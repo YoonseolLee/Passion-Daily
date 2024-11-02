@@ -7,21 +7,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // 단일 다크 테마 팔레트 정의
-private val DarkColorPalette =
+val DarkColorPalette =
     darkColorScheme(
-        primary = PrimaryColor,
+        primary = PrimaryColor, // #1A3C96
         onPrimary = Color.White,
-        secondary = SecondaryColor,
-        background = BlackBackground,
+        secondary = SecondaryColor, // #D9D9D9
+        background = BlackBackground, // #000000
         surface = BlackBackground,
         onBackground = SecondaryColor,
-        onSurface = SecondaryColor,
+        onSurface = OnSurface,
     )
 
 @Composable
 fun Passion_DailyTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = DarkColorPalette,
         typography = Typography,
         content = content,
     )
