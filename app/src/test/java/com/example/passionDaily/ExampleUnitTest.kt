@@ -1,8 +1,7 @@
-package com.example.passion_daily
-
-import org.junit.Test
+package com.example.passionDaily
 
 import org.junit.Assert.*
+import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).
