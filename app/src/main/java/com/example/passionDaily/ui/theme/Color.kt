@@ -1,4 +1,4 @@
-package com.example.passion_daily.ui.theme
+package com.example.passionDaily.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
