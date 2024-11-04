@@ -15,4 +15,6 @@ class LoadingViewModel : ViewModel() {
     fun stopLoading() {
         _isLoading.value = false
     }
+
+    // TODO: 실제로 데이터가 100% 로딩이 되었을 때, stopLoading()이 실행되어야함. 현재는 임의로 만들었을 뿐임!
 }
