@@ -40,7 +40,7 @@ fun SplashScreen(
 }
 
 @Composable
-fun SplashScreenContent() {
+fun SplashScreenContent(modifier: Modifier = Modifier) {
     Box(
         modifier =
             Modifier
@@ -48,13 +48,14 @@ fun SplashScreenContent() {
                 .background(BlackBackground),
         contentAlignment = Alignment.Center,
     ) {
-        SplashScreenLogo()
+        SplashScreenLogo(modifier)
     }
 }
 
 @Composable
-fun SplashScreenLogo() {
+fun SplashScreenLogo(modifier: Modifier = Modifier) {
     Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -71,7 +72,7 @@ fun SplashScreenLogo() {
 
 @Composable
 @Preview(showBackground = true)
-fun SplashScreenContentPreview() {
+fun SplashScreenContentPreview(modifier: Modifier = Modifier) {
     Passion_DailyTheme {
         SplashScreenContent()
     }
