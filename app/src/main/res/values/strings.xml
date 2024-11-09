@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Passion_Daily</string>
+    <string name="header_title">간편로그인 후
+이용이 가능합니다.</string>
+    <string name="header_subtitle_30sec">30초</string>
+    <string name="header_subtitle_signin_eligible">면 가입이 가능해요.</string>
+    <string name="kakao_login">카카오로 로그인</string>
+    <string name="google_login">구글로 로그인</string>
 </resources>

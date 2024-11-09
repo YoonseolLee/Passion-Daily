@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -79,7 +80,7 @@ fun LoginGuideScreenContent() {
 @Composable
 private fun HeaderTitle() {
     Text(
-        text = "간편로그인 후\n이용이 가능합니다.",
+        text = stringResource(id = R.string.header_title),
         style =
             TextStyle(
                 fontSize = 30.sp,
@@ -97,7 +98,7 @@ private fun HeaderSubtitle() {
         modifier = Modifier.padding(top = 7.dp),
     ) {
         Text(
-            text = "30초",
+            text = stringResource(id = R.string.header_subtitle_30sec),
             style =
                 TextStyle(
                     fontSize = 16.sp,
@@ -107,7 +108,7 @@ private fun HeaderSubtitle() {
                 ),
         )
         Text(
-            text = "면 가입이 가능해요.",
+            text = stringResource(id = R.string.header_subtitle_signin_eligible),
             style =
                 TextStyle(
                     fontSize = 16.sp,
@@ -137,12 +138,12 @@ private fun KakaoLoginButton() {
             contentScale = ContentScale.Crop,
         )
         Text(
-            text = "카카오로 로그인",
+            text = stringResource(id = R.string.kakao_login),
             style =
                 TextStyle(
                     fontSize = 18.sp,
                     lineHeight = 25.2.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
                     fontWeight = FontWeight(400),
                     color = Color(0xFF000000),
                     textAlign = TextAlign.Center,
@@ -174,11 +175,11 @@ private fun GoogleLoginButton() {
             contentScale = ContentScale.None,
         )
         Text(
-            text = "구글로 로그인",
+            text = stringResource(id = R.string.google_login),
             style =
                 TextStyle(
                     fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
                     fontWeight = FontWeight(400),
                     color = Color(0xFF000000),
                 ),
