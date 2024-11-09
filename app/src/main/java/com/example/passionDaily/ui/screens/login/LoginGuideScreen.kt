@@ -1,22 +1,29 @@
 package com.example.passionDaily.ui.screens.login
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,70 +37,151 @@ import com.example.passion_daily.R
 
 @Composable
 fun LoginGuideScreen() {
+    LoginGuideScreenContent()
 }
 
 @Composable
 fun LoginGuideScreenContent() {
     Box(
-        // 전체 화면을 채우는 최상위 Box
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(BlackBackground)
-                .border(width = 1.dp, color = Color.White),
+                .background(BlackBackground),
     ) {
         Column(
             modifier =
                 Modifier
-                    .border(width = 1.dp, color = Color.Green)
-                    .align(Alignment.TopStart) // Column을 왼쪽 상단에 배치
-                    .padding(16.dp),
-            // Column과 화면 가장자리 간격 추가
-            verticalArrangement = Arrangement.spacedBy(4.dp), // 텍스트 간격 설정
+                    .offset(x = 40.dp, y = 99.dp)
+                    .align(Alignment.TopStart),
         ) {
-            Text(
-                text = "간편로그인 후\n이용이 가능합니다.",
-                style =
-                    TextStyle(
-                        fontSize = 30.sp,
-                        fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                        fontWeight = FontWeight(400),
-                        color = GrayScaleWhite,
-                    ),
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier
-                        .border(width = 1.dp, color = Color.Green)
-                        .padding(top = 4.dp), // 위쪽 간격 추가
-            ) {
-                Text(
-                    text = "30초",
-                    style =
-                        TextStyle(
-                            fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                            fontWeight = FontWeight(500),
-                            color = PrimaryColor, // 파란색
-                        ),
-                )
-                Text(
-                    text = "면 가입이 가능해요.",
-                    style =
-                        TextStyle(
-                            fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                            fontWeight = FontWeight(500),
-                            color = OnSurface, // 회색
-                        ),
-                )
-            }
+            HeaderTitle()
+            HeaderSubtitle()
         }
 
         SplashScreenLogo(
-            modifier = Modifier.align(Alignment.Center), // 로고를 중앙에 고정
+            modifier = Modifier.align(Alignment.Center),
+        )
+
+        Column(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top),
+            horizontalAlignment = Alignment.Start,
+        ) {
+            KakaoLoginButton()
+            GoogleLoginButton()
+        }
+    }
+}
+
+@Composable
+private fun HeaderTitle() {
+    Text(
+        text = "간편로그인 후\n이용이 가능합니다.",
+        style =
+            TextStyle(
+                fontSize = 30.sp,
+                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                fontWeight = FontWeight(400),
+                color = GrayScaleWhite,
+            ),
+    )
+}
+
+@Composable
+private fun HeaderSubtitle() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 7.dp),
+    ) {
+        Text(
+            text = "30초",
+            style =
+                TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontWeight = FontWeight(500),
+                    color = PrimaryColor,
+                ),
+        )
+        Text(
+            text = "면 가입이 가능해요.",
+            style =
+                TextStyle(
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontWeight = FontWeight(500),
+                    color = OnSurface,
+                ),
+        )
+    }
+}
+
+@Composable
+private fun KakaoLoginButton() {
+    Row(
+        modifier =
+            Modifier
+                .width(345.dp)
+                .height(54.dp)
+                .background(color = Color(0xFFFEE500), shape = RoundedCornerShape(size = 10.dp))
+                .padding(start = 7.dp),
+        horizontalArrangement = Arrangement.spacedBy(59.dp, Alignment.Start),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.kakaotalk_icon),
+            contentDescription = "kakaotalk_icon",
+            contentScale = ContentScale.Crop,
+        )
+        Text(
+            text = "카카오로 로그인",
+            style =
+                TextStyle(
+                    fontSize = 18.sp,
+                    lineHeight = 25.2.sp,
+                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFF000000),
+                    textAlign = TextAlign.Center,
+                ),
+        )
+    }
+}
+
+@Composable
+private fun GoogleLoginButton() {
+    Row(
+        modifier =
+            Modifier
+                .width(345.dp)
+                .height(54.dp)
+                .background(color = GrayScaleWhite, shape = RoundedCornerShape(size = 10.dp))
+                .padding(start = 17.dp),
+        horizontalArrangement = Arrangement.spacedBy(79.dp, Alignment.Start),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            modifier =
+                Modifier
+                    .width(24.dp)
+                    .height(24.dp)
+                    .background(color = GrayScaleWhite),
+            painter = painterResource(id = R.drawable.google_icon),
+            contentDescription = "google_icon",
+            contentScale = ContentScale.None,
+        )
+        Text(
+            text = "구글로 로그인",
+            style =
+                TextStyle(
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFF000000),
+                ),
         )
     }
 }
