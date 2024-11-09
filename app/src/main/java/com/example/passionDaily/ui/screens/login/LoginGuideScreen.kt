@@ -52,7 +52,7 @@ fun LoginGuideScreenContent() {
         Column(
             modifier =
                 Modifier
-                    .offset(x = 40.dp, y = 99.dp)
+                    .offset(x = 34.dp, y = 99.dp)
                     .align(Alignment.TopStart),
         ) {
             HeaderTitle()
