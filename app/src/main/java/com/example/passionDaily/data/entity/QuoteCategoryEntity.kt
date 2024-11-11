@@ -8,7 +8,6 @@ import java.util.Date
 data class QuoteCategoryEntity(
     @PrimaryKey val categoryId: Int,
     val categoryName: String,
-    val parentCategoryId: Int?,
     val createdDate: Date,
     val modifiedDate: Date,
 )
