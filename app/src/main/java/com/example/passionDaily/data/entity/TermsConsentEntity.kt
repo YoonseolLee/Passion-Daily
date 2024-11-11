@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(
     tableName = "terms_consent",
@@ -23,6 +22,6 @@ data class TermsConsentEntity(
     @PrimaryKey(autoGenerate = true) val consentId: Int = 0,
     @ColumnInfo(name = "user_id") val userId: Int,
     @ColumnInfo(name = "terms_version") val termsVersion: Int,
-    @ColumnInfo(name = "consent_date") val consentDate: Date,
-    @ColumnInfo(name = "created_date") val createdDate: Date,
+    @ColumnInfo(name = "consent_date") val consentDate: Long,
+    @ColumnInfo(name = "created_date") val createdDate: Long,
 )

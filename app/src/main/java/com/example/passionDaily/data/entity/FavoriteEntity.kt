@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(
     tableName = "favorites",
@@ -33,5 +32,5 @@ data class FavoriteEntity(
     @PrimaryKey(autoGenerate = true) val favoriteId: Int = 0,
     @ColumnInfo(name = "quote_id") val quoteId: Int,
     @ColumnInfo(name = "user_id") val userId: Int,
-    @ColumnInfo(name = "created_date") val createdDate: Date,
+    @ColumnInfo(name = "created_date") val createdDate: Long,
 )

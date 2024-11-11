@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(
     tableName = "quotes",
@@ -27,6 +26,6 @@ data class QuoteEntity(
     @ColumnInfo(name = "category_id") val categoryId: Int,
     @ColumnInfo(name = "views") val views: Int,
     @ColumnInfo(name = "likes") val likes: Int,
-    @ColumnInfo(name = "created_date") val createdDate: Date,
-    @ColumnInfo(name = "modified_date") val modifiedDate: Date,
+    @ColumnInfo(name = "created_date") val createdDate: Long,
+    @ColumnInfo(name = "modified_date") val modifiedDate: Long,
 )

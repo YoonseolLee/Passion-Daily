@@ -4,7 +4,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
-import java.util.Date
 
 @Entity(
     tableName = "notifications",
@@ -21,5 +20,5 @@ data class NotificationEntity(
     @PrimaryKey @ColumnInfo(name = "user_id") val userId: Int,
     @ColumnInfo(name = "is_push_enabled") val isPushEnabled: Boolean,
     @ColumnInfo(name = "is_promotional_enabled") val isPromotionalEnabled: Boolean,
-    @ColumnInfo(name = "last_sync_date") val lastSyncDate: Date,
+    @ColumnInfo(name = "last_sync_date") val lastSyncDate: Long,
 )
