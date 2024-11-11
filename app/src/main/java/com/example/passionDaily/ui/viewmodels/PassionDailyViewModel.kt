@@ -3,8 +3,10 @@ package com.example.passionDaily.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.entity.FavoriteEntity
+import com.example.passionDaily.data.entity.NotificationEntity
 import com.example.passionDaily.data.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.entity.QuoteEntity
+import com.example.passionDaily.data.entity.TermsConsentEntity
 import com.example.passionDaily.data.entity.UserEntity
 import com.example.passionDaily.data.repository.PassionDailyRepository
 import com.example.passionDaily.util.RequestState
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,8 +39,11 @@ class PassionDailyViewModel
         private val _categories = MutableStateFlow<RequestState<List<QuoteCategoryEntity>>>(RequestState.Idle)
         val categories: StateFlow<RequestState<List<QuoteCategoryEntity>>> = _categories.asStateFlow()
 
-        private val _userSettings = MutableStateFlow<RequestState<UserSettingsEntity>>(RequestState.Idle)
-        val userSettings: StateFlow<RequestState<UserSettingsEntity>> = _userSettings.asStateFlow()
+        private val _termsConsents = MutableStateFlow<RequestState<List<TermsConsentEntity>>>(RequestState.Idle)
+        val termsConsents: StateFlow<RequestState<List<TermsConsentEntity>>> = _termsConsents.asStateFlow()
+
+        private val _notificationSettings = MutableStateFlow<RequestState<NotificationEntity>>(RequestState.Idle)
+        val notificationSettings: StateFlow<RequestState<NotificationEntity>> = _notificationSettings.asStateFlow()
 
         init {
             loadCategories()
@@ -61,7 +67,8 @@ class PassionDailyViewModel
             _currentUserId.value = userId
             loadUserData(userId)
             loadUserFavorites(userId)
-            loadUserSettings(userId)
+            loadTermsConsents(userId)
+            loadNotificationSettings(userId)
         }
 
         private fun loadUserData(userId: Int) {
@@ -91,15 +98,28 @@ class PassionDailyViewModel
             }
         }
 
-        private fun loadUserSettings(userId: Int) {
+        private fun loadTermsConsents(userId: Int) {
             viewModelScope.launch {
-                _userSettings.value = RequestState.Loading
+                _termsConsents.value = RequestState.Loading
                 try {
-                    val settings = repository.getUserSettings(userId)
-                    _userSettings.value = settings?.let { RequestState.Success(it) }
-                        ?: RequestState.Error(Exception("Settings not found"))
+                    repository.getTermsConsentsByUserId(userId).collect { consentsList ->
+                        _termsConsents.value = RequestState.Success(consentsList)
+                    }
                 } catch (e: Exception) {
-                    _userSettings.value = RequestState.Error(e)
+                    _termsConsents.value = RequestState.Error(e)
+                }
+            }
+        }
+
+        private fun loadNotificationSettings(userId: Int) {
+            viewModelScope.launch {
+                _notificationSettings.value = RequestState.Loading
+                try {
+                    val settings = repository.getNotificationSettings(userId)
+                    _notificationSettings.value = settings?.let { RequestState.Success(it) }
+                        ?: RequestState.Error(Exception("Notification settings not found"))
+                } catch (e: Exception) {
+                    _notificationSettings.value = RequestState.Error(e)
                 }
             }
         }
@@ -125,7 +145,7 @@ class PassionDailyViewModel
                             FavoriteEntity(
                                 userId = userId,
                                 quoteId = quoteId,
-                                createdDate = System.currentTimeMillis(),
+                                createdDate = Date(),
                             )
                         repository.addFavorite(favorite)
                         // Refresh favorites list after adding
@@ -150,14 +170,27 @@ class PassionDailyViewModel
             }
         }
 
-        fun updateUserSettings(settings: UserSettingsEntity) {
+        fun updateNotificationSettings(settings: NotificationEntity) {
             viewModelScope.launch {
-                _userSettings.value = RequestState.Loading
+                _notificationSettings.value = RequestState.Loading
                 try {
-                    repository.updateSettings(settings)
-                    _userSettings.value = RequestState.Success(settings)
+                    repository.updateNotificationSettings(settings)
+                    _notificationSettings.value = RequestState.Success(settings)
                 } catch (e: Exception) {
-                    _userSettings.value = RequestState.Error(e)
+                    _notificationSettings.value = RequestState.Error(e)
+                }
+            }
+        }
+
+        fun addTermsConsent(termsConsent: TermsConsentEntity) {
+            viewModelScope.launch {
+                _termsConsents.value = RequestState.Loading
+                try {
+                    repository.insertTermsConsent(termsConsent)
+                    // Refresh terms consents after adding
+                    currentUserId.value?.let { loadTermsConsents(it) }
+                } catch (e: Exception) {
+                    _termsConsents.value = RequestState.Error(e)
                 }
             }
         }
