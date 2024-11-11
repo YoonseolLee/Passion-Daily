@@ -15,4 +15,6 @@ abstract class BaseViewModel : ViewModel() {
     protected fun stopLoading() {
         _isLoading.value = false
     }
+
+    // TODO: 뷰모델 생성
 }

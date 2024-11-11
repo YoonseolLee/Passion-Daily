@@ -8,7 +8,7 @@ import com.example.passionDaily.util.UserRole
 
 @Entity(tableName = "users")
 data class UserEntity(
-    @PrimaryKey val userId: Int,
+    @PrimaryKey @ColumnInfo(name = "user_id") val userId: Int,
     @ColumnInfo(name = "username") val username: String,
     @ColumnInfo(name = "nickname") val nickname: String?,
     @ColumnInfo(name = "phone") val phone: String?,

@@ -5,23 +5,35 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
+import androidx.room.Transaction
 import com.example.passionDaily.data.entity.FavoriteEntity
 import com.example.passionDaily.data.relation.FavoriteWithQuotes
-import kotlinx.coroutines.flow.Flow
+import com.example.passionDaily.data.relation.UserWithFavorites
 
 @Dao
 interface FavoriteDao {
+    @Transaction
     @Query("SELECT * FROM favorites WHERE user_id = :userId")
-    fun getFavoritesByUserId(userId: Int): Flow<List<FavoriteEntity>>
+    fun getFavoritesByUser(userId: Int): List<UserWithFavorites>
 
+    @Transaction
     @Query(
-        """
-        SELECT * FROM favorites f 
-        INNER JOIN quotes q ON f.quote_id = q.quote_id 
-        WHERE f.user_id = :userId
-    """,
+        "SELECT f.*, q.* FROM favorites f " +
+            "JOIN quotes q ON f.quote_id = q.quote_id " +
+            "WHERE f.user_id = :userId",
     )
-    fun getFavoritesWithQuotesByUserId(userId: Int): Flow<List<FavoriteWithQuotes>>
+    @RewriteQueriesToDropUnusedColumns
+    fun getFavoriteWithQuotes(userId: Int): List<FavoriteWithQuotes>
+
+//    @Query(
+//        """
+//        SELECT * FROM favorites f
+//        INNER JOIN quotes q ON f.quote_id = q.quote_id
+//        WHERE f.user_id = :userId
+//    """,
+//    )
+//    fun getFavoritesWithQuotesByUserId(userId: Int): Flow<List<FavoriteWithQuotes>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addFavorite(favorite: FavoriteEntity)
