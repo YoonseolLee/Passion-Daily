@@ -6,7 +6,6 @@ import com.example.passionDaily.data.entity.FavoriteEntity
 import com.example.passionDaily.data.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.entity.QuoteEntity
 import com.example.passionDaily.data.entity.UserEntity
-import com.example.passionDaily.data.entity.UserSettingsEntity
 import com.example.passionDaily.data.repository.PassionDailyRepository
 import com.example.passionDaily.util.RequestState
 import dagger.hilt.android.lifecycle.HiltViewModel

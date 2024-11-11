@@ -9,8 +9,8 @@ data class UserWithFavoritesAndQuotes(
     @Embedded val user: UserEntity,
     @Relation(
         entity = FavoriteEntity::class,
-        parentColumn = "userId",
-        entityColumn = "userId",
+        parentColumn = "user_id",
+        entityColumn = "user_id",
     )
     val favorites: List<FavoriteWithQuotes>,
 )

@@ -1,20 +1,24 @@
 package com.example.passionDaily.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.passionDaily.util.Gender
+import com.example.passionDaily.util.UserRole
 import java.util.Date
 
 @Entity(tableName = "users")
 data class UserEntity(
     @PrimaryKey val userId: Int,
-    val username: String,
-    val nickname: String?,
-    val email: String,
-    val role: String,
-    val gender: String?,
-    val birthYear: Int?,
-    val isAccountDeleted: Boolean,
-    val lastLoginDate: Date?,
-    val createdDate: Date,
-    val modifiedDate: Date,
+    @ColumnInfo(name = "username") val username: String,
+    @ColumnInfo(name = "nickname") val nickname: String?,
+    @ColumnInfo(name = "phone") val phone: String?,
+    @ColumnInfo(name = "email") val email: String,
+    @ColumnInfo(name = "role") val role: UserRole,
+    @ColumnInfo(name = "gender") val gender: Gender?,
+    @ColumnInfo(name = "birth_year") val birthYear: Int?,
+    @ColumnInfo(name = "is_account_deleted") val isAccountDeleted: Boolean,
+    @ColumnInfo(name = "last_login_date") val lastLoginDate: Date?,
+    @ColumnInfo(name = "created_date") val createdDate: Date,
+    @ColumnInfo(name = "modified_date") val modifiedDate: Date,
 )

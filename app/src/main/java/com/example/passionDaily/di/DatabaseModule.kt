@@ -3,10 +3,11 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.room.Room
 import com.example.passionDaily.data.dao.FavoriteDao
+import com.example.passionDaily.data.dao.NotificationDao
 import com.example.passionDaily.data.dao.QuoteCategoryDao
 import com.example.passionDaily.data.dao.QuoteDao
+import com.example.passionDaily.data.dao.TermsConsentDao
 import com.example.passionDaily.data.dao.UserDao
-import com.example.passionDaily.data.dao.UserSettingsDao
 import com.example.passionDaily.data.database.PassionDailyDatabase
 import dagger.Module
 import dagger.Provides
@@ -48,5 +49,9 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideUserSettingsDao(database: PassionDailyDatabase): UserSettingsDao = database.userSettingsDao()
+    fun provideNotificationDao(database: PassionDailyDatabase): NotificationDao = database.notificationDao()
+
+    @Provides
+    @Singleton
+    fun provideTermsConsentDao(database: PassionDailyDatabase): TermsConsentDao = database.termsConsentDao()
 }

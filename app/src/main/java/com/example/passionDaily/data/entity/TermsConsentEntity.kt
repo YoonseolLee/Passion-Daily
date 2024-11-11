@@ -8,14 +8,8 @@ import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity(
-    tableName = "favorites",
+    tableName = "terms_consent",
     foreignKeys = [
-        ForeignKey(
-            entity = QuoteEntity::class,
-            parentColumns = ["quote_id"],
-            childColumns = ["quote_id"],
-            onDelete = ForeignKey.CASCADE,
-        ),
         ForeignKey(
             entity = UserEntity::class,
             parentColumns = ["user_id"],
@@ -23,15 +17,12 @@ import java.util.Date
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [
-        Index("quote_id"),
-        Index("user_id"),
-        Index(value = ["quote_id", "user_id"], unique = true),
-    ],
+    indices = [Index("user_id")],
 )
-data class FavoriteEntity(
-    @PrimaryKey(autoGenerate = true) val favoriteId: Int = 0,
-    @ColumnInfo(name = "quote_id") val quoteId: Int,
+data class TermsConsentEntity(
+    @PrimaryKey(autoGenerate = true) val consentId: Int = 0,
     @ColumnInfo(name = "user_id") val userId: Int,
+    @ColumnInfo(name = "terms_version") val termsVersion: Int,
+    @ColumnInfo(name = "consent_date") val consentDate: Date,
     @ColumnInfo(name = "created_date") val createdDate: Date,
 )

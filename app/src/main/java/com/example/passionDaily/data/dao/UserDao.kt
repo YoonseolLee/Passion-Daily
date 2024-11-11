@@ -8,7 +8,8 @@ import androidx.room.Transaction
 import com.example.passionDaily.data.entity.UserEntity
 import com.example.passionDaily.data.relation.UserWithFavorites
 import com.example.passionDaily.data.relation.UserWithFavoritesAndQuotes
-import com.example.passionDaily.data.relation.UserWithSettings
+import com.example.passionDaily.data.relation.UserWithNotifications
+import com.example.passionDaily.data.relation.UserWithTermsConsents
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -21,13 +22,17 @@ interface UserDao {
 
     @Transaction
     @Query("SELECT * FROM users")
-    fun getUsersWithSettings(): List<UserWithSettings>
-
-    @Transaction
-    @Query("SELECT * FROM users")
     fun getUsersWithFavorites(): List<UserWithFavorites>
 
     @Transaction
     @Query("SELECT * FROM users")
     fun getUsersWithFavoritesAndQuotes(): List<UserWithFavoritesAndQuotes>
+
+    @Transaction
+    @Query("SELECT * FROM users")
+    fun getUsersWithTermsConsents(): List<UserWithTermsConsents>
+
+    @Transaction
+    @Query("SELECT * FROM users")
+    fun getUsersWithNotifications(): List<UserWithNotifications>
 }

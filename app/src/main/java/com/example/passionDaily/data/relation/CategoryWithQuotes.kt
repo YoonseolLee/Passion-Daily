@@ -8,8 +8,8 @@ import com.example.passionDaily.data.entity.QuoteEntity
 data class CategoryWithQuotes(
     @Embedded val category: QuoteCategoryEntity,
     @Relation(
-        parentColumn = "categoryId",
-        entityColumn = "categoryId",
+        parentColumn = "category_id",
+        entityColumn = "category_id",
     )
     val quotes: List<QuoteEntity>,
 )

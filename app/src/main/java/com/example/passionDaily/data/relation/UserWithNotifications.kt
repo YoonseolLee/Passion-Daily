@@ -2,14 +2,14 @@ package com.example.passionDaily.data.relation
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.example.passionDaily.data.entity.NotificationEntity
 import com.example.passionDaily.data.entity.UserEntity
-import com.example.passionDaily.data.entity.UserSettingsEntity
 
-data class UserWithSettings(
+data class UserWithNotifications(
     @Embedded val user: UserEntity,
     @Relation(
-        parentColumn = "userId",
-        entityColumn = "userId",
+        parentColumn = "user_id",
+        entityColumn = "user_id",
     )
-    val settings: UserSettingsEntity,
+    val notifications: NotificationEntity,
 )

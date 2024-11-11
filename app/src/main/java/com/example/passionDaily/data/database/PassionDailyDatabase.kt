@@ -4,15 +4,17 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.passionDaily.data.dao.FavoriteDao
+import com.example.passionDaily.data.dao.NotificationDao
 import com.example.passionDaily.data.dao.QuoteCategoryDao
 import com.example.passionDaily.data.dao.QuoteDao
+import com.example.passionDaily.data.dao.TermsConsentDao
 import com.example.passionDaily.data.dao.UserDao
-import com.example.passionDaily.data.dao.UserSettingsDao
 import com.example.passionDaily.data.entity.FavoriteEntity
+import com.example.passionDaily.data.entity.NotificationEntity
 import com.example.passionDaily.data.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.entity.QuoteEntity
+import com.example.passionDaily.data.entity.TermsConsentEntity
 import com.example.passionDaily.data.entity.UserEntity
-import com.example.passionDaily.data.entity.UserSettingsEntity
 
 @Database(
     entities = [
@@ -20,7 +22,8 @@ import com.example.passionDaily.data.entity.UserSettingsEntity
         QuoteEntity::class,
         QuoteCategoryEntity::class,
         FavoriteEntity::class,
-        UserSettingsEntity::class,
+        NotificationEntity::class,
+        TermsConsentEntity::class,
     ],
     version = 1,
 )
@@ -34,5 +37,7 @@ abstract class PassionDailyDatabase : RoomDatabase() {
 
     abstract fun favoriteDao(): FavoriteDao
 
-    abstract fun userSettingsDao(): UserSettingsDao
+    abstract fun notificationDao(): NotificationDao
+
+    abstract fun termsConsentDao(): TermsConsentDao
 }

@@ -1,13 +1,14 @@
 package com.example.passionDaily.data.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
 @Entity(tableName = "quote_categories")
 data class QuoteCategoryEntity(
-    @PrimaryKey val categoryId: Int,
-    val categoryName: String,
-    val createdDate: Date,
-    val modifiedDate: Date,
+    @PrimaryKey @ColumnInfo(name = "category_id") val categoryId: Int,
+    @ColumnInfo(name = "category_name") val categoryName: String,
+    @ColumnInfo(name = "created_date") val createdDate: Date,
+    @ColumnInfo(name = "modified_date") val modifiedDate: Date,
 )

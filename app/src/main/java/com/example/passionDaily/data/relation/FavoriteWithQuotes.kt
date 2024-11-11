@@ -8,8 +8,8 @@ import com.example.passionDaily.data.entity.QuoteEntity
 data class FavoriteWithQuotes(
     @Embedded val favorite: FavoriteEntity,
     @Relation(
-        parentColumn = "quoteId",
-        entityColumn = "quoteId",
+        parentColumn = "quote_id",
+        entityColumn = "quote_id",
     )
     val quote: QuoteEntity,
 )
