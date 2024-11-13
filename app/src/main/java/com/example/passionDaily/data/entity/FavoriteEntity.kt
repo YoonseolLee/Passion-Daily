@@ -24,11 +24,12 @@ import androidx.room.PrimaryKey
 
     ],
     indices = [
-        Index(value = ["quote_id, user_id"], unique = true),
+        Index(value = ["user_id"]),
+        Index(value = ["quote_id", "user_id"])
     ],
 )
 data class FavoriteEntity(
-    @PrimaryKey(autoGenerate = true) val favoriteId: Int = 0,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "favorite_id") val favoriteId: Int = 0,
     @ColumnInfo(name = "quote_id") val quoteId: Int,
     @ColumnInfo(name = "user_id") val userId: Int,
     @ColumnInfo(name = "created_date") val createdDate: Long,

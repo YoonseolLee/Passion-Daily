@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.passion_daily.R
+import com.example.passionDaily.R
 
 // 폰트 파일을 기반으로 FontFamily 생성
 val InterFontFamily =

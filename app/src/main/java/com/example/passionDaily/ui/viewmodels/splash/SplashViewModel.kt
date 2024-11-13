@@ -22,31 +22,41 @@ class SplashViewModel @Inject constructor(
     private val quoteRepository: QuoteRepository
 ) : ViewModel() {
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     private val _recentCategories = MutableStateFlow<List<QuoteCategoryEntity>>(emptyList())
     val recentCategories: StateFlow<List<QuoteCategoryEntity>> = _recentCategories.asStateFlow()
 
-    private val splashDelay = 2000L  // 2초 동안 스플래시 화면을 유지
+    init {
+        // 스플래시 화면을 계속 표시하기 위해 isLoading을 true로 유지
+        viewModelScope.launch {
+            _isLoading.value = true
+//            checkLoginStatus()
+        }
+    }
 
-//    init {
-//        checkLoginStatus()
-//    }
-//
 //    private fun checkLoginStatus() {
 //        viewModelScope.launch {
-//            delay(splashDelay)
-//            _isLoggedIn.value = userRepository.hasLoginHistory() // 로그인 이력 확인
-//
-//            if (_isLoggedIn.value) {
-//                loadRecentCategories()
+//            try {
+//                _isLoggedIn.value = userRepository.hasLoginHistory()
+//                if (_isLoggedIn.value) {
+//                    loadRecentCategories()
+//                }
+//            } catch (e: Exception) {
+//                // 에러 처리
 //            }
 //        }
 //    }
 //
 //    private suspend fun loadRecentCategories() {
-//        // 최근 선택한 카테고리 로드
-//        _recentCategories.value = categoryRepository.getRecentCategories()
+//        try {
+//            _recentCategories.value = categoryRepository.getRecentCategories()
+//        } catch (e: Exception) {
+//            // 에러 처리
+//        }
 //    }
 }

@@ -15,6 +15,7 @@ import com.example.passionDaily.data.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.entity.QuoteEntity
 import com.example.passionDaily.data.entity.TermsConsentEntity
 import com.example.passionDaily.data.entity.UserEntity
+import com.example.passionDaily.util.Converters
 
 @Database(
     entities = [
@@ -26,8 +27,10 @@ import com.example.passionDaily.data.entity.UserEntity
         TermsConsentEntity::class,
     ],
     version = 1,
+    exportSchema = false
 )
-@TypeConverters(TypeConverters::class)
+
+@TypeConverters(Converters::class)
 abstract class PassionDailyDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 

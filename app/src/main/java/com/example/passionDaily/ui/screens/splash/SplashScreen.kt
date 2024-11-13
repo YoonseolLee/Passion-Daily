@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.screens.splash
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,10 +18,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
+import com.example.passionDaily.ui.viewmodels.splash.SplashViewModel
 import com.example.passionDaily.util.Action
-import com.example.passion_daily.R
 
 @Composable
 fun SplashScreen(
@@ -28,11 +30,11 @@ fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel(),
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val recentCategories by viewModel.recentCategories.collectAsState()
 
-    LaunchedEffect(isLoading) {
-        if (!isLoading) {
-            navigateToQuote(Action.NO_ACTION)
-        }
+    LaunchedEffect(Unit) {
+        Log.d("SplashScreen", "Splash screen is rendered")
     }
 
     SplashScreenContent()

@@ -28,13 +28,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.passionDaily.R
 import com.example.passionDaily.ui.screens.splash.SplashScreenLogo
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passion_daily.R
 
 @Composable
 fun LoginGuideScreen() {

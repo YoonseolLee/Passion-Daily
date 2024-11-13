@@ -1,9 +1,11 @@
 package com.example.passionDaily.util
 
 object Constants {
-    const val SPLASH_SCREEN = "splash"
-    const val QUOTE_SCREEN = "quote"
+    const val SPLASH_SCREEN = "splash_screen"
+    const val QUOTE_SCREEN = "quote_screen"
 
-    // Route Builder 함수
-    fun quoteRoute(action: Action) = "$QUOTE_SCREEN/${action.name}"
+    fun quoteRoute(action: Action): String {
+        return if (action == Action.NO_ACTION) QUOTE_SCREEN
+        else "$QUOTE_SCREEN?action=${action.name}"
+    }
 }

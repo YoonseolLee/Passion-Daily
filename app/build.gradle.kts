@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.passion_daily"
+    namespace = "com.example.passionDaily"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.passion_daily"
-        minSdk = 24
+        applicationId = "com.example.passionDaily"
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -81,7 +81,6 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.51")
     ksp("com.google.dagger:hilt-android-compiler:2.51")
 
-    // 추가할 의존성
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // Hilt with Compose Navigation
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4") // ViewModel utilities for Compose
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4") // Lifecycle utilities for Compose

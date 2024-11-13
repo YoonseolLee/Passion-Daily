@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import com.example.passionDaily.navigation.destinations.splashComposable
 import com.example.passionDaily.util.Constants
 
+// SetupNavigation.kt
 @Composable
 fun SetupNavigation(navController: NavHostController) {
     val screens = Screens(navController = navController)
@@ -17,5 +18,6 @@ fun SetupNavigation(navController: NavHostController) {
         splashComposable(
             navigateToQuote = screens.navigateToQuote,
         )
+        // 추후 다른 화면들 추가
     }
 }
