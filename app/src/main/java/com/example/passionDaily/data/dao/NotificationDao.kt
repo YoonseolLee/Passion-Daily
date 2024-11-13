@@ -1,20 +1,25 @@
 package com.example.passionDaily.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.passionDaily.data.entity.NotificationEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotificationDao {
     @Query("SELECT * FROM notifications WHERE user_id = :userId")
-    suspend fun getNotificationSettings(userId: Int): NotificationEntity?
+    fun getNotificationSettings(userId: Int): Flow<NotificationEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNotificationSettings(settings: NotificationEntity)
+    suspend fun insertNotificationSettings(notifications: NotificationEntity)
 
     @Update
-    suspend fun updateNotificationSettings(settings: NotificationEntity)
+    suspend fun updateNotificationSettings(notifications: NotificationEntity)
+
+    @Delete
+    suspend fun deleteNotificationSettings(notifications: NotificationEntity)
 }

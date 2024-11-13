@@ -5,11 +5,11 @@ import androidx.room.Relation
 import com.example.passionDaily.data.entity.TermsConsentEntity
 import com.example.passionDaily.data.entity.UserEntity
 
-data class UserWithTermsConsents(
+data class UserWithTermsConsent(
     @Embedded val user: UserEntity,
     @Relation(
         parentColumn = "user_id",
         entityColumn = "user_id",
     )
-    val termsConsents: List<TermsConsentEntity>,
+    val termsConsent: TermsConsentEntity,
 )

@@ -5,11 +5,11 @@ import androidx.room.Relation
 import com.example.passionDaily.data.entity.NotificationEntity
 import com.example.passionDaily.data.entity.UserEntity
 
-data class UserWithNotifications(
+data class UserWithNotification(
     @Embedded val user: UserEntity,
     @Relation(
         parentColumn = "user_id",
         entityColumn = "user_id",
     )
-    val notifications: NotificationEntity,
+    val notification: NotificationEntity?,
 )

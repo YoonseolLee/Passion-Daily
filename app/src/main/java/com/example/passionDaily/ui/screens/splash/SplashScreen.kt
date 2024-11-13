@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
-import com.example.passionDaily.ui.viewmodels.SplashViewModel
 import com.example.passionDaily.util.Action
 import com.example.passion_daily.R
 

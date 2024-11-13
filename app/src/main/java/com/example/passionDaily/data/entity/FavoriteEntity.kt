@@ -10,22 +10,21 @@ import androidx.room.PrimaryKey
     tableName = "favorites",
     foreignKeys = [
         ForeignKey(
-            entity = QuoteEntity::class,
-            parentColumns = ["quote_id"],
-            childColumns = ["quote_id"],
-            onDelete = ForeignKey.CASCADE,
-        ),
-        ForeignKey(
             entity = UserEntity::class,
             parentColumns = ["user_id"],
             childColumns = ["user_id"],
             onDelete = ForeignKey.CASCADE,
         ),
+        ForeignKey(
+            entity = QuoteEntity::class,
+            parentColumns = ["quote_id"],
+            childColumns = ["quote_id"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+
     ],
     indices = [
-        Index("quote_id"),
-        Index("user_id"),
-        Index(value = ["quote_id", "user_id"], unique = true),
+        Index(value = ["quote_id, user_id"], unique = true),
     ],
 )
 data class FavoriteEntity(

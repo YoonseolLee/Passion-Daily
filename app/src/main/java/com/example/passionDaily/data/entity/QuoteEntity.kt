@@ -24,8 +24,6 @@ data class QuoteEntity(
     @ColumnInfo(name = "author") val author: String?,
     @ColumnInfo(name = "image_url") val imageUrl: String?,
     @ColumnInfo(name = "category_id") val categoryId: Int,
-    @ColumnInfo(name = "views") val views: Int,
-    @ColumnInfo(name = "likes") val likes: Int,
     @ColumnInfo(name = "created_date") val createdDate: Long,
     @ColumnInfo(name = "modified_date") val modifiedDate: Long,
 )

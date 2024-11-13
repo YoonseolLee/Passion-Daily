@@ -5,11 +5,11 @@ import androidx.room.Relation
 import com.example.passionDaily.data.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.entity.QuoteEntity
 
-data class CategoryWithQuotes(
-    @Embedded val category: QuoteCategoryEntity,
+data class QuoteWithCategory(
+    @Embedded val quote: QuoteEntity,
     @Relation(
         parentColumn = "category_id",
         entityColumn = "category_id",
     )
-    val quotes: List<QuoteEntity>,
+    val category: QuoteCategoryEntity,
 )

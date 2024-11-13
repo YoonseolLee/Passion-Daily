@@ -1,43 +1,33 @@
 package com.example.passionDaily.data.dao
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.RewriteQueriesToDropUnusedColumns
-import androidx.room.Transaction
+import androidx.room.Update
 import com.example.passionDaily.data.entity.FavoriteEntity
-import com.example.passionDaily.data.relation.FavoriteWithQuotes
-import com.example.passionDaily.data.relation.UserWithFavorites
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FavoriteDao {
-    @Transaction
     @Query("SELECT * FROM favorites WHERE user_id = :userId")
-    fun getFavoritesByUser(userId: Int): List<UserWithFavorites>
+    fun getFavoritesByUserId(userId: Int): Flow<List<FavoriteEntity>>
 
-    @Transaction
-    @Query(
-        "SELECT f.*, q.* FROM favorites f " +
-            "JOIN quotes q ON f.quote_id = q.quote_id " +
-            "WHERE f.user_id = :userId",
-    )
-    @RewriteQueriesToDropUnusedColumns
-    fun getFavoriteWithQuotes(userId: Int): List<FavoriteWithQuotes>
-
-//    @Query(
-//        """
-//        SELECT * FROM favorites f
-//        INNER JOIN quotes q ON f.quote_id = q.quote_id
-//        WHERE f.user_id = :userId
-//    """,
-//    )
-//    fun getFavoritesWithQuotesByUserId(userId: Int): Flow<List<FavoriteWithQuotes>>
+    @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE user_id = :userId AND quote_id = :quoteId)")
+    suspend fun isFavorite(
+        userId: Int,
+        quoteId: Int,
+    ): Boolean
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addFavorite(favorite: FavoriteEntity)
+    suspend fun insertFavorite(favorite: FavoriteEntity)
 
-    @Delete
-    suspend fun deleteFavorite(favorite: FavoriteEntity)
+    @Update
+    suspend fun updateFavorite(favorite: FavoriteEntity)
+
+    @Query("DELETE FROM favorites WHERE user_id = :userId AND quote_id = :quoteId")
+    suspend fun deleteFavorite(
+        userId: Int,
+        quoteId: Int,
+    )
 }
