@@ -44,7 +44,7 @@ class FavoriteViewModel @Inject constructor(
      * 이 함수는 해당 명언을 즐겨찾기 목록에 추가합니다.
      */
 
-    fun toggleFavorites(userId: Int, quoteId: Int, createdDate: Long) {
+    fun toggleFavorites(userId: Int, quoteId: Int, createdDate: Long, isSynced: Boolean) {
         viewModelScope.launch {
             val isFavorite = favoriteRepository.isFavorite(userId, quoteId)
             if (isFavorite) {
@@ -54,7 +54,8 @@ class FavoriteViewModel @Inject constructor(
                     FavoriteEntity(
                         userId = userId,
                         quoteId = quoteId,
-                        createdDate = createdDate
+                        createdDate = createdDate,
+                        isSynced = isSynced,
                     )
                 )
             }

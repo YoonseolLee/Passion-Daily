@@ -33,4 +33,5 @@ data class FavoriteEntity(
     @ColumnInfo(name = "quote_id") val quoteId: Int,
     @ColumnInfo(name = "user_id") val userId: Int,
     @ColumnInfo(name = "created_date") val createdDate: Long,
+    @ColumnInfo(name = "is_synced") val isSynced: Boolean,
 )
