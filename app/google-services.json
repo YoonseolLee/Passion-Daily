@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "608527802027",
+    "project_id": "passion-daily-d8b51",
+    "storage_bucket": "passion-daily-d8b51.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608527802027:android:1d4f1aad5050f90819e1ee",
+        "android_client_info": {
+          "package_name": "com.example.passionDaily"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDDEQffZnDZOruz8e1YRN8Fgx-PK_EH29A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

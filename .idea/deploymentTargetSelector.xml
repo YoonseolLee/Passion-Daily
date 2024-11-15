@@ -16,17 +16,6 @@
       <SelectionState runConfigName="SplashScreenContentPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="LoadingIndicatorPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-11-02T11:48:06.368116500Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CT342687D" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="LoadingScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2024-11-03T11:29:35.563991300Z">
@@ -39,6 +28,9 @@
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="PreviewLoginGuideScreenContent">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="checkTableColumns()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
