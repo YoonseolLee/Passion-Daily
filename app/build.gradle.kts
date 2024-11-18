@@ -82,13 +82,19 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.51")
     ksp("com.google.dagger:hilt-android-compiler:2.51")
 
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // Hilt with Compose Navigation
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4") // ViewModel utilities for Compose
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4") // Lifecycle utilities for Compose
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
 
     // Compose Navigation
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+
+    // Credential Manager
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     implementation("com.google.firebase:firebase-analytics")
 }
