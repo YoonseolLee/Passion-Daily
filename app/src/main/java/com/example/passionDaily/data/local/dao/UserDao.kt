@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.dao
+package com.example.passionDaily.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -7,11 +7,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.example.passionDaily.data.entity.UserEntity
-import com.example.passionDaily.data.relation.UserWithFavoriteQuotes
-import com.example.passionDaily.data.relation.UserWithFavorites
-import com.example.passionDaily.data.relation.UserWithNotification
-import com.example.passionDaily.data.relation.UserWithTermsConsent
+import com.example.passionDaily.data.local.entity.UserEntity
+import com.example.passionDaily.data.local.relation.UserWithFavoriteQuotes
+import com.example.passionDaily.data.local.relation.UserWithFavorites
+import com.example.passionDaily.data.local.relation.UserWithNotification
+import com.example.passionDaily.data.local.relation.UserWithTermsConsent
 
 @Dao
 interface UserDao {

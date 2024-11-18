@@ -1,9 +1,9 @@
-package com.example.passionDaily.data.relation
+package com.example.passionDaily.data.local.relation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.example.passionDaily.data.entity.QuoteCategoryEntity
-import com.example.passionDaily.data.entity.QuoteEntity
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
+import com.example.passionDaily.data.local.entity.QuoteEntity
 
 data class QuoteWithCategory(
     @Embedded val quote: QuoteEntity,

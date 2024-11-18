@@ -2,8 +2,8 @@ package com.example.passionDaily.ui.viewmodels.quoteCategory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.data.entity.QuoteCategoryEntity
-import com.example.passionDaily.data.repository.QuoteCategoryRepository
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
+import com.example.passionDaily.data.repository.local.QuoteCategoryRepository
 import com.example.passionDaily.util.RequestState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

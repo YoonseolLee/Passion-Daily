@@ -1,9 +1,9 @@
-package com.example.passionDaily.data.relation
+package com.example.passionDaily.data.local.relation
 
 import androidx.room.Embedded
 import androidx.room.Relation
-import com.example.passionDaily.data.entity.FavoriteEntity
-import com.example.passionDaily.data.entity.UserEntity
+import com.example.passionDaily.data.local.entity.FavoriteEntity
+import com.example.passionDaily.data.local.entity.UserEntity
 
 data class UserWithFavorites(
     @Embedded val user: UserEntity,

@@ -1,8 +1,9 @@
-package com.example.passionDaily.data.repository
+package com.example.passionDaily.data.repository.local
 
-import com.example.passionDaily.data.dao.QuoteDao
-import com.example.passionDaily.data.entity.QuoteEntity
-import com.example.passionDaily.data.relation.QuoteWithCategory
+
+import com.example.passionDaily.data.local.dao.QuoteDao
+import com.example.passionDaily.data.local.entity.QuoteEntity
+import com.example.passionDaily.data.local.relation.QuoteWithCategory
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

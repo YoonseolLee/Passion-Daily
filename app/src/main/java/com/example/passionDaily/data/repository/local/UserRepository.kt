@@ -1,9 +1,9 @@
-package com.example.passionDaily.data.repository
+package com.example.passionDaily.data.repository.local
 
-import com.example.passionDaily.data.dao.UserDao
-import com.example.passionDaily.data.entity.UserEntity
-import com.example.passionDaily.data.relation.UserWithFavorites
-import com.example.passionDaily.data.relation.UserWithNotification
+import com.example.passionDaily.data.local.dao.UserDao
+import com.example.passionDaily.data.local.entity.UserEntity
+import com.example.passionDaily.data.local.relation.UserWithFavorites
+import com.example.passionDaily.data.local.relation.UserWithNotification
 import javax.inject.Inject
 
 class UserRepository @Inject constructor(

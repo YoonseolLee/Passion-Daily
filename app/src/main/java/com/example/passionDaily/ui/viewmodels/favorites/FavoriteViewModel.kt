@@ -2,8 +2,8 @@ package com.example.passionDaily.ui.viewmodels.favorites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.data.entity.FavoriteEntity
-import com.example.passionDaily.data.repository.FavoriteRepository
+import com.example.passionDaily.data.local.entity.FavoriteEntity
+import com.example.passionDaily.data.repository.local.FavoriteRepository
 import com.example.passionDaily.util.RequestState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

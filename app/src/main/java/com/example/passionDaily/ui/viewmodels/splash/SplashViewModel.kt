@@ -2,13 +2,11 @@ package com.example.passionDaily.ui.viewmodels.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.passionDaily.data.entity.QuoteCategoryEntity
-import com.example.passionDaily.data.repository.QuoteCategoryRepository
-import com.example.passionDaily.data.repository.QuoteRepository
-import com.example.passionDaily.data.repository.UserRepository
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
+import com.example.passionDaily.data.repository.local.QuoteCategoryRepository
+import com.example.passionDaily.data.repository.local.QuoteRepository
+import com.example.passionDaily.data.repository.local.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

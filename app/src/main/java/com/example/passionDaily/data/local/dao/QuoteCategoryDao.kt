@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.dao
+package com.example.passionDaily.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.passionDaily.data.entity.QuoteCategoryEntity
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 
 @Dao
 interface QuoteCategoryDao {

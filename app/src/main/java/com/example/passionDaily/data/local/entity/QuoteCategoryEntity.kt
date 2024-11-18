@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.entity
+package com.example.passionDaily.data.local.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

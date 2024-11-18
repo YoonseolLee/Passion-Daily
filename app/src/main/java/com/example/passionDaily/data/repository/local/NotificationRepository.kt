@@ -1,7 +1,8 @@
-package com.example.passionDaily.data.repository
+package com.example.passionDaily.data.repository.local
 
-import com.example.passionDaily.data.dao.NotificationDao
-import com.example.passionDaily.data.entity.NotificationEntity
+
+import com.example.passionDaily.data.local.dao.NotificationDao
+import com.example.passionDaily.data.local.entity.NotificationEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

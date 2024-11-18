@@ -1,7 +1,8 @@
-package com.example.passionDaily.data.repository
+package com.example.passionDaily.data.repository.local
 
-import com.example.passionDaily.data.dao.QuoteCategoryDao
-import com.example.passionDaily.data.entity.QuoteCategoryEntity
+
+import com.example.passionDaily.data.local.dao.QuoteCategoryDao
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import javax.inject.Inject
 
 class QuoteCategoryRepository @Inject constructor(

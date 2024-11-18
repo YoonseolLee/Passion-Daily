@@ -2,13 +2,13 @@ package com.example.passionDaily.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.passionDaily.data.dao.FavoriteDao
-import com.example.passionDaily.data.dao.NotificationDao
-import com.example.passionDaily.data.dao.QuoteCategoryDao
-import com.example.passionDaily.data.dao.QuoteDao
-import com.example.passionDaily.data.dao.TermsConsentDao
-import com.example.passionDaily.data.dao.UserDao
-import com.example.passionDaily.data.database.PassionDailyDatabase
+import com.example.passionDaily.data.local.dao.FavoriteDao
+import com.example.passionDaily.data.local.dao.NotificationDao
+import com.example.passionDaily.data.local.dao.QuoteCategoryDao
+import com.example.passionDaily.data.local.dao.QuoteDao
+import com.example.passionDaily.data.local.dao.TermsConsentDao
+import com.example.passionDaily.data.local.dao.UserDao
+import com.example.passionDaily.data.local.database.PassionDailyDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

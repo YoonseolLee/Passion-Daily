@@ -1,7 +1,7 @@
-package com.example.passionDaily.data.repository
+package com.example.passionDaily.data.repository.local
 
-import com.example.passionDaily.data.dao.FavoriteDao
-import com.example.passionDaily.data.entity.FavoriteEntity
+import com.example.passionDaily.data.local.dao.FavoriteDao
+import com.example.passionDaily.data.local.entity.FavoriteEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

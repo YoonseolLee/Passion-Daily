@@ -37,12 +37,12 @@ import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.theme.PrimaryColor
 
 @Composable
-fun LoginGuideScreen() {
-    LoginGuideScreenContent()
+fun LoginScreen() {
+    LoginScreenContent()
 }
 
 @Composable
-fun LoginGuideScreenContent() {
+fun LoginScreenContent() {
     Box(
         modifier =
             Modifier
@@ -189,8 +189,8 @@ private fun GoogleLoginButton() {
 
 @Composable
 @Preview(showBackground = true)
-fun PreviewLoginGuideScreenContent() {
+fun PreviewLoginScreenContent() {
     Passion_DailyTheme {
-        LoginGuideScreenContent()
+        LoginScreenContent()
     }
 }

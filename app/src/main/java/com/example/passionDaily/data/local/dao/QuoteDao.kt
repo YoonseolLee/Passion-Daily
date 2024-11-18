@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.dao
+package com.example.passionDaily.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -7,8 +7,8 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
-import com.example.passionDaily.data.entity.QuoteEntity
-import com.example.passionDaily.data.relation.QuoteWithCategory
+import com.example.passionDaily.data.local.entity.QuoteEntity
+import com.example.passionDaily.data.local.relation.QuoteWithCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -2,9 +2,9 @@ package com.example.passionDaily.ui.viewmodels.userWithFavoriteQuotes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.data.relation.UserWithFavoriteQuotes
-import com.example.passionDaily.data.repository.QuoteRepository
-import com.example.passionDaily.data.repository.UserRepository
+import com.example.passionDaily.data.local.relation.UserWithFavoriteQuotes
+import com.example.passionDaily.data.repository.local.QuoteRepository
+import com.example.passionDaily.data.repository.local.UserRepository
 import com.example.passionDaily.util.RequestState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

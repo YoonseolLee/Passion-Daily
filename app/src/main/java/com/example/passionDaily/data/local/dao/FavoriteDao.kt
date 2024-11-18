@@ -1,11 +1,11 @@
-package com.example.passionDaily.data.dao
+package com.example.passionDaily.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.passionDaily.data.entity.FavoriteEntity
+import com.example.passionDaily.data.local.entity.FavoriteEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
