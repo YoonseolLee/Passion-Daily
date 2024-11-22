@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.screens.login
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +15,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -28,6 +32,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.screens.splash.SplashScreenLogo
 import com.example.passionDaily.ui.theme.BlackBackground
@@ -35,25 +41,48 @@ import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.theme.PrimaryColor
+import com.example.passionDaily.ui.viewmodels.LoginViewModel
+import com.example.passionDaily.util.LoginState
 
 @Composable
-fun LoginScreen() {
-    LoginScreenContent()
+fun LoginScreen(
+    viewModel: LoginViewModel = hiltViewModel(),
+    onNavigateToQuote: () -> Unit,
+    onNavigateToSignUp: () -> Unit
+) {
+    val loginState by viewModel.loginState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(loginState) {
+        if (loginState is LoginState.Success) {
+            onNavigateToQuote()
+            viewModel.resetState()
+        }
+    }
+
+    LoginScreenContent(
+        loginState = loginState,
+        onGoogleSignInClick = {
+            viewModel.signInWithGoogle()
+        }
+    )
 }
 
 @Composable
-fun LoginScreenContent() {
+fun LoginScreenContent(
+    loginState: LoginState,
+    onGoogleSignInClick: () -> Unit
+) {
     Box(
         modifier =
-            Modifier
-                .fillMaxSize()
-                .background(BlackBackground),
+        Modifier
+            .fillMaxSize()
+            .background(BlackBackground),
     ) {
         Column(
             modifier =
-                Modifier
-                    .offset(x = 34.dp, y = 99.dp)
-                    .align(Alignment.TopStart),
+            Modifier
+                .offset(x = 34.dp, y = 99.dp)
+                .align(Alignment.TopStart),
         ) {
             HeaderTitle()
             HeaderSubtitle()
@@ -65,14 +94,25 @@ fun LoginScreenContent() {
 
         Column(
             modifier =
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 80.dp),
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start,
         ) {
             KakaoLoginButton()
-            GoogleLoginButton()
+            GoogleLoginButton(
+                isLoading = loginState is LoginState.Loading,
+                onClick = onGoogleSignInClick
+            )
+        }
+
+        if (loginState is LoginState.Error) {
+            Toast.makeText(
+                LocalContext.current,
+                loginState.message,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
@@ -82,12 +122,12 @@ private fun HeaderTitle() {
     Text(
         text = stringResource(id = R.string.header_title),
         style =
-            TextStyle(
-                fontSize = 30.sp,
-                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                fontWeight = FontWeight(400),
-                color = GrayScaleWhite,
-            ),
+        TextStyle(
+            fontSize = 30.sp,
+            fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+            fontWeight = FontWeight(400),
+            color = GrayScaleWhite,
+        ),
     )
 }
 
@@ -100,22 +140,22 @@ private fun HeaderSubtitle() {
         Text(
             text = stringResource(id = R.string.header_subtitle_30sec),
             style =
-                TextStyle(
-                    fontSize = 16.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                    fontWeight = FontWeight(500),
-                    color = PrimaryColor,
-                ),
+            TextStyle(
+                fontSize = 16.sp,
+                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                fontWeight = FontWeight(500),
+                color = PrimaryColor,
+            ),
         )
         Text(
             text = stringResource(id = R.string.header_subtitle_signin_eligible),
             style =
-                TextStyle(
-                    fontSize = 16.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                    fontWeight = FontWeight(500),
-                    color = OnSurface,
-                ),
+            TextStyle(
+                fontSize = 16.sp,
+                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
+                fontWeight = FontWeight(500),
+                color = OnSurface,
+            ),
         )
     }
 }
@@ -124,11 +164,11 @@ private fun HeaderSubtitle() {
 private fun KakaoLoginButton() {
     Row(
         modifier =
-            Modifier
-                .width(345.dp)
-                .height(54.dp)
-                .background(color = Color(0xFFFEE500), shape = RoundedCornerShape(size = 10.dp))
-                .padding(start = 7.dp),
+        Modifier
+            .width(345.dp)
+            .height(54.dp)
+            .background(color = Color(0xFFFEE500), shape = RoundedCornerShape(size = 10.dp))
+            .padding(start = 7.dp),
         horizontalArrangement = Arrangement.spacedBy(59.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -140,36 +180,39 @@ private fun KakaoLoginButton() {
         Text(
             text = stringResource(id = R.string.kakao_login),
             style =
-                TextStyle(
-                    fontSize = 18.sp,
-                    lineHeight = 25.2.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                    fontWeight = FontWeight(400),
-                    color = Color(0xFF000000),
-                    textAlign = TextAlign.Center,
-                ),
+            TextStyle(
+                fontSize = 18.sp,
+                lineHeight = 25.2.sp,
+                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                fontWeight = FontWeight(400),
+                color = Color(0xFF000000),
+                textAlign = TextAlign.Center,
+            ),
         )
     }
 }
 
 @Composable
-private fun GoogleLoginButton() {
+private fun GoogleLoginButton(
+    isLoading: Boolean,
+    onClick: () -> Unit
+) {
     Row(
         modifier =
-            Modifier
-                .width(345.dp)
-                .height(54.dp)
-                .background(color = GrayScaleWhite, shape = RoundedCornerShape(size = 10.dp))
-                .padding(start = 17.dp),
+        Modifier
+            .width(345.dp)
+            .height(54.dp)
+            .background(color = GrayScaleWhite, shape = RoundedCornerShape(size = 10.dp))
+            .padding(start = 17.dp),
         horizontalArrangement = Arrangement.spacedBy(79.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Image(
             modifier =
-                Modifier
-                    .width(24.dp)
-                    .height(24.dp)
-                    .background(color = GrayScaleWhite),
+            Modifier
+                .width(24.dp)
+                .height(24.dp)
+                .background(color = GrayScaleWhite),
             painter = painterResource(id = R.drawable.google_icon),
             contentDescription = "google_icon",
             contentScale = ContentScale.None,
@@ -177,12 +220,12 @@ private fun GoogleLoginButton() {
         Text(
             text = stringResource(id = R.string.google_login),
             style =
-                TextStyle(
-                    fontSize = 18.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                    fontWeight = FontWeight(400),
-                    color = Color(0xFF000000),
-                ),
+            TextStyle(
+                fontSize = 18.sp,
+                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                fontWeight = FontWeight(400),
+                color = Color(0xFF000000),
+            ),
         )
     }
 }
@@ -191,6 +234,9 @@ private fun GoogleLoginButton() {
 @Preview(showBackground = true)
 fun PreviewLoginScreenContent() {
     Passion_DailyTheme {
-        LoginScreenContent()
+        LoginScreenContent(
+            loginState = LoginState.Success,
+            onGoogleSignInClick = {}
+        )
     }
 }
