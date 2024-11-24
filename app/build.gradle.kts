@@ -91,7 +91,10 @@ dependencies {
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-core:21.1.1")
     implementation ("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore:25.1.1")
+
 
     // Credential Manager
     implementation("androidx.credentials:credentials:1.3.0")
