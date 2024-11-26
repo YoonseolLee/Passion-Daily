@@ -1,6 +1,5 @@
 package com.example.passionDaily.ui.screens.splash
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -19,22 +17,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
+import com.example.passionDaily.navigation.NavAction
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.splash.SplashViewModel
-import com.example.passionDaily.util.Action
 
 @Composable
 fun SplashScreen(
-    navigateToQuote: (Action) -> Unit,
-    viewModel: SplashViewModel = hiltViewModel(),
+    splashViewModel: SplashViewModel = hiltViewModel(),
+    navigateToNextScreen: (NavAction) -> Unit
 ) {
-    val isLoading by viewModel.isLoading.collectAsState()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-    val recentCategories by viewModel.recentCategories.collectAsState()
+    val navigationAction by splashViewModel.navigationAction.collectAsState()
 
-    LaunchedEffect(Unit) {
-        Log.d("SplashScreen", "Splash screen is rendered")
+    LaunchedEffect(navigationAction) {
+        navigationAction?.let { action ->
+            navigateToNextScreen(action)
+            splashViewModel.clearNavigationAction()
+        }
     }
 
     SplashScreenContent()
@@ -44,9 +43,9 @@ fun SplashScreen(
 fun SplashScreenContent(modifier: Modifier = Modifier) {
     Box(
         modifier =
-            Modifier
-                .fillMaxSize()
-                .background(BlackBackground),
+        Modifier
+            .fillMaxSize()
+            .background(BlackBackground),
         contentAlignment = Alignment.Center,
     ) {
         SplashScreenLogo(modifier)

@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.screens.splash.SplashScreenLogo
 import com.example.passionDaily.ui.theme.BlackBackground
@@ -46,25 +46,26 @@ import com.example.passionDaily.util.LoginState
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = hiltViewModel(),
-    onNavigateToQuote: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    onLoginSuccess: () -> Unit,
+    onSignUpRequired: () -> Unit,
 ) {
-    val loginState by viewModel.loginState.collectAsStateWithLifecycle()
+    val loginState by loginViewModel.loginState.collectAsState()
 
     LaunchedEffect(loginState) {
-        if (loginState is LoginState.Success) {
-            onNavigateToQuote()
-            viewModel.resetState()
+        when (loginState) {
+            is LoginState.Success -> {
+                val user = (loginState as LoginState.Success).user
+                if (user?.isMember == true) {
+                    onLoginSuccess() // 회원이면 QuoteScreen으로 이동
+                } else {
+                    onSignUpRequired()
+                }
+                loginViewModel.clearLoginAction()
+            }
+
         }
     }
-
-    LoginScreenContent(
-        loginState = loginState,
-        onGoogleSignInClick = {
-            viewModel.signInWithGoogle()
-        }
-    )
 }
 
 @Composable

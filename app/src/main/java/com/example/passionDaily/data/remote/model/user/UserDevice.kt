@@ -1,7 +1,6 @@
 package com.example.passionDaily.data.remote.model.user
 
 import com.google.firebase.Timestamp
-import java.util.Date
 
 data class UserDevice(
     val token: String = "", // device_token
