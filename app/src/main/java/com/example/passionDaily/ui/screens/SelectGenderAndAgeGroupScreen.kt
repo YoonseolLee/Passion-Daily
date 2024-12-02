@@ -1,6 +1,5 @@
 package com.example.passionDaily.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Text
@@ -15,31 +14,81 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
+import com.example.passionDaily.ui.viewmodels.SelectGenderAndAgeGroupScreenViewModel
+import com.example.passionDaily.util.AgeGroup
+import com.example.passionDaily.util.Gender
+import kotlinx.coroutines.launch
 
 @Composable
-fun SelectGenderAndAgeGroupScreen() {
-    SelectGenderAndAgeGroupScreenContent()
+fun SelectGenderAndAgeGroupScreen(
+    pendingUserMap: Map<String, Any>?,
+    onSkip: () -> Unit,
+    onNextClicked: () -> Unit,
+    viewModel: SelectGenderAndAgeGroupScreenViewModel = hiltViewModel()
+) {
+    val coroutineScope = rememberCoroutineScope()
+
+    var selectedGender by remember { mutableStateOf<Gender?>(null) }
+    var selectedAgeGroup by remember { mutableStateOf<AgeGroup?>(null) }
+
+    SelectGenderAndAgeGroupScreenContent(
+        selectedGender = selectedGender,
+        selectedAgeGroup = selectedAgeGroup,
+
+        onGenderSelected = { gender ->
+            selectedGender = gender
+        },
+        onAgeGroupSelected = { ageGroup ->
+            selectedAgeGroup = ageGroup
+        },
+
+        onSkip = {
+            coroutineScope.launch {
+                viewModel.completeUserRegistration(
+                    pendingUserMap = pendingUserMap,
+                    isSkipped = true
+                )
+                onSkip()
+            }
+        },
+
+        onNextClicked = {
+            coroutineScope.launch {
+                viewModel.completeUserRegistration(
+                    pendingUserMap = pendingUserMap,
+                    gender = selectedGender,
+                    ageGroup = selectedAgeGroup
+                )
+                onNextClicked()
+            }
+        }
+    )
 }
 
-@Composable
-fun SelectGenderAndAgeGroupScreenContent() {
-    var selectedAgeGroup by remember { mutableStateOf<String?>(null) }
-    var selectedGender by remember { mutableStateOf<String?>(null) }
 
+@Composable
+fun SelectGenderAndAgeGroupScreenContent(
+    selectedGender: Gender?,
+    selectedAgeGroup: AgeGroup?,
+    onGenderSelected: (Gender?) -> Unit,
+    onAgeGroupSelected: (AgeGroup?) -> Unit,
+    onSkip: () -> Unit,
+    onNextClicked: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,7 +103,9 @@ fun SelectGenderAndAgeGroupScreenContent() {
                     .padding(top = 40.dp, end = 34.dp),
                 horizontalArrangement = Arrangement.End
             ) {
-                SkipButton()
+                SkipButton(
+                    modifier = Modifier.clickable { onSkip() }
+                )
             }
 
             Column(
@@ -67,15 +118,17 @@ fun SelectGenderAndAgeGroupScreenContent() {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                GenderSelectionContent { gender ->
-                    selectedGender = gender
-                }
+                GenderSelectionContent(
+                    selectedGender = selectedGender,
+                    onGenderSelected = onGenderSelected
+                )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                AgeGroupSelectionContent { selectedGroup ->
-                    selectedAgeGroup = selectedGroup
-                }
+                AgeGroupSelectionContent(
+                    selectedAgeGroup = selectedAgeGroup,
+                    onAgeGroupSelected = onAgeGroupSelected
+                )
             }
 
             Box(
@@ -86,7 +139,8 @@ fun SelectGenderAndAgeGroupScreenContent() {
             ) {
                 NextActionButton(
                     selectedAgeGroup = selectedAgeGroup,
-                    selectedGender = selectedGender
+                    selectedGender = selectedGender,
+                    onNextClicked = { onNextClicked() }
                 )
             }
         }
@@ -104,7 +158,8 @@ fun SkipButton(
             fontSize = 20.sp,
             fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
             color = Color.White
-        )
+        ),
+        modifier = Modifier
     )
 }
 
@@ -132,8 +187,10 @@ fun HeaderSection() {
 }
 
 @Composable
-fun GenderSelectionContent(onGenderSelected: (String?) -> Unit) {
-    var selectedGender by remember { mutableStateOf<String?>(null) }
+fun GenderSelectionContent(
+    selectedGender: Gender?,
+    onGenderSelected: (Gender?) -> Unit
+) {
 
     Column {
         Text(
@@ -159,10 +216,9 @@ fun GenderSelectionContent(onGenderSelected: (String?) -> Unit) {
                     iconId = R.drawable.female_icon,
                     selectedIconId = R.drawable.female_icon_selected,
                     description = "여자",
-                    isSelected = selectedGender == "여자",
+                    isSelected = selectedGender == Gender.F,
                     onClick = {
-                        selectedGender = if (selectedGender == "여자") null else "여자"
-                        onGenderSelected(selectedGender)
+                        onGenderSelected(if (selectedGender == Gender.F) null else Gender.F)
                     }
                 )
 
@@ -170,10 +226,9 @@ fun GenderSelectionContent(onGenderSelected: (String?) -> Unit) {
                     iconId = R.drawable.male_icon,
                     selectedIconId = R.drawable.male_icon_selected,
                     description = "남자",
-                    isSelected = selectedGender == "남자",
+                    isSelected = selectedGender == Gender.M,
                     onClick = {
-                        selectedGender = if (selectedGender == "남자") null else "남자"
-                        onGenderSelected(selectedGender)
+                        onGenderSelected(if (selectedGender == Gender.M) null else Gender.M)
                     }
                 )
             }
@@ -213,7 +268,10 @@ fun GenderOption(
 }
 
 @Composable
-fun AgeGroupSelectionContent(onAgeGroupSelected: (String?) -> Unit) {
+fun AgeGroupSelectionContent(
+    selectedAgeGroup: AgeGroup?,
+    onAgeGroupSelected: (AgeGroup?) -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -226,7 +284,10 @@ fun AgeGroupSelectionContent(onAgeGroupSelected: (String?) -> Unit) {
             )
         )
         Spacer(modifier = Modifier.height(8.dp))
-        AgeGroupOptions(onAgeGroupSelected = onAgeGroupSelected)
+        AgeGroupOptions(
+            selectedAgeGroup = selectedAgeGroup,
+            onAgeGroupSelected = onAgeGroupSelected
+        )
     }
 }
 
@@ -263,9 +324,18 @@ fun AgeGroupBox(
 }
 
 @Composable
-fun AgeGroupOptions(onAgeGroupSelected: (String?) -> Unit) {
-    val ageGroups = listOf("10대", "20대", "30대", "40대", "50대", "기타")
-    var selectedAgeGroup by remember { mutableStateOf<String?>(null) }
+fun AgeGroupOptions(
+    selectedAgeGroup: AgeGroup?,
+    onAgeGroupSelected: (AgeGroup?) -> Unit
+) {
+    val ageGroups = listOf(
+        AgeGroup.TEENS to "10대",
+        AgeGroup.TWENTIES to "20대",
+        AgeGroup.THIRTIES to "30대",
+        AgeGroup.FORTIES to "40대",
+        AgeGroup.FIFTIES to "50대",
+        AgeGroup.ETC to "기타"
+    )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -275,14 +345,14 @@ fun AgeGroupOptions(onAgeGroupSelected: (String?) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                rowItems.forEach { ageGroup ->
+                rowItems.forEach { (ageGroupEnum, ageGroupText) ->
                     AgeGroupBox(
-                        text = ageGroup,
-                        isSelected = selectedAgeGroup == ageGroup,
+                        text = ageGroupText,
+                        isSelected = selectedAgeGroup == ageGroupEnum,
                         onSelect = {
-                            // 현재 선택된 연령대와 같은 버튼을 다시 누르면 선택 해제
-                            selectedAgeGroup = if (selectedAgeGroup == ageGroup) null else ageGroup
-                            onAgeGroupSelected(selectedAgeGroup) // 선택 상태 전달
+                            val newAgeGroup =
+                                if (selectedAgeGroup == ageGroupEnum) null else ageGroupEnum
+                            onAgeGroupSelected(newAgeGroup)
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -300,44 +370,22 @@ fun AgeGroupOptions(onAgeGroupSelected: (String?) -> Unit) {
 
 @Composable
 fun NextActionButton(
-    selectedAgeGroup: String?,
-    selectedGender: String?,
+    selectedAgeGroup: AgeGroup?,
+    selectedGender: Gender?,
+    onNextClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
+    val isEnabled = selectedGender != null && selectedAgeGroup != null
 
     Box(
         modifier = modifier
             .width(345.dp)
             .height(57.dp)
-            .background(color = Color.White, shape = RoundedCornerShape(size = 4.dp))
-            .clickable {
-                when {
-                    selectedGender == null -> {
-                        Toast
-                            .makeText(
-                                context,
-                                "성별을 선택해주세요.",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    }
-
-                    selectedAgeGroup == null -> {
-                        Toast
-                            .makeText(
-                                context,
-                                "연령대를 선택해주세요.",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    }
-
-                    else -> {
-                        // Proceed to next screen or action
-                    }
-                }
-            },
+            .background(
+                color = if (isEnabled) Color.White else Color(0xFF737373),
+                shape = RoundedCornerShape(size = 4.dp)
+            )
+            .clickable(enabled = isEnabled) { onNextClicked() },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -345,15 +393,14 @@ fun NextActionButton(
             style = TextStyle(
                 fontSize = 18.sp,
                 fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                color = Color.Black
+                color = if (isEnabled) Color.Black else Color(0xFFABABAB)
             )
         )
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun SelectGenderAndAgeGroupScreenContentPreview() {
-    SelectGenderAndAgeGroupScreenContent()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun SelectGenderAndAgeGroupScreenContentPreview() {
+//    SelectGenderAndAgeGroupScreenContent()
+//}

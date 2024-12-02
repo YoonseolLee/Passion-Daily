@@ -1,8 +1,9 @@
-package com.example.passionDaily.ui.screens.login
+package com.example.passionDaily.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,48 +32,58 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.screens.splash.SplashScreenLogo
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
-import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.theme.PrimaryColor
+import com.example.passionDaily.ui.viewmodels.AuthState
 import com.example.passionDaily.ui.viewmodels.LoginViewModel
-import com.example.passionDaily.util.LoginState
 
 @Composable
 fun LoginScreen(
-    loginViewModel: LoginViewModel = hiltViewModel(),
-    onLoginSuccess: () -> Unit,
-    onSignUpRequired: () -> Unit,
+    loginViewModel: LoginViewModel,
+    onNavigateToGenderAndAgeGroup: () -> Unit,
+    onNavigateToQuote: () -> Unit
 ) {
-    val loginState by loginViewModel.loginState.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
 
-    LaunchedEffect(loginState) {
-        when (loginState) {
-            is LoginState.Success -> {
-                val user = (loginState as LoginState.Success).user
-                if (user?.isMember == true) {
-                    onLoginSuccess() // 회원이면 QuoteScreen으로 이동
-                } else {
-                    onSignUpRequired()
-                }
-                loginViewModel.clearLoginAction()
+    when (authState) {
+        is AuthState.Loading -> {
+            // TODO: 관련 로직 추가하기
+            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+        }
+
+        is AuthState.SignedOut -> {
+            LoginScreenContent(onGoogleLoginClick = {
+                loginViewModel.onGoogleLoginClicked()
+            })
+        }
+
+        is AuthState.SignedIn -> {
+            LaunchedEffect(Unit) {
+                onNavigateToQuote()
             }
+        }
 
+        is AuthState.SignUpRequired -> {
+            LaunchedEffect(Unit) {
+                onNavigateToGenderAndAgeGroup()
+            }
+        }
+
+        is AuthState.Error -> {
+            val errorMessage = (authState as AuthState.Error).message
+            Toast.makeText(LocalContext.current, errorMessage, Toast.LENGTH_SHORT).show()
         }
     }
 }
 
 @Composable
 fun LoginScreenContent(
-    loginState: LoginState,
-    onGoogleSignInClick: () -> Unit
+    onGoogleLoginClick: () -> Unit
 ) {
     Box(
         modifier =
@@ -103,25 +115,37 @@ fun LoginScreenContent(
         ) {
             KakaoLoginButton()
             GoogleLoginButton(
-                isLoading = loginState is LoginState.Loading,
-                onClick = onGoogleSignInClick
+                onGoogleLoginClick
             )
         }
+    }
+}
 
-        if (loginState is LoginState.Error) {
-            Toast.makeText(
-                LocalContext.current,
-                loginState.message,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
+/**
+ * 나중에 SplashScreen 주석 해제시 없애야함. 임시방편임.
+ */
+@Composable
+fun SplashScreenLogo(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(22.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.passion_daily_icon),
+            contentDescription = "passion_daily_icon",
+        )
+        Image(
+            painter = painterResource(id = R.drawable.passion_daily_text),
+            contentDescription = "passion_daily_text",
+        )
     }
 }
 
 @Composable
 private fun HeaderTitle() {
     Text(
-        text = stringResource(id = R.string.header_title),
+        text = stringResource(id = R.string.header_title_login_screen),
         style =
         TextStyle(
             fontSize = 30.sp,
@@ -139,7 +163,7 @@ private fun HeaderSubtitle() {
         modifier = Modifier.padding(top = 7.dp),
     ) {
         Text(
-            text = stringResource(id = R.string.header_subtitle_30sec),
+            text = stringResource(id = R.string.header_subtitle1_login_screen),
             style =
             TextStyle(
                 fontSize = 16.sp,
@@ -149,7 +173,7 @@ private fun HeaderSubtitle() {
             ),
         )
         Text(
-            text = stringResource(id = R.string.header_subtitle_signin_eligible),
+            text = stringResource(id = R.string.header_subtitle2_login_screen),
             style =
             TextStyle(
                 fontSize = 16.sp,
@@ -195,8 +219,8 @@ private fun KakaoLoginButton() {
 
 @Composable
 private fun GoogleLoginButton(
-    isLoading: Boolean,
-    onClick: () -> Unit
+    onGoogleLoginClick: () -> Unit
+    // TODO: onGoogleLoginClick 밑에 구현 onclick
 ) {
     Row(
         modifier =
@@ -204,7 +228,8 @@ private fun GoogleLoginButton(
             .width(345.dp)
             .height(54.dp)
             .background(color = GrayScaleWhite, shape = RoundedCornerShape(size = 10.dp))
-            .padding(start = 17.dp),
+            .padding(start = 17.dp)
+            .clickable(onClick = onGoogleLoginClick),
         horizontalArrangement = Arrangement.spacedBy(79.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -231,13 +256,4 @@ private fun GoogleLoginButton(
     }
 }
 
-@Composable
-@Preview(showBackground = true)
-fun PreviewLoginScreenContent() {
-    Passion_DailyTheme {
-        LoginScreenContent(
-            loginState = LoginState.Success,
-            onGoogleSignInClick = {}
-        )
-    }
-}
+

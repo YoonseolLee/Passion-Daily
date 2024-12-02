@@ -4,7 +4,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.room.Room
 import androidx.sqlite.db.SimpleSQLiteQuery
-import com.example.passionDaily.data.database.PassionDailyDatabase
+import com.example.passionDaily.data.local.database.PassionDailyDatabase
 import org.junit.Test
 import org.junit.runner.RunWith
 

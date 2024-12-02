@@ -1,4 +1,4 @@
-package com.example.passionDaily.ui.screens.loading
+package com.example.passionDaily.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

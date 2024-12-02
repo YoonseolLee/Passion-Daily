@@ -1,4 +1,4 @@
-package com.example.passionDaily.ui.viewmodels.favorites
+package com.example.passionDaily.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

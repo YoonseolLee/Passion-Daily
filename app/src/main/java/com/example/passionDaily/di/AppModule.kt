@@ -1,7 +1,7 @@
 package com.example.passionDaily.di
 
 import android.content.Context
-import com.example.passionDaily.auth.GoogleAuthClient
+import com.example.passionDaily.R
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +21,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideGoogleAuthClient(context: Context): GoogleAuthClient {
-        return GoogleAuthClient(context)
+    fun provideClientId(@ApplicationContext context: Context): String {
+        return context.getString(R.string.client_id)
     }
 }

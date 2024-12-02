@@ -1,14 +1,14 @@
-package com.example.passionDaily.data.remote.model.user
+package com.example.passionDaily.data.remote.dto
 
 import com.example.passionDaily.util.AgeGroup
 import com.example.passionDaily.util.Gender
 import com.example.passionDaily.util.UserRole
 import com.google.firebase.Timestamp
 
-data class User(
+data class UserDTO(
     val id: String,
     val nickname: String,
-    val email: String,
+    val email: String?,
     val role: UserRole,
     val gender: Gender? = null,
     val ageGroup: AgeGroup? = null,
