@@ -1,7 +1,11 @@
 package com.example.passionDaily.di
 
 import android.content.Context
+import androidx.credentials.CredentialManager
 import com.example.passionDaily.R
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,14 +18,13 @@ import javax.inject.Singleton
 object AppModule {
 
     @Provides
-    @Singleton
-    fun provideContext(@ApplicationContext context: Context): Context {
-        return context
+    fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager {
+        return CredentialManager.create(context)
     }
 
     @Provides
     @Singleton
-    fun provideClientId(@ApplicationContext context: Context): String {
-        return context.getString(R.string.client_id)
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return FirebaseAuth.getInstance()
     }
 }

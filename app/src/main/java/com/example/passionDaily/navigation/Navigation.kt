@@ -2,10 +2,11 @@ package com.example.passionDaily.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.passionDaily.navigation.destinations.loginComposable
-import com.example.passionDaily.navigation.destinations.selectGenderAndAgeGroupComposable
+import com.example.passionDaily.navigation.destinations.quoteComposable
 
 @Composable
 fun SetupNavigation(
@@ -20,23 +21,8 @@ fun SetupNavigation(
         startDestination = "login"
     ) {
         loginComposable(
-            onNavigateToGenderAndAgeGroup = screens.navigateToGenderAndAgeSelectionWithUserMap,
             onNavigateToQuote = screens.navigateToQuote
         )
-
-        selectGenderAndAgeGroupComposable(
-            onSkip = screens.navigateToSignUpComplete,
-            onNextClicked = screens.navigateToSignUpComplete,
-        )
+        quoteComposable()
     }
 }
-
-//fun NavGraphBuilder.signupCompleteComposable(
-//    onNextClicked: () -> Unit
-//) {
-//    composable(route = "signup_complete") {
-//        SignupCompleteScreen(
-//            onNextClicked = onNextClicked
-//        )
-//    }
-//}

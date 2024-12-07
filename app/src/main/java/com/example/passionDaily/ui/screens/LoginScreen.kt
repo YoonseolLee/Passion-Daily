@@ -1,6 +1,7 @@
 package com.example.passionDaily.ui.screens
 
-import android.widget.Toast
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,9 +31,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
@@ -41,49 +42,45 @@ import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.AuthState
 import com.example.passionDaily.ui.viewmodels.LoginViewModel
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 @Composable
 fun LoginScreen(
-    loginViewModel: LoginViewModel,
-    onNavigateToGenderAndAgeGroup: () -> Unit,
+    loginViewModel: LoginViewModel = hiltViewModel(),
     onNavigateToQuote: () -> Unit
 ) {
+    val context = LocalContext.current
     val authState by loginViewModel.authState.collectAsState()
 
-    when (authState) {
-        is AuthState.Loading -> {
-            // TODO: 관련 로직 추가하기
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
-        }
-
-        is AuthState.SignedOut -> {
-            LoginScreenContent(onGoogleLoginClick = {
-                loginViewModel.onGoogleLoginClicked()
-            })
-        }
-
-        is AuthState.SignedIn -> {
-            LaunchedEffect(Unit) {
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Authenticated -> {
+                // 인증 성공 시 콜백 호출
                 onNavigateToQuote()
             }
-        }
 
-        is AuthState.SignUpRequired -> {
-            LaunchedEffect(Unit) {
-                onNavigateToGenderAndAgeGroup()
+            is AuthState.Error -> {
+                // 에러 처리 로직 (필요한 경우)
+                Log.e(
+                    "LoginScreen",
+                    "Authentication failed: ${(authState as AuthState.Error).message}"
+                )
             }
-        }
 
-        is AuthState.Error -> {
-            val errorMessage = (authState as AuthState.Error).message
-            Toast.makeText(LocalContext.current, errorMessage, Toast.LENGTH_SHORT).show()
+            else -> {} // Loading 또는 Unauthenticated 상태
         }
     }
+
+    LoginScreenContent(
+        loginViewModel = loginViewModel,
+        context = context
+    )
 }
 
 @Composable
 fun LoginScreenContent(
-    onGoogleLoginClick: () -> Unit
+    loginViewModel: LoginViewModel,
+    context: Context
 ) {
     Box(
         modifier =
@@ -113,9 +110,18 @@ fun LoginScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start,
         ) {
-            KakaoLoginButton()
             GoogleLoginButton(
-                onGoogleLoginClick
+                onGoogleLoginClick = {
+                    val credentialManager = CredentialManager.create(context)
+                    val googleIdOption =
+                        GetSignInWithGoogleOption.Builder("608527802027-5vecvmhkc7iaf7bkt5fu7fets3i1cb69.apps.googleusercontent.com")
+                            .build()
+
+                    loginViewModel.signInWithGoogle(
+                        credentialManager,
+                        googleIdOption
+                    )
+                }
             )
         }
     }
@@ -143,7 +149,7 @@ fun SplashScreenLogo(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HeaderTitle() {
+fun HeaderTitle() {
     Text(
         text = stringResource(id = R.string.header_title_login_screen),
         style =
@@ -157,7 +163,7 @@ private fun HeaderTitle() {
 }
 
 @Composable
-private fun HeaderSubtitle() {
+fun HeaderSubtitle() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(top = 7.dp),
@@ -186,41 +192,8 @@ private fun HeaderSubtitle() {
 }
 
 @Composable
-private fun KakaoLoginButton() {
-    Row(
-        modifier =
-        Modifier
-            .width(345.dp)
-            .height(54.dp)
-            .background(color = Color(0xFFFEE500), shape = RoundedCornerShape(size = 10.dp))
-            .padding(start = 7.dp),
-        horizontalArrangement = Arrangement.spacedBy(59.dp, Alignment.Start),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.kakaotalk_icon),
-            contentDescription = "kakaotalk_icon",
-            contentScale = ContentScale.Crop,
-        )
-        Text(
-            text = stringResource(id = R.string.kakao_login),
-            style =
-            TextStyle(
-                fontSize = 18.sp,
-                lineHeight = 25.2.sp,
-                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                fontWeight = FontWeight(400),
-                color = Color(0xFF000000),
-                textAlign = TextAlign.Center,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun GoogleLoginButton(
+fun GoogleLoginButton(
     onGoogleLoginClick: () -> Unit
-    // TODO: onGoogleLoginClick 밑에 구현 onclick
 ) {
     Row(
         modifier =
@@ -255,5 +228,4 @@ private fun GoogleLoginButton(
         )
     }
 }
-
 
