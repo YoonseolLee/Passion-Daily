@@ -4,17 +4,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.passionDaily.ui.screens.LoginScreen
-import com.example.passionDaily.ui.viewmodels.LoginViewModel
+import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 fun NavGraphBuilder.loginComposable(
-    onNavigateToQuote: () -> Unit
+    onNavigateToQuote: () -> Unit,
+    onNavigateToTermsConsent: (String) -> Unit
 ) {
     composable(route = "login") {
-        val loginViewModel: LoginViewModel = hiltViewModel()
+        val sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
 
         LoginScreen(
-            loginViewModel = loginViewModel,
-            onNavigateToQuote = onNavigateToQuote
+            sharedSignInViewModel = sharedSignInViewModel,
+            onNavigateToQuote = onNavigateToQuote,
+            onNavigateToTermsConsent = onNavigateToTermsConsent
         )
     }
+
+    // TODO: JSON 전달과 함께 다음 화면 TermsConsent로 이동
 }

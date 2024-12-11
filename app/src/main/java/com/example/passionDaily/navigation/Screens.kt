@@ -8,8 +8,15 @@ class Screens(private val navController: NavHostController) {
 
     val navigateToLogin: () -> Unit = {
         navController.navigate("login") {
-            // pop up to splash screen
         }
+    }
+
+    val navigateToTermsConsent: (String) -> Unit = { userProfileJson ->
+        navController.navigate("termsConsent/${userProfileJson}")
+    }
+
+    val navigateToGenderAgeSelection: () -> Unit = {
+        navController.navigate("genderAgeSelection")
     }
 
     val navigateToQuote: () -> Unit = {

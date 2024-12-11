@@ -41,22 +41,30 @@ import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.AuthState
-import com.example.passionDaily.ui.viewmodels.LoginViewModel
+import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 @Composable
 fun LoginScreen(
-    loginViewModel: LoginViewModel = hiltViewModel(),
-    onNavigateToQuote: () -> Unit
+    sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
+    onNavigateToQuote: () -> Unit,
+    onNavigateToTermsConsent: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val authState by loginViewModel.authState.collectAsState()
+    val authState by sharedSignInViewModel.authState.collectAsState()
+    val userProfileJson by sharedSignInViewModel.userProfileJson.collectAsState()
 
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Authenticated -> {
                 // 인증 성공 시 콜백 호출
                 onNavigateToQuote()
+            }
+
+            is AuthState.RequiresConsent -> {
+                userProfileJson?.let { json ->
+                    onNavigateToTermsConsent(json)
+                }
             }
 
             is AuthState.Error -> {
@@ -72,14 +80,14 @@ fun LoginScreen(
     }
 
     LoginScreenContent(
-        loginViewModel = loginViewModel,
+        sharedSignInViewModel = sharedSignInViewModel,
         context = context
     )
 }
 
 @Composable
 fun LoginScreenContent(
-    loginViewModel: LoginViewModel,
+    sharedSignInViewModel: SharedSignInViewModel,
     context: Context
 ) {
     Box(
@@ -117,7 +125,7 @@ fun LoginScreenContent(
                         GetSignInWithGoogleOption.Builder("608527802027-5vecvmhkc7iaf7bkt5fu7fets3i1cb69.apps.googleusercontent.com")
                             .build()
 
-                    loginViewModel.signInWithGoogle(
+                    sharedSignInViewModel.signInWithGoogle(
                         credentialManager,
                         googleIdOption
                     )
