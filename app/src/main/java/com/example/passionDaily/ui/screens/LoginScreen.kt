@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -33,7 +32,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
@@ -42,7 +40,6 @@ import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.AuthState
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 
 @Composable
 fun LoginScreen(
@@ -79,13 +76,13 @@ fun LoginScreen(
     }
 
     LoginScreenContent(
-        sharedSignInViewModel = sharedSignInViewModel
+        sharedSignInViewModel = sharedSignInViewModel,
     )
 }
 
 @Composable
 fun LoginScreenContent(
-    sharedSignInViewModel: SharedSignInViewModel
+    sharedSignInViewModel: SharedSignInViewModel,
 ) {
     Box(
         modifier =
@@ -96,14 +93,14 @@ fun LoginScreenContent(
         Column(
             modifier =
             Modifier
-                .offset(x = 34.dp, y = 99.dp)
+                .offset(x = 34.dp, y = 100.dp)
                 .align(Alignment.TopStart),
         ) {
-            HeaderTitle()
-            HeaderSubtitle()
+            LoginScreenHeaderTitle()
+            LoginScreenHeaderSubtitle()
         }
 
-        SplashScreenLogo(
+        LoginScreenSplashScreenLogo(
             modifier = Modifier.align(Alignment.Center),
         )
 
@@ -115,7 +112,7 @@ fun LoginScreenContent(
             verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start,
         ) {
-            GoogleLoginButton(
+            LoginScreenGoogleLoginButton(
                 onGoogleLoginClick = {
                     sharedSignInViewModel.signInWithGoogle()
                 }
@@ -128,7 +125,7 @@ fun LoginScreenContent(
  * 나중에 SplashScreen 주석 해제시 없애야함. 임시방편임.
  */
 @Composable
-fun SplashScreenLogo(modifier: Modifier = Modifier) {
+fun LoginScreenSplashScreenLogo(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(22.dp),
@@ -146,7 +143,7 @@ fun SplashScreenLogo(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun HeaderTitle() {
+fun LoginScreenHeaderTitle() {
     Text(
         text = stringResource(id = R.string.header_title_login_screen),
         style =
@@ -160,7 +157,7 @@ fun HeaderTitle() {
 }
 
 @Composable
-fun HeaderSubtitle() {
+fun LoginScreenHeaderSubtitle() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(top = 7.dp),
@@ -189,7 +186,7 @@ fun HeaderSubtitle() {
 }
 
 @Composable
-fun GoogleLoginButton(
+fun LoginScreenGoogleLoginButton(
     onGoogleLoginClick: () -> Unit
 ) {
     Row(
