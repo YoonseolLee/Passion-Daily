@@ -2,7 +2,6 @@ package com.example.passionDaily.ui.viewmodels
 
 import android.content.Context
 import android.util.Log
-import androidx.collection.emptyLongSet
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -10,6 +9,7 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.R
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.Firebase
@@ -31,7 +31,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedSignInViewModel @Inject constructor(
-    private val credentialManager: CredentialManager,
     private val auth: FirebaseAuth,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
@@ -48,16 +47,18 @@ class SharedSignInViewModel @Inject constructor(
     /**
      * LoginScreen
      */
-    fun signInWithGoogle(
-        credentialManager: CredentialManager,
-        googleOption: GetSignInWithGoogleOption,
-    ) {
+    fun signInWithGoogle() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
             try {
+                val credentialManager = CredentialManager.create(context)
+                val googleIdOption =
+                    GetSignInWithGoogleOption.Builder(R.string.client_id.toString())
+                        .build()
+
                 val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleOption)
+                    .addCredentialOption(googleIdOption)
                     .build()
 
                 val result = credentialManager.getCredential(context, request)
@@ -129,10 +130,10 @@ class SharedSignInViewModel @Inject constructor(
     }
 
 
-
     /**
-     * ConsentScreen
+     * TermsConsentScreen
      */
+
 
     /**
      * SelectGenderAndAgeGroupScreen
@@ -216,7 +217,6 @@ class SharedSignInViewModel @Inject constructor(
         println("GoogleAuthClient: $message")
     }
 }
-
 
 
 ///**

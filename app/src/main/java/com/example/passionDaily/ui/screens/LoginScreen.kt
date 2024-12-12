@@ -50,7 +50,6 @@ fun LoginScreen(
     onNavigateToQuote: () -> Unit,
     onNavigateToTermsConsent: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val authState by sharedSignInViewModel.authState.collectAsState()
     val userProfileJson by sharedSignInViewModel.userProfileJson.collectAsState()
 
@@ -80,15 +79,13 @@ fun LoginScreen(
     }
 
     LoginScreenContent(
-        sharedSignInViewModel = sharedSignInViewModel,
-        context = context
+        sharedSignInViewModel = sharedSignInViewModel
     )
 }
 
 @Composable
 fun LoginScreenContent(
-    sharedSignInViewModel: SharedSignInViewModel,
-    context: Context
+    sharedSignInViewModel: SharedSignInViewModel
 ) {
     Box(
         modifier =
@@ -120,15 +117,7 @@ fun LoginScreenContent(
         ) {
             GoogleLoginButton(
                 onGoogleLoginClick = {
-                    val credentialManager = CredentialManager.create(context)
-                    val googleIdOption =
-                        GetSignInWithGoogleOption.Builder("608527802027-5vecvmhkc7iaf7bkt5fu7fets3i1cb69.apps.googleusercontent.com")
-                            .build()
-
-                    sharedSignInViewModel.signInWithGoogle(
-                        credentialManager,
-                        googleIdOption
-                    )
+                    sharedSignInViewModel.signInWithGoogle()
                 }
             )
         }
