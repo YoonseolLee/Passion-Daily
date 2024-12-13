@@ -19,6 +19,4 @@ fun NavGraphBuilder.loginComposable(
             onNavigateToTermsConsent = onNavigateToTermsConsent
         )
     }
-
-    // TODO: JSON 전달과 함께 다음 화면 TermsConsent로 이동
 }

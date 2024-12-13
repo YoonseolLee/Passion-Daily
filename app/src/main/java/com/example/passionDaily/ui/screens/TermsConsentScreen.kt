@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,14 +41,21 @@ import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 @Composable
 fun TermsConsentScreen(
+    userProfileJson: String?,
     sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
+    onNavigateToAgeGenderSelection: () -> Unit = {},
 ) {
-    TermsConsentContent()
+    LaunchedEffect(userProfileJson) {
+        sharedSignInViewModel.verifyUserProfileJson(userProfileJson)
+    }
+    TermsConsentContent(
+        onNextClicked = onNavigateToAgeGenderSelection
+    )
 }
 
 @Composable
 fun TermsConsentContent(
-//    sharedSignInViewModel: SharedSignInViewModel
+    onNextClicked: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -56,9 +64,9 @@ fun TermsConsentContent(
     ) {
         Column(
             modifier =
-                Modifier
-                    .offset(x = 34.dp, y = 100.dp)
-                    .align(Alignment.TopStart)
+            Modifier
+                .offset(x = 34.dp, y = 100.dp)
+                .align(Alignment.TopStart)
         ) {
             TermsConsentScreenHeaderTitle()
             Spacer(modifier = Modifier.height(38.dp))
@@ -83,9 +91,7 @@ fun TermsConsentContent(
             horizontalAlignment = Alignment.Start,
         ) {
             NextButton(
-                onNextClicked = {
-                    // TODO: JSON으로 다음 화면으로 보내기
-                }
+                onNextClicked = onNextClicked
             )
         }
     }
@@ -244,13 +250,13 @@ fun NextButton(
     }
 }
 
-@Preview
-@Composable
-fun PreviewTermsConsentContent() {
-    Passion_DailyTheme {
-        TermsConsentContent()
-    }
-}
+//@Preview
+//@Composable
+//fun PreviewTermsConsentContent() {
+//    Passion_DailyTheme {
+//        TermsConsentContent()
+//    }
+//}
 
 
 

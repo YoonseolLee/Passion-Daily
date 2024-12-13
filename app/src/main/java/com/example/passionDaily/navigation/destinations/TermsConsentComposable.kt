@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.passionDaily.ui.screens.TermsConsentScreen
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
@@ -19,10 +20,10 @@ fun NavGraphBuilder.termsConsentComposable(
         val userProfileJson = backStackEntry.arguments?.getString("userProfileJson")
         val sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
 
-//        TermsConsentScreen(
-//            userProfileJson = userProfileJson,
-//            sharedSignInViewModel = sharedSignInViewModel,
-//            onNavigateToAgeGenderSelection = onNavigateToAgeGenderSelection
-//        )
+        TermsConsentScreen(
+            userProfileJson = userProfileJson,
+            sharedSignInViewModel = sharedSignInViewModel,
+            onNavigateToAgeGenderSelection = onNavigateToAgeGenderSelection
+        )
     }
 }

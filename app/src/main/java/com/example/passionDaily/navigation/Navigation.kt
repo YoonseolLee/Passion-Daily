@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
+import com.example.passionDaily.navigation.destinations.termsConsentComposable
 
 @Composable
 fun SetupNavigation(
@@ -26,9 +27,9 @@ fun SetupNavigation(
             }
         )
 
-//        termsConsentComposable(
-//            onNavigateToGenderAgeSelection = screens.navigateToGenderAgeSelection
-//        )
+        termsConsentComposable(
+            onNavigateToAgeGenderSelection = screens.navigateToGenderAgeSelection
+        )
 
         quoteComposable()
     }
