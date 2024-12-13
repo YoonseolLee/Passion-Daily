@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -29,14 +30,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
-import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 @Composable
@@ -155,7 +154,7 @@ fun TermsOfService() {
                 color = GrayScaleWhite,
             )
         )
-        View()
+        View(url = stringResource(id = R.string.terms_of_service_url))
     }
 }
 
@@ -181,7 +180,7 @@ fun PrivacyPolicy() {
                 color = GrayScaleWhite,
             )
         )
-        View()
+        View(url = stringResource(id = R.string.privacy_policy_url))
     }
 }
 
@@ -206,14 +205,22 @@ fun MarketingConsent() {
                 color = GrayScaleWhite,
             )
         )
-        View()
+        View(url = stringResource(id = R.string.marketing_consent_url))
     }
 }
 
 @Composable
-fun View() {
+fun View(
+    url: String,
+    sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
+) {
+    val context = LocalContext.current
+
     Text(
         text = "보기",
+        modifier = Modifier.clickable {
+            sharedSignInViewModel.openUrl(context, url)
+        },
         style = TextStyle(
             fontSize = 14.sp,
             fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
@@ -257,6 +264,4 @@ fun NextButton(
 //        TermsConsentContent()
 //    }
 //}
-
-
 

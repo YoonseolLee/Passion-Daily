@@ -17,4 +17,7 @@
     <string name="privacy_policy_agreement">개인정보 수집 및 이용 동의</string>
     <string name="marketing_consent">(선택) 마케팅 정보 수신 동의</string>
     <string name="next">다음</string>
+    <string name="terms_of_service_url">https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0</string>
+    <string name="privacy_policy_url">https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0</string>
+    <string name="marketing_consent_url">https://sites.google.com/view/passiondaily-1/%EB%A7%88%EC%BC%80%ED%8C%85-%EC%A0%95%EB%B3%B4-%EC%88%98%EC%8B%A0-%EB%8F%99%EC%9D%98?authuser=0</string>
 </resources>

@@ -1,6 +1,8 @@
 package com.example.passionDaily.ui.viewmodels
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -162,6 +164,13 @@ class SharedSignInViewModel @Inject constructor(
             }
         }
     }
+
+    fun openUrl(context: Context, url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
+    }
+
 
     /**
      * SelectGenderAndAgeGroupScreen
