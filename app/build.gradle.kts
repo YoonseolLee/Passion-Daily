@@ -105,4 +105,7 @@ dependencies {
     // GSON
     implementation("com.google.code.gson:gson:2.11.0")
 
+    // gcm
+    implementation("com.google.android.gms:play-services-gcm:17.0.0")
+
 }
