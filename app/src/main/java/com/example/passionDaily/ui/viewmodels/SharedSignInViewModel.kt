@@ -7,6 +7,8 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
@@ -27,7 +29,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import org.json.JSONException
+import org.json.JSONObject
 import javax.inject.Inject
+
 
 @HiltViewModel
 class SharedSignInViewModel @Inject constructor(
@@ -44,6 +49,9 @@ class SharedSignInViewModel @Inject constructor(
     private val _userProfileJson = MutableStateFlow<String?>(null)
     val userProfileJson: StateFlow<String?> = _userProfileJson.asStateFlow()
 
+    private val _isJsonValid = MutableLiveData<Boolean>()
+    val isJsonValid: LiveData<Boolean> get() = _isJsonValid
+
     /**
      * LoginScreen
      */
@@ -53,16 +61,20 @@ class SharedSignInViewModel @Inject constructor(
 
             try {
                 val credentialManager = CredentialManager.create(context)
+                val clientId = context.getString(R.string.client_id)
+
                 val googleIdOption =
-                    GetSignInWithGoogleOption.Builder(R.string.client_id.toString())
+                    GetSignInWithGoogleOption.Builder(clientId)
                         .build()
+                Log.i(tag, "googleIdOption: ${googleIdOption}")
 
                 val request = GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
                     .build()
+                Log.i(tag, "request: ${request}")
 
                 val result = credentialManager.getCredential(context, request)
-                Log.i(tag, "getCredential() 완료")
+                Log.i(tag, "getCredential(): ${result}")
 
                 processSignInResult(result)
             } catch (e: GetCredentialException) {
@@ -70,6 +82,7 @@ class SharedSignInViewModel @Inject constructor(
             }
         }
     }
+
 
     private suspend fun processSignInResult(result: GetCredentialResponse) {
         var credential = result.credential
@@ -133,6 +146,21 @@ class SharedSignInViewModel @Inject constructor(
     /**
      * TermsConsentScreen
      */
+    fun verifyUserProfileJson(json: String?) {
+        if (json.isNullOrEmpty()) {
+            Log.e("SharedSignInViewModel", "Invalid JSON: null or empty")
+            _isJsonValid.value = false
+        } else {
+            try {
+                JSONObject(json)
+                Log.d("SharedSignInViewModel", "Valid JSON: $json")
+                _isJsonValid.value = true
+            } catch (e: JSONException) {
+                Log.e("SharedSignInViewModel", "Invalid JSON format: $json", e)
+                _isJsonValid.value = false
+            }
+        }
+    }
 
 
     /**

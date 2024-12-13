@@ -1,6 +1,5 @@
 package com.example.passionDaily.ui.screens
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
