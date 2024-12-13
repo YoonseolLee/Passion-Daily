@@ -22,6 +22,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -162,7 +163,6 @@ class SharedSignInViewModel @Inject constructor(
         }
     }
 
-
     /**
      * SelectGenderAndAgeGroupScreen
      */
@@ -215,7 +215,9 @@ class SharedSignInViewModel @Inject constructor(
     }
 
     private fun convertMapToJson(map: Map<String, Any?>): String {
-        val gson = Gson()
+        val gson = GsonBuilder()
+            .serializeNulls()
+            .create()
         return gson.toJson(map)
     }
 
