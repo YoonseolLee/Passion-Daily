@@ -52,6 +52,12 @@ class SharedSignInViewModel @Inject constructor(
     private val _userProfileJson = MutableStateFlow<String?>(null)
     val userProfileJson: StateFlow<String?> = _userProfileJson.asStateFlow()
 
+    private val _userProfileJsonV2 = MutableStateFlow<String?>(null)
+    val userProfileJsonV2: StateFlow<String?> = _userProfileJsonV2.asStateFlow()
+
+    private val _userProfileJsonV3 = MutableStateFlow<String?>(null)
+    val userProfileJsonV3: StateFlow<String?> = _userProfileJsonV3.asStateFlow()
+
     private val _isJsonValid = MutableLiveData<Boolean>()
     val isJsonValid: LiveData<Boolean> get() = _isJsonValid
 
@@ -147,6 +153,31 @@ class SharedSignInViewModel @Inject constructor(
 //                    _authState.value = AuthState.Error("User ID is null")
 //                }
 
+    private fun createInitialProfile(
+        firebaseUser: FirebaseUser,
+        userId: String
+    ): Map<String, Any?> {
+        val now = Timestamp.now()
+
+        return mapOf(
+            "id" to userId,
+            "nickname" to generateRandomNickname(),
+            "email" to (firebaseUser.email ?: ""),
+            "role" to "USER",
+            "gender" to null,
+            "ageGroup" to null,
+            "lastLoginDate" to now,
+            "notificationEnabled" to true,
+            "marketingConsentEnabled" to null,
+            "privacyPolicyEnabled" to null,
+            "termsOfServiceEnabled" to null,
+            "lastSyncDate" to null,
+            "isAccountDeleted" to false,
+            "createdDate" to now,
+            "modifiedDate" to now,
+        )
+    }
+
     private suspend fun isUserRegisteredInFirestore(userId: String): Boolean {
         return try {
             val documentSnapshot = firestore.collection("users").document(userId).get().await()
@@ -211,16 +242,16 @@ class SharedSignInViewModel @Inject constructor(
     }
 
     // 다음 버튼 클릭 핸들러
-    fun handleNextClick(userProfileJson: String?, onNavigateToAgeGenderSelection: () -> Unit) {
+    fun handleNextClick(userProfileJson: String?) {
         Log.d(tag, "Terms of Service Checked: ${_termsOfServiceChecked.value}")
         Log.d(tag, "Privacy Policy Checked: ${_privacyPolicyChecked.value}")
         Log.d(tag, "Marketing Consent Checked: ${_marketingConsentChecked.value}")
 
-        handleUserProfileJson(userProfileJson)
-        onNavigateToAgeGenderSelection()
+        val userProfileJsonV2 = handleUserProfileJson(userProfileJson)
+        _userProfileJsonV2.value = userProfileJsonV2
     }
 
-    fun handleUserProfileJson(userProfileJson: String?) {
+    fun handleUserProfileJson(userProfileJson: String?): String? {
         if (_isJsonValid.value == true) {
             try {
                 // 1. JSON 문자열을 JSONObject로 변환
@@ -235,18 +266,31 @@ class SharedSignInViewModel @Inject constructor(
                 Log.d("SharedSignInViewModel", "updatedConsentStates: ${consentStatesMap}")
 
                 // 2. JSON에서 각 동의 상태 값을 추출하고 업데이트
-                userProfileJsonObject.put("marketingConsentEnabled",
-                    consentStatesMap["marketingConsentChecked"] ?: false)
-                userProfileJsonObject.put("privacyPolicyEnabled",
-                    consentStatesMap["privacyPolicyChecked"] ?: false)
-                userProfileJsonObject.put("termsOfServiceEnabled",
-                    consentStatesMap["termsOfServiceChecked"] ?: false)
+                userProfileJsonObject.put(
+                    "marketingConsentEnabled",
+                    consentStatesMap["marketingConsentChecked"] ?: false
+                )
+                userProfileJsonObject.put(
+                    "privacyPolicyEnabled",
+                    consentStatesMap["privacyPolicyChecked"] ?: false
+                )
+                userProfileJsonObject.put(
+                    "termsOfServiceEnabled",
+                    consentStatesMap["termsOfServiceChecked"] ?: false
+                )
 
-                Log.i("SharedSignInViewModel", "Updated userProfileJsonObject: $userProfileJsonObject")
+                Log.i(
+                    "SharedSignInViewModel",
+                    "Updated userProfileJsonObject: $userProfileJsonObject"
+                )
+
+                // 3. 업데이트된 JSONObject를 문자열로 변환하여 리턴
+                return userProfileJsonObject.toString()
             } catch (e: JSONException) {
                 Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
             }
         }
+        return null
     }
 
     fun openUrl(context: Context, url: String) {

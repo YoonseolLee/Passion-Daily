@@ -15,8 +15,8 @@ class Screens(private val navController: NavHostController) {
         navController.navigate("termsConsent/${userProfileJson}")
     }
 
-    val navigateToGenderAgeSelection: () -> Unit = {
-        navController.navigate("genderAgeSelection")
+    val navigateToGenderAgeSelection: (String) -> Unit = { userProfileJsonV2 ->
+        navController.navigate("genderAgeSelection/${userProfileJsonV2}")
     }
 
     val navigateToQuote: () -> Unit = {

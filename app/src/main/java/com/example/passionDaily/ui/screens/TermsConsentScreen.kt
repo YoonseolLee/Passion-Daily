@@ -47,13 +47,13 @@ import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 fun TermsConsentScreen(
     userProfileJson: String? = null,
     sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
-    onNavigateToAgeGenderSelection: () -> Unit = {}
+    onNavigateToGenderAgeSelection: (String) -> Unit
 ) {
-    // ViewModel의 상태를 관찰
     val isAgreeAllChecked by sharedSignInViewModel.isAgreeAllChecked.collectAsState()
     val termsOfServiceChecked by sharedSignInViewModel.termsOfServiceChecked.collectAsState()
     val privacyPolicyChecked by sharedSignInViewModel.privacyPolicyChecked.collectAsState()
     val marketingConsentChecked by sharedSignInViewModel.marketingConsentChecked.collectAsState()
+    val userProfileJsonV2 by sharedSignInViewModel.userProfileJsonV2.collectAsState()
 
     // 사용자 프로필 JSON 검증
     LaunchedEffect(userProfileJson) {
@@ -134,10 +134,10 @@ fun TermsConsentScreen(
             NextButton(
                 enabled = termsOfServiceChecked && privacyPolicyChecked,
                 onNextClicked = {
-                    sharedSignInViewModel.handleNextClick(
-                        userProfileJson,
-                        onNavigateToAgeGenderSelection
-                    )
+                    sharedSignInViewModel.handleNextClick(userProfileJson)
+                    userProfileJsonV2?.let {
+                        onNavigateToGenderAgeSelection(it)
+                    }
                 }
             )
         }
