@@ -55,6 +55,19 @@ class SharedSignInViewModel @Inject constructor(
     private val _isJsonValid = MutableLiveData<Boolean>()
     val isJsonValid: LiveData<Boolean> get() = _isJsonValid
 
+    private val _isAgreeAllChecked = MutableStateFlow(false)
+    val isAgreeAllChecked: StateFlow<Boolean> = _isAgreeAllChecked.asStateFlow()
+
+    private val _termsOfServiceChecked = MutableStateFlow(false)
+    val termsOfServiceChecked: StateFlow<Boolean> = _termsOfServiceChecked.asStateFlow()
+
+    private val _privacyPolicyChecked = MutableStateFlow(false)
+    val privacyPolicyChecked: StateFlow<Boolean> = _privacyPolicyChecked.asStateFlow()
+
+    private val _marketingConsentChecked = MutableStateFlow(false)
+    val marketingConsentChecked: StateFlow<Boolean> = _marketingConsentChecked.asStateFlow()
+
+
     /**
      * LoginScreen
      */
@@ -85,7 +98,6 @@ class SharedSignInViewModel @Inject constructor(
             }
         }
     }
-
 
     private suspend fun processSignInResult(result: GetCredentialResponse) {
         var credential = result.credential
@@ -145,7 +157,6 @@ class SharedSignInViewModel @Inject constructor(
         }
     }
 
-
     /**
      * TermsConsentScreen
      */
@@ -165,22 +176,88 @@ class SharedSignInViewModel @Inject constructor(
         }
     }
 
+    // 전체 동의 토글 메서드
+    fun toggleAgreeAll() {
+        val currentState = !_isAgreeAllChecked.value
+        _isAgreeAllChecked.value = currentState
+        _termsOfServiceChecked.value = currentState
+        _privacyPolicyChecked.value = currentState
+        _marketingConsentChecked.value = currentState
+    }
+
+    // 개별 항목 토글 메서드
+    fun toggleIndividualItem(item: String) {
+        when (item) {
+            "termsOfService" -> {
+                _termsOfServiceChecked.value = !_termsOfServiceChecked.value
+                updateAgreeAllState()
+            }
+            "privacyPolicy" -> {
+                _privacyPolicyChecked.value = !_privacyPolicyChecked.value
+                updateAgreeAllState()
+            }
+            "marketingConsent" -> {
+                _marketingConsentChecked.value = !_marketingConsentChecked.value
+                updateAgreeAllState()
+            }
+        }
+    }
+
+    // 개별 체크박스 상태에 따라 전체 동의 상태 업데이트
+    private fun updateAgreeAllState() {
+        _isAgreeAllChecked.value = _termsOfServiceChecked.value &&
+                _privacyPolicyChecked.value &&
+                _marketingConsentChecked.value
+    }
+
+    // 다음 버튼 클릭 핸들러
+    fun handleNextClick(userProfileJson: String?, onNavigateToAgeGenderSelection: () -> Unit) {
+        Log.d(tag, "Terms of Service Checked: ${_termsOfServiceChecked.value}")
+        Log.d(tag, "Privacy Policy Checked: ${_privacyPolicyChecked.value}")
+        Log.d(tag, "Marketing Consent Checked: ${_marketingConsentChecked.value}")
+
+        handleUserProfileJson(userProfileJson)
+        onNavigateToAgeGenderSelection()
+    }
+
+    fun handleUserProfileJson(userProfileJson: String?) {
+        if (_isJsonValid.value == true) {
+            try {
+                // 1. JSON 문자열을 JSONObject로 변환
+                val userProfileJsonObject = JSONObject(userProfileJson)
+
+                // 현재 상태(_termsOfServiceChecked, _privacyPolicyChecked, _marketingConsentChecked)를 변경 가능한 맵으로 복사
+                val consentStatesMap = mapOf(
+                    "termsOfServiceChecked" to _termsOfServiceChecked.value,
+                    "privacyPolicyChecked" to _privacyPolicyChecked.value,
+                    "marketingConsentChecked" to _marketingConsentChecked.value
+                )
+                Log.d("SharedSignInViewModel", "updatedConsentStates: ${consentStatesMap}")
+
+                // 2. JSON에서 각 동의 상태 값을 추출하고 업데이트
+                userProfileJsonObject.put("marketingConsentEnabled",
+                    consentStatesMap["marketingConsentChecked"] ?: false)
+                userProfileJsonObject.put("privacyPolicyEnabled",
+                    consentStatesMap["privacyPolicyChecked"] ?: false)
+                userProfileJsonObject.put("termsOfServiceEnabled",
+                    consentStatesMap["termsOfServiceChecked"] ?: false)
+
+                Log.i("SharedSignInViewModel", "Updated userProfileJsonObject: $userProfileJsonObject")
+            } catch (e: JSONException) {
+                Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
+            }
+        }
+    }
+
     fun openUrl(context: Context, url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(intent)
     }
 
-    // ViewModel에 추가할 메서드
-    fun saveConsentJson(consentJson: String) {
-        // JSON 저장 로직 구현 (예: SharedPreferences, Room 데이터베이스 등)
-    }
-
-
     /**
      * SelectGenderAndAgeGroupScreen
      */
-
 
     private suspend fun saveInitialProfileInFirestore(userId: String) {
         try {

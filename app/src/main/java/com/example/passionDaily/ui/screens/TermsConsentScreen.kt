@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,15 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,7 +42,6 @@ import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
-import org.json.JSONObject
 
 @Composable
 fun TermsConsentScreen(
@@ -53,65 +49,16 @@ fun TermsConsentScreen(
     sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
     onNavigateToAgeGenderSelection: () -> Unit = {}
 ) {
+    // ViewModel의 상태를 관찰
+    val isAgreeAllChecked by sharedSignInViewModel.isAgreeAllChecked.collectAsState()
+    val termsOfServiceChecked by sharedSignInViewModel.termsOfServiceChecked.collectAsState()
+    val privacyPolicyChecked by sharedSignInViewModel.privacyPolicyChecked.collectAsState()
+    val marketingConsentChecked by sharedSignInViewModel.marketingConsentChecked.collectAsState()
+
     // 사용자 프로필 JSON 검증
     LaunchedEffect(userProfileJson) {
         sharedSignInViewModel.verifyUserProfileJson(userProfileJson)
     }
-
-    // 약관 동의 화면 상태 관리
-    var isAgreeAllChecked by remember { mutableStateOf(false) }
-    var termsOfServiceChecked by remember { mutableStateOf(false) }
-    var privacyPolicyChecked by remember { mutableStateOf(false) }
-    var marketingConsentChecked by remember { mutableStateOf(false) }
-
-    // 전체 동의 토글 핸들러
-    val toggleAgreeAll: () -> Unit = {
-        isAgreeAllChecked = !isAgreeAllChecked
-        termsOfServiceChecked = isAgreeAllChecked
-        privacyPolicyChecked = isAgreeAllChecked
-        marketingConsentChecked = isAgreeAllChecked
-    }
-
-    // 개별 항목 토글 핸들러
-    val toggleIndividualItem: (String) -> Unit = { item ->
-        when (item) {
-            "termsOfService" -> {
-                termsOfServiceChecked = !termsOfServiceChecked
-                isAgreeAllChecked = termsOfServiceChecked &&
-                        privacyPolicyChecked &&
-                        marketingConsentChecked
-            }
-            "privacyPolicy" -> {
-                privacyPolicyChecked = !privacyPolicyChecked
-                isAgreeAllChecked = termsOfServiceChecked &&
-                        privacyPolicyChecked &&
-                        marketingConsentChecked
-            }
-            "marketingConsent" -> {
-                marketingConsentChecked = !marketingConsentChecked
-                isAgreeAllChecked = termsOfServiceChecked &&
-                        privacyPolicyChecked &&
-                        marketingConsentChecked
-            }
-        }
-    }
-
-//    // JSON 생성 함수
-//    val createConsentJson: () -> String = {
-//        JSONObject().apply {
-//            put("agreeAll", isAgreeAllChecked)
-//            put("termsOfService", termsOfServiceChecked)
-//            put("privacyPolicy", privacyPolicyChecked)
-//            put("marketingConsent", marketingConsentChecked)
-//        }.toString()
-//    }
-//
-//    // 다음 버튼 클릭 핸들러
-//    val handleNextClick: () -> Unit = {
-//        val consentJson = createConsentJson()
-//        sharedSignInViewModel.saveConsentJson(consentJson)
-//        onNavigateToAgeGenderSelection()
-//    }
 
     Box(
         modifier = Modifier
@@ -139,7 +86,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.agree_all),
                 isChecked = isAgreeAllChecked,
-                onCheckedChange = { toggleAgreeAll() },
+                onCheckedChange = { sharedSignInViewModel.toggleAgreeAll() },
                 isAgreeAll = true
             )
 
@@ -149,7 +96,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.terms_of_service),
                 isChecked = termsOfServiceChecked,
-                onCheckedChange = { toggleIndividualItem("termsOfService") },
+                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("termsOfService") },
                 url = stringResource(id = R.string.terms_of_service_url),
                 sharedSignInViewModel = sharedSignInViewModel
             )
@@ -160,7 +107,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.privacy_policy_agreement),
                 isChecked = privacyPolicyChecked,
-                onCheckedChange = { toggleIndividualItem("privacyPolicy") },
+                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("privacyPolicy") },
                 url = stringResource(id = R.string.privacy_policy_url),
                 sharedSignInViewModel = sharedSignInViewModel
             )
@@ -171,7 +118,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.marketing_consent),
                 isChecked = marketingConsentChecked,
-                onCheckedChange = { toggleIndividualItem("marketingConsent") },
+                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("marketingConsent") },
                 url = stringResource(id = R.string.marketing_consent_url),
                 sharedSignInViewModel = sharedSignInViewModel
             )
@@ -186,7 +133,12 @@ fun TermsConsentScreen(
         ) {
             NextButton(
                 enabled = termsOfServiceChecked && privacyPolicyChecked,
-                onNextClicked = handleNextClick
+                onNextClicked = {
+                    sharedSignInViewModel.handleNextClick(
+                        userProfileJson,
+                        onNavigateToAgeGenderSelection
+                    )
+                }
             )
         }
     }
