@@ -14,8 +14,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
+import com.example.passionDaily.util.AgeGroup
+import com.example.passionDaily.util.Gender
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.common.reflect.TypeToken
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -73,6 +76,11 @@ class SharedSignInViewModel @Inject constructor(
     private val _marketingConsentChecked = MutableStateFlow(false)
     val marketingConsentChecked: StateFlow<Boolean> = _marketingConsentChecked.asStateFlow()
 
+    private val _selectedGender = MutableStateFlow<Gender?>(null)
+    val selectedGender: StateFlow<Gender?> = _selectedGender.asStateFlow()
+
+    private val _selectedAgeGroup = MutableStateFlow<AgeGroup?>(null)
+    val selectedAgeGroup: StateFlow<AgeGroup?> = _selectedAgeGroup.asStateFlow()
 
     /**
      * LoginScreen
@@ -303,7 +311,68 @@ class SharedSignInViewModel @Inject constructor(
      * SelectGenderAndAgeGroupScreen
      */
 
-    private suspend fun saveInitialProfileInFirestore(userId: String) {
+    fun selectGender(gender: Gender?) {
+        _selectedGender.value = gender
+    }
+
+    fun selectAgeGroup(ageGroup: AgeGroup?) {
+        _selectedAgeGroup.value = ageGroup
+    }
+
+    fun isNextEnabled(): Boolean {
+        return selectedGender.value != null && selectedAgeGroup.value != null
+    }
+
+    fun handleNextClicked(userProfileJson_V2: String?) {
+        if (!isNextEnabled()) {
+            Log.e(tag, "성별과 연령대를 모두 선택해주세요.")
+            return
+        }
+
+        Log.d(
+            tag,
+            "gender: ${_selectedGender.value}, " +
+                    "agegroup: ${_selectedAgeGroup.value}, " +
+                    "isNextEnabled: ${isNextEnabled()}"
+        )
+
+        // JSON에다가 gender, ageGroup 추가한다.
+        addGenderAndAgeGroupToUserProfile(userProfileJson_V2)
+
+        userProfileJsonV3.value?.let { userProfileJsonV3 ->
+            viewModelScope.launch {
+                // Firebase에 회원정보를 저장한다.
+                adduserProfileToFireStore(userProfileJsonV3)
+
+                // Local DB에 저장한다.
+            }
+        }
+    }
+
+    private fun addGenderAndAgeGroupToUserProfile(userProfileJson_V2: String?) {
+        try {
+            val userProfileJsonObject = JSONObject(userProfileJson_V2)
+
+            userProfileJsonObject.put(
+                "gender", selectedGender.value
+            )
+            userProfileJsonObject.put(
+                "ageGroup", selectedAgeGroup.value
+            )
+
+            val userProfileJsonV3 = userProfileJsonObject.toString()
+            _userProfileJsonV3.value = userProfileJsonV3
+
+            Log.d(tag, "userProfileJsonObject: $userProfileJsonV3")
+//            return userProfileJsonV3
+
+        } catch (e: JSONException) {
+            Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
+//            return null
+        }
+    }
+
+    private suspend fun adduserProfileToFireStore(userProfileJsonV3: String) {
         try {
             val userDoc = firestore.collection("users").document(userId).get().await()
 
@@ -311,42 +380,16 @@ class SharedSignInViewModel @Inject constructor(
             if (!userDoc.exists()) {
                 val firebaseUser = auth.currentUser
                 if (firebaseUser != null) {
-                    val initialProfile = createInitialProfile(firebaseUser, userId)
-                    firestore.collection("users").document(userId).set(initialProfile).await()
+                    firestore.collection("users").document(id).set(userProfileMap).await()
                 }
             }
 
             // Firestore 정보 확인/등록 완료 후 인증 상태로 전환
-            _authState.value = AuthState.Authenticated(userId)
+            _authState.value = AuthState.Authenticated(id)
             Log.i(tag, "authstate: ${_authState.value}")
-
         } catch (e: Exception) {
             _authState.value = AuthState.Error("Firestore 처리 실패: ${e.message}")
         }
-    }
-
-    private fun createInitialProfile(
-        firebaseUser: FirebaseUser,
-        userId: String
-    ): Map<String, Any?> {
-        val now = Timestamp.now()
-
-        return mapOf(
-            "id" to userId,
-            "nickname" to generateRandomNickname(),
-            "email" to (firebaseUser.email ?: ""),
-            "role" to "USER",
-            "gender" to null,
-            "lastLoginDate" to now,
-            "notificationEnabled" to true,
-            "marketingConsentEnabled" to null,
-            "privacyPolicyEnabled" to null,
-            "termsOfServiceEnabled" to null,
-            "lastSyncDate" to null,
-            "isAccountDeleted" to false,
-            "createdDate" to now,
-            "modifiedDate" to now,
-        )
     }
 
     private fun convertMapToJson(map: Map<String, Any?>): String {
