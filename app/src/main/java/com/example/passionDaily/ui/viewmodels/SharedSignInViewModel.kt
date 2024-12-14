@@ -171,6 +171,11 @@ class SharedSignInViewModel @Inject constructor(
         context.startActivity(intent)
     }
 
+    // ViewModel에 추가할 메서드
+    fun saveConsentJson(consentJson: String) {
+        // JSON 저장 로직 구현 (예: SharedPreferences, Room 데이터베이스 등)
+    }
+
 
     /**
      * SelectGenderAndAgeGroupScreen
