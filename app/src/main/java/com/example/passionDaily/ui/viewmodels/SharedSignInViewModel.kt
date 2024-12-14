@@ -374,7 +374,16 @@ class SharedSignInViewModel @Inject constructor(
 
     private suspend fun adduserProfileToFireStore(userProfileJsonV3: String) {
         try {
-            val userDoc = firestore.collection("users").document(userId).get().await()
+            val gson = Gson()
+
+            val userProfileMap: Map<String, Any?> = gson.fromJson(
+                userProfileJsonV3,
+                object : TypeToken<Map<String, Any?>>() {}.type
+            )
+
+            val id = userProfileMap["id"] as String
+
+            val userDoc = firestore.collection("users").document(id).get().await()
 
             // Firestore에 사용자 정보가 없으면 등록
             if (!userDoc.exists()) {
