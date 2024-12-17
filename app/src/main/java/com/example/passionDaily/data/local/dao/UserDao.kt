@@ -42,13 +42,5 @@ interface UserDao {
 
     @Transaction
     @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
-    suspend fun getUserWithTermsConsent(userId: String): UserWithTermsConsent?
-
-    @Transaction
-    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
-    suspend fun getUserWithNotification(userId: String): UserWithNotification?
-
-    @Transaction
-    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
     suspend fun getUserWithFavorites(userId: String): UserWithFavorites?
 }

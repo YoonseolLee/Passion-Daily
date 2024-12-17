@@ -47,14 +47,6 @@ class UserRepository @Inject constructor(
         return userDao.getUsersWithNotificationsEnabled()
     }
 
-    suspend fun getUserWithTermsConsent(userId: String): UserWithTermsConsent? {
-        return userDao.getUserWithTermsConsent(userId)
-    }
-
-    suspend fun getUserWithNotification(userId: String): UserWithNotification? {
-        return userDao.getUserWithNotification(userId)
-    }
-
     suspend fun getUserWithFavorites(userId: String): UserWithFavorites? {
         return userDao.getUserWithFavorites(userId)
     }
