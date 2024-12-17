@@ -8,21 +8,15 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.passionDaily.data.local.entity.UserEntity
-import com.example.passionDaily.data.local.relation.UserWithFavoriteQuotes
 import com.example.passionDaily.data.local.relation.UserWithFavorites
 import com.example.passionDaily.data.local.relation.UserWithNotification
 import com.example.passionDaily.data.local.relation.UserWithTermsConsent
 
 @Dao
 interface UserDao {
-    @Query("SELECT * FROM users WHERE user_id = :userId")
-    suspend fun getUserById(userId: Int): UserEntity?
-
-    @Query("SELECT * FROM users WHERE email = :email")
-    suspend fun getUserByEmail(email: String): UserEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: UserEntity): Long
+    suspend fun insertUser(user: UserEntity)
 
     @Update
     suspend fun updateUser(user: UserEntity)
@@ -30,19 +24,33 @@ interface UserDao {
     @Delete
     suspend fun deleteUser(user: UserEntity)
 
-    @Transaction
-    @Query("SELECT * FROM users WHERE user_id = :userId")
-    suspend fun getUserWithNotification(userId: Int): UserWithNotification?
+    @Query("DELETE FROM user WHERE user_id = :userId")
+    suspend fun deleteUserById(userId: String)
+
+    @Query("SELECT * FROM user")
+    suspend fun getAllUsers(): List<UserEntity>
+
+    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
+    suspend fun getUserByUserId(userId: String): UserEntity?
+
+    @Query("SELECT * FROM user WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): UserEntity?
+
+    @Query("SELECT * FROM user WHERE is_account_deleted = :isDeleted")
+    suspend fun getUsersByAccountStatus(isDeleted: Boolean): List<UserEntity>
+
+    @Query("SELECT * FROM user WHERE notification_enabled = 1")
+    suspend fun getUsersWithNotificationsEnabled(): List<UserEntity>
 
     @Transaction
-    @Query("SELECT * FROM users WHERE user_id = :userId")
-    suspend fun getUserWithTermsConsent(userId: Int): UserWithTermsConsent?
+    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
+    suspend fun getUserWithTermsConsent(userId: String): UserWithTermsConsent?
 
     @Transaction
-    @Query("SELECT * FROM users WHERE user_id = :userId")
-    suspend fun getUserWithFavorites(userId: Int): UserWithFavorites?
+    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
+    suspend fun getUserWithNotification(userId: String): UserWithNotification?
 
     @Transaction
-    @Query("SELECT * FROM users WHERE user_id = :userId")
-    suspend fun getUserWithFavoriteQuotes(userId: Int): UserWithFavoriteQuotes?
+    @Query("SELECT * FROM user WHERE user_id = :userId LIMIT 1")
+    suspend fun getUserWithFavorites(userId: String): UserWithFavorites?
 }

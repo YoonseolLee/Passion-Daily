@@ -29,18 +29,11 @@ import com.example.passionDaily.util.Converters
     version = 1,
     exportSchema = false
 )
-
-@TypeConverters(Converters::class)
 abstract class PassionDailyDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
-
     abstract fun quoteDao(): QuoteDao
-
     abstract fun categoryDao(): QuoteCategoryDao
-
     abstract fun favoriteDao(): FavoriteDao
-
     abstract fun notificationDao(): NotificationDao
-
     abstract fun termsConsentDao(): TermsConsentDao
 }
