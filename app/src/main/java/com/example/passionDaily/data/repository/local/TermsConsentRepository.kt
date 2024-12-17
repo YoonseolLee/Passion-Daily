@@ -2,7 +2,6 @@ package com.example.passionDaily.data.repository.local
 
 
 import com.example.passionDaily.data.local.dao.TermsConsentDao
-import com.example.passionDaily.data.local.entity.TermsConsentEntity
 import javax.inject.Inject
 
 class TermsConsentRepository @Inject constructor(private val termsConsentDao: TermsConsentDao) {

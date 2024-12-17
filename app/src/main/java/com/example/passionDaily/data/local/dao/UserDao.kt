@@ -9,8 +9,6 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.example.passionDaily.data.local.entity.UserEntity
 import com.example.passionDaily.data.local.relation.UserWithFavorites
-import com.example.passionDaily.data.local.relation.UserWithNotification
-import com.example.passionDaily.data.local.relation.UserWithTermsConsent
 
 @Dao
 interface UserDao {

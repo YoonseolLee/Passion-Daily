@@ -10,10 +10,8 @@ import com.example.passionDaily.data.local.dao.QuoteDao
 import com.example.passionDaily.data.local.dao.TermsConsentDao
 import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.FavoriteEntity
-import com.example.passionDaily.data.local.entity.NotificationEntity
 import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
-import com.example.passionDaily.data.local.entity.TermsConsentEntity
 import com.example.passionDaily.data.local.entity.UserEntity
 import com.example.passionDaily.util.Converters
 

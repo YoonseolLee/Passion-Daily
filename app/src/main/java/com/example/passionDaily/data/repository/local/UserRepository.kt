@@ -3,8 +3,6 @@ package com.example.passionDaily.data.repository.local
 import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.UserEntity
 import com.example.passionDaily.data.local.relation.UserWithFavorites
-import com.example.passionDaily.data.local.relation.UserWithNotification
-import com.example.passionDaily.data.local.relation.UserWithTermsConsent
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
 
