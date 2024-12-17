@@ -14,13 +14,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
+import com.example.passionDaily.data.local.entity.UserEntity
+import com.example.passionDaily.data.repository.local.UserRepository
 import com.example.passionDaily.util.AgeGroup
+import com.example.passionDaily.util.Converters
 import com.example.passionDaily.util.Gender
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.common.reflect.TypeToken
 import com.google.firebase.Firebase
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -37,15 +39,19 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONException
 import org.json.JSONObject
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 
 @HiltViewModel
 class SharedSignInViewModel @Inject constructor(
+    private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    private val tag = "LoginViewModel: "
+    // TODO: 테스트코드 작성
+    private val tag = "SharedSignInViewModel: "
 
     private val firestore: FirebaseFirestore = Firebase.firestore
 
@@ -153,24 +159,19 @@ class SharedSignInViewModel @Inject constructor(
         }
     }
 
-    //                if (userId != null) {
-//                    saveInitialProfileInFirestore(userId)
-//                    // TODO: saveInitialProfileInRoomDB 작성
-//                    // saveInitialProfileInRoomDB
-//                } else {
-//                    _authState.value = AuthState.Error("User ID is null")
-//                }
-
     private fun createInitialProfile(
         firebaseUser: FirebaseUser,
         userId: String
     ): Map<String, Any?> {
-        val now = Timestamp.now()
+        val now = LocalDateTime.now()
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+        Log.d(tag, "now: ${now}")
 
         return mapOf(
             "id" to userId,
             "nickname" to generateRandomNickname(),
-            "email" to (firebaseUser.email ?: ""),
+            "email" to (firebaseUser.email),
             "role" to "USER",
             "gender" to null,
             "ageGroup" to null,
@@ -179,7 +180,7 @@ class SharedSignInViewModel @Inject constructor(
             "marketingConsentEnabled" to null,
             "privacyPolicyEnabled" to null,
             "termsOfServiceEnabled" to null,
-            "lastSyncDate" to null,
+            "lastSyncDate" to now,
             "isAccountDeleted" to false,
             "createdDate" to now,
             "modifiedDate" to now,
@@ -231,10 +232,12 @@ class SharedSignInViewModel @Inject constructor(
                 _termsOfServiceChecked.value = !_termsOfServiceChecked.value
                 updateAgreeAllState()
             }
+
             "privacyPolicy" -> {
                 _privacyPolicyChecked.value = !_privacyPolicyChecked.value
                 updateAgreeAllState()
             }
+
             "marketingConsent" -> {
                 _marketingConsentChecked.value = !_marketingConsentChecked.value
                 updateAgreeAllState()
@@ -342,9 +345,10 @@ class SharedSignInViewModel @Inject constructor(
         userProfileJsonV3.value?.let { userProfileJsonV3 ->
             viewModelScope.launch {
                 // Firebase에 회원정보를 저장한다.
-                adduserProfileToFireStore(userProfileJsonV3)
+                addUserProfileToFireStore(userProfileJsonV3)
 
                 // Local DB에 저장한다.
+                addUserProfileToRoomDB(userProfileJsonV3)
             }
         }
     }
@@ -364,15 +368,13 @@ class SharedSignInViewModel @Inject constructor(
             _userProfileJsonV3.value = userProfileJsonV3
 
             Log.d(tag, "userProfileJsonObject: $userProfileJsonV3")
-//            return userProfileJsonV3
 
         } catch (e: JSONException) {
             Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
-//            return null
         }
     }
 
-    private suspend fun adduserProfileToFireStore(userProfileJsonV3: String) {
+    private suspend fun addUserProfileToFireStore(userProfileJsonV3: String) {
         try {
             val gson = Gson()
 
@@ -398,6 +400,37 @@ class SharedSignInViewModel @Inject constructor(
             Log.i(tag, "authstate: ${_authState.value}")
         } catch (e: Exception) {
             _authState.value = AuthState.Error("Firestore 처리 실패: ${e.message}")
+        }
+    }
+
+    private suspend fun addUserProfileToRoomDB(userProfileJsonV3: String) {
+        try {
+            val gson = Gson()
+
+            val userProfileMap: Map<String, Any?> = gson.fromJson(
+                userProfileJsonV3,
+                object : TypeToken<Map<String, Any?>>() {}.type
+            )
+
+            // JSON 데이터를 UserEntity로 매핑
+            val userEntity = UserEntity(
+                userId = userProfileMap["id"] as String,
+                nickname = userProfileMap["nickname"] as String,
+                email = userProfileMap["email"] as String,
+                gender = Gender.valueOf(userProfileMap["gender"] as String),
+                ageGroup = AgeGroup.valueOf(userProfileMap["ageGroup"] as String),
+                notificationEnabled = userProfileMap["notificationEnabled"] as Boolean,
+                lastSyncDate = (userProfileMap["lastSyncDate"] as String).let {
+                    Converters.fromStringToLong(it)
+                },
+                isAccountDeleted = userProfileMap["isAccountDeleted"] as Boolean
+            )
+
+            // Room DB에 저장
+            userRepository.insertUser(userEntity)
+            Log.i(tag, "User Profile added to Room DB: $userEntity")
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to add user profile to Room DB: ${e.message}", e)
         }
     }
 
@@ -436,53 +469,3 @@ class SharedSignInViewModel @Inject constructor(
 }
 
 
-///**
-// * 마지막 로그인 시간 업데이트
-// */
-//private suspend fun updateLastLoginDate(userId: String) {
-//    firestore.collection("users")
-//        .document(userId)
-//        .update("lastLoginDate", FieldValue.serverTimestamp())
-//        .await()
-//}
-//
-//private suspend fun saveOAuthInfo(userId: String) {
-//    val oauthDoc = firestore.collection("users")
-//        .document(userId)
-//        .collection("oauth")
-//        .document("google")
-//
-//    val oauthInfo = UserOauth(
-//        provider = "google",
-//        accessToken = "",
-//        refreshToken = "",
-//        expiresAt = Timestamp.now()
-//    )
-//
-//    oauthDoc.set(oauthInfo, SetOptions.merge()).await()
-//}
-//
-///**
-// * 로그아웃 - 아마 추후에 삭제 예정
-// */
-//suspend fun signOut() {
-//    credentialManager.clearCredentialState(ClearCredentialStateRequest())
-//    firebaseAuth.signOut()
-//    _authState.value = AuthState.SignedOut
-//}
-
-//        return mapOf(
-//            "id" to userId,
-//            "nickname" to generateRandomNickname(),
-//            "email" to (firebaseUser.email ?: ""),
-//            "role" to "USER",
-//            "lastLoginDate" to now,
-//            "notificationEnabled" to true,
-//            "marketingConsentEnabled" to false,
-//            "privacyPolicyEnabled" to false,
-//            "termsOfServiceEnabled" to false,
-//            "lastSyncDate" to null,
-//            "isAccountDeleted" to false,
-//            "createdDate" to now,
-//            "modifiedDate" to now,
-//        )
