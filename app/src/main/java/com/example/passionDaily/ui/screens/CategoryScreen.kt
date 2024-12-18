@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,16 +36,16 @@ import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.CategoryViewModel
-import com.example.passionDaily.ui.viewmodels.CategoryViewModelInterface
-import com.example.passionDaily.ui.viewmodels.FakeCategoryViewModel
+import com.example.passionDaily.util.Categories
 
 @Composable
 fun CategoryScreen(categoryViewModel: CategoryViewModel = hiltViewModel()) {
-    CategoryScreenContent(categoryViewModel)
+    val categories = categoryViewModel.getCategories()
+    CategoryScreenContent(categories)
 }
 
 @Composable
-fun CategoryScreenContent(categoryViewModel: CategoryViewModelInterface) {
+fun CategoryScreenContent(categories: List<String>) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +78,7 @@ fun CategoryScreenContent(categoryViewModel: CategoryViewModelInterface) {
                 CategorySelectionGuide()
             }
             Spacer(modifier = Modifier.height(28.dp))
-            CategoryBoxes(categoryViewModel)
+            CategoryBoxes(categories)
         }
     }
 }
@@ -122,8 +120,7 @@ fun CategorySelectionGuide() {
 }
 
 @Composable
-fun CategoryBoxes(categoryViewModel: CategoryViewModelInterface) {
-    val categories = categoryViewModel.getCategories()
+fun CategoryBoxes(categories: List<String>) {
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -178,6 +175,8 @@ fun SingleCategoryBox(
 @Composable
 fun CategoryScreenContentPreview() {
     Passion_DailyTheme {
-        CategoryScreenContent(categoryViewModel = FakeCategoryViewModel())
+        CategoryScreenContent(
+            categories = Categories.values().map { it.toKorean() }
+        )
     }
 }

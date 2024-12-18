@@ -6,10 +6,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryViewModel @Inject constructor() : ViewModel(), CategoryViewModelInterface {
+class CategoryViewModel @Inject constructor() : ViewModel() {
     private val categories = Categories.values().map { it.toKorean() }
 
-    override fun getCategories(): List<String> {
+    fun getCategories(): List<String> {
         return categories
     }
 }
