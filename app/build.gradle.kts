@@ -108,4 +108,7 @@ dependencies {
     // gcm
     implementation("com.google.android.gms:play-services-gcm:17.0.0")
 
+    // coil
+    runtimeOnly("io.coil-kt:coil:2.7.0")
+
 }
