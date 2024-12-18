@@ -35,12 +35,12 @@ import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
-import com.example.passionDaily.ui.viewmodels.CategoryViewModel
+import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
 import com.example.passionDaily.util.Categories
 
 @Composable
-fun CategoryScreen(categoryViewModel: CategoryViewModel = hiltViewModel()) {
-    val categories = categoryViewModel.getCategories()
+fun CategoryScreen(sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel()) {
+    val categories = sharedQuoteViewModel.getCategories()
     CategoryScreenContent(categories)
 }
 
@@ -115,7 +115,7 @@ fun CategorySelectionGuide() {
             fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
             fontWeight = FontWeight(400),
             color = Color(0xFF999494),
-            )
+        )
     )
 }
 

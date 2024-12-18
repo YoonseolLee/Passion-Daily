@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class CategoryViewModel @Inject constructor() : ViewModel() {
+class SharedQuoteViewModel @Inject constructor() : ViewModel() {
     private val categories = Categories.values().map { it.toKorean() }
 
     fun getCategories(): List<String> {
