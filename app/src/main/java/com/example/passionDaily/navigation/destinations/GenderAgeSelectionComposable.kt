@@ -9,7 +9,7 @@ import com.example.passionDaily.ui.screens.GenderAgeSelectionScreen
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 fun NavGraphBuilder.genderAgeSelectionComposable(
-    onNavigateToAgeGenderSelection: () -> Unit
+    onNextClicked: () -> Unit
 ) {
     composable(
         route = "genderAgeSelection/{userProfileJsonV2}",
@@ -22,7 +22,8 @@ fun NavGraphBuilder.genderAgeSelectionComposable(
 
         GenderAgeSelectionScreen(
             userProfileJsonV2 = userProfileJsonV2,
-            sharedSignInViewModel = sharedSignInViewModel
+            sharedSignInViewModel = sharedSignInViewModel,
+            onNextClicked = onNextClicked
         )
     }
 }

@@ -1,8 +1,6 @@
 package com.example.passionDaily.navigation
 
-import android.net.Uri
 import androidx.navigation.NavHostController
-import com.google.gson.Gson
 
 class Screens(private val navController: NavHostController) {
 
@@ -21,7 +19,11 @@ class Screens(private val navController: NavHostController) {
 
     val navigateToQuote: () -> Unit = {
         navController.navigate("quote") {
-            popUpTo("login") { inclusive = true }
+        }
+    }
+
+    val navigateToCategory: () -> Unit = {
+        navController.navigate("category") {
         }
     }
 }

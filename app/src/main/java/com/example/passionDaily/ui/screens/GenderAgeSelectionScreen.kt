@@ -32,13 +32,13 @@ import com.example.passionDaily.util.Gender
 @Composable
 fun GenderAgeSelectionScreen(
     userProfileJsonV2: String? = null,
+    onNextClicked: () -> Unit,
     sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
 ) {
     val selectedGender by sharedSignInViewModel.selectedGender.collectAsState()
     val selectedAgeGroup by sharedSignInViewModel.selectedAgeGroup.collectAsState()
 
     val isNextEnabled = sharedSignInViewModel.isNextEnabled()
-
 
     GenderAgeSelectionScreenContent(
         selectedGender = selectedGender,
@@ -53,6 +53,7 @@ fun GenderAgeSelectionScreen(
         },
         onNextClicked = {
             sharedSignInViewModel.handleNextClicked(userProfileJsonV2)
+            onNextClicked()
         }
     )
 }

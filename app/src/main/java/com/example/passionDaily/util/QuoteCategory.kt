@@ -1,7 +1,7 @@
 package com.example.passionDaily.util
 
 
-enum class Categories {
+enum class QuoteCategory {
     EFFORT, WEALTH, BUSINESS, LOVE, EXERCISE, CONFIDENCE, CREATIVITY, HAPPINESS, OTHER;
 
     fun toKorean(): String {
