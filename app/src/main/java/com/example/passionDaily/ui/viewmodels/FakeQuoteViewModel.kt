@@ -5,7 +5,7 @@ import android.content.Context
 class FakeQuoteViewModel : QuoteViewModelInterface {
     private val fakeCategories = listOf("노력", "운동", "자신감", "행복")
 
-    override fun getCategories(): List<String> {
+    override fun getQuoteCategories(): List<String> {
         return fakeCategories
     }
 

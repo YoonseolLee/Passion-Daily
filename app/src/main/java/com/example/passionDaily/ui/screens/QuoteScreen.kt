@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,17 +42,31 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
+import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.FakeQuoteViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModelInterface
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
 
 @Composable
-fun QuoteScreen(sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel()) {
-    QuoteScreenContent(sharedQuoteViewModel)
+fun QuoteScreen(
+    sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel(),
+    onNavigateToCategory: () -> Unit,
+//    onNavigateToFavorite: () -> Unit,
+//    onNavigateToSettings: () -> Unit,
+) {
+    val selectedCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
+
+    QuoteScreenContent(
+        sharedQuoteViewModel,
+        onCategoryClicked = onNavigateToCategory
+    )
 }
 
 @Composable
-fun QuoteScreenContent(sharedQuoteViewModel: QuoteViewModelInterface) {
+fun QuoteScreenContent(
+    sharedQuoteViewModel: QuoteViewModelInterface,
+    onCategoryClicked: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -64,7 +78,9 @@ fun QuoteScreenContent(sharedQuoteViewModel: QuoteViewModelInterface) {
                 .offset(y = 110.dp)
                 .align(Alignment.TopCenter)
         ) {
-            CategorySelectionButton()
+            CategorySelectionButton(
+                onCategoryClicked = onCategoryClicked
+            )
         }
 
         Column(
@@ -105,7 +121,9 @@ fun BackgroundPhoto() {
 }
 
 @Composable
-fun CategorySelectionButton() {
+fun CategorySelectionButton(
+    onCategoryClicked: () -> Unit
+) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.Start),
         verticalAlignment = Alignment.CenterVertically,
@@ -116,6 +134,7 @@ fun CategorySelectionButton() {
                 shape = RoundedCornerShape(size = 999.dp)
             )
             .padding(start = 18.dp, top = 8.dp, bottom = 8.dp, end = 16.dp)
+            .clickable { onCategoryClicked() }
     ) {
         Text(
             text = "창의력",
@@ -304,9 +323,11 @@ fun NavigationButton(
 
 @Preview
 @Composable
-fun QuoteScreenPreview() {
-    val fakeViewModel = FakeQuoteViewModel()
-    QuoteScreenContent(sharedQuoteViewModel = fakeViewModel)
+fun QuoteScreenContentPreview() {
+    Passion_DailyTheme {
+        QuoteScreenContent(
+            sharedQuoteViewModel = FakeQuoteViewModel(),
+            onCategoryClicked = {}
+        )
+    }
 }
-
-
