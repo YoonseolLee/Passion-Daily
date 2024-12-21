@@ -109,6 +109,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-gcm:17.0.0")
 
     // coil
-    runtimeOnly("io.coil-kt:coil:2.7.0")
-
-}
+    implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+    implementation("io.coil-kt:coil-transformations:2.4.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.0.4")}
