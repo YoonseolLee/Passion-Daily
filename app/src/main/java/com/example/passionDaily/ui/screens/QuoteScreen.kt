@@ -46,6 +46,7 @@ import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.FakeQuoteViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModelInterface
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun QuoteScreen(
@@ -73,6 +74,22 @@ fun QuoteScreenContent(
             // TODO: 추후 이미지로 변경
             .background(BlackBackground)
     ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        ) {
+            LeftArrow()
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 16.dp)
+        ) {
+            RightArrow()
+        }
+
         Row(
             modifier = Modifier
                 .offset(y = 110.dp)
@@ -110,7 +127,6 @@ fun QuoteScreenContent(
     }
 }
 
-
 @Composable
 fun BackgroundPhoto() {
 //    Image(
@@ -118,6 +134,24 @@ fun BackgroundPhoto() {
 //        contentDescription = "image description",
 //        contentScale = ContentScale.FillBounds
 //    )
+}
+
+@Composable
+fun LeftArrow() {
+    Image(
+        painter = painterResource(id = R.drawable.quote_arrow_left),
+        contentDescription = "quote_arrow_left",
+        contentScale = ContentScale.None
+    )
+}
+
+@Composable
+fun RightArrow() {
+    Image(
+        painter = painterResource(id = R.drawable.quote_arrow_right),
+        contentDescription = "quote_arrow_left",
+        contentScale = ContentScale.None
+    )
 }
 
 @Composable
@@ -199,7 +233,7 @@ fun Buttons(sharedQuoteViewModel: QuoteViewModelInterface) {
 
 @Composable
 fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface) {
-    val context = LocalContext.current // 현재 컨텍스트 가져오기
+    val context = LocalContext.current
 
     Image(
         painter = painterResource(id = R.drawable.share_icon),
@@ -210,7 +244,6 @@ fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface) {
         }
     )
 }
-
 
 @Composable
 fun AddToFavoritesButton(
@@ -327,7 +360,8 @@ fun QuoteScreenContentPreview() {
     Passion_DailyTheme {
         QuoteScreenContent(
             sharedQuoteViewModel = FakeQuoteViewModel(),
-            onCategoryClicked = {}
+            selectedCategory = QuoteCategory.EFFORT,
+            onCategoryClicked = {},
         )
     }
 }
