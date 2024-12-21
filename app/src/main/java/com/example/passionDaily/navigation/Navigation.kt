@@ -2,6 +2,7 @@ package com.example.passionDaily.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.passionDaily.navigation.destinations.categoryComposable
@@ -9,6 +10,7 @@ import com.example.passionDaily.navigation.destinations.genderAgeSelectionCompos
 import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.termsConsentComposable
+import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
 
 @Composable
 fun SetupNavigation(
@@ -17,6 +19,8 @@ fun SetupNavigation(
     val screens = remember(navController) {
         Screens(navController = navController)
     }
+
+    val sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -37,10 +41,12 @@ fun SetupNavigation(
             screens.navigateToQuote
         }
         quoteComposable(
-            onNavigateToCategory = screens.navigateToCategory
+            onNavigateToCategory = screens.navigateToCategory,
+            sharedQuoteViewModel = sharedQuoteViewModel
         )
         categoryComposable(
-            onNavigateToQuote = screens.navigateToQuote
+            onNavigateToQuote = screens.navigateToQuote,
+            sharedQuoteViewModel = sharedQuoteViewModel
         )
     }
 }

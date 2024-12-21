@@ -195,7 +195,7 @@ fun SingleCategoryBox(
     onCategoryClicked: (QuoteCategory?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val currentCategory = QuoteCategory.values().find { it.toKorean() == category }
+    val currentCategory = QuoteCategory.fromKoreanName(category)
     val isSelected = selectedCategory == currentCategory
 
     Box(
@@ -221,15 +221,15 @@ fun SingleCategoryBox(
     }
 }
 
-@Preview
-@Composable
-fun CategoryScreenContentPreview() {
-    Passion_DailyTheme {
-        CategoryScreenContent(
-            categories = QuoteCategory.values().map { it.toKorean() },
-            selectedCategory = null,
-            onCategoryClicked = {},
-            onNavigateToQuote = {}
-        )
-    }
-}
+//@Preview
+//@Composable
+//fun CategoryScreenContentPreview() {
+//    Passion_DailyTheme {
+//        CategoryScreenContent(
+//            categories = ,
+//            selectedCategory = null,
+//            onCategoryClicked = {},
+//            onNavigateToQuote = {}
+//        )
+//    }
+//}

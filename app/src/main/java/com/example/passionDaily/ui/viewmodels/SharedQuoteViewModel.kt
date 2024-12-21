@@ -6,8 +6,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.util.QuoteCategory
-import com.example.passionDaily.util.Gender
-import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelInterface{
-    private val quoteCategory = QuoteCategory.values().map { it.toKorean() }
+    private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(null)
     val selectedQuoteCategory: StateFlow<QuoteCategory?> = _selectedQuoteCategory.asStateFlow()
@@ -26,12 +24,8 @@ class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelIn
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
-    init {
-        fetchQuotes(_selectedQuoteCategory.value)
-    }
-
     override fun getQuoteCategories(): List<String> {
-        return quoteCategory
+        return quoteCategories
     }
 
     override fun shareText(context: Context, text: String) {
@@ -54,10 +48,11 @@ class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelIn
                 Log.e("FetchQuotes", "Category is null")
                 return
             }
+            Log.i("FetchQuotes", "selectedCategory : ${selectedCategory}")
 
             val db = Firebase.firestore
             db.collection("categories")
-                .document(selectedCategory.toKorean())
+                .document(selectedCategory.koreanName)
                 .collection("quotes")
                 .get()
                 .addOnSuccessListener { result ->
@@ -75,6 +70,7 @@ class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelIn
                             shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                         )
                     }
+                    Log.i("FetchQuotes", "quotes : ${quotes}")
                     _quotes.value = quotes
                 }
                 .addOnFailureListener { exception ->

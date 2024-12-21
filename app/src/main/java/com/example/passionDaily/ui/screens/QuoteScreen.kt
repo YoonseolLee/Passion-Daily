@@ -59,6 +59,7 @@ fun QuoteScreen(
 
     QuoteScreenContent(
         sharedQuoteViewModel,
+        selectedCategory = selectedCategory,
         onCategoryClicked = onNavigateToCategory
     )
 }
@@ -66,6 +67,7 @@ fun QuoteScreen(
 @Composable
 fun QuoteScreenContent(
     sharedQuoteViewModel: QuoteViewModelInterface,
+    selectedCategory: QuoteCategory?,
     onCategoryClicked: () -> Unit
 ) {
     Box(
@@ -96,7 +98,8 @@ fun QuoteScreenContent(
                 .align(Alignment.TopCenter)
         ) {
             CategorySelectionButton(
-                onCategoryClicked = onCategoryClicked
+                onCategoryClicked = onCategoryClicked,
+                selectedCategory = selectedCategory,
             )
         }
 
@@ -156,7 +159,8 @@ fun RightArrow() {
 
 @Composable
 fun CategorySelectionButton(
-    onCategoryClicked: () -> Unit
+    onCategoryClicked: () -> Unit,
+    selectedCategory: QuoteCategory?
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.Start),
@@ -171,7 +175,7 @@ fun CategorySelectionButton(
             .clickable { onCategoryClicked() }
     ) {
         Text(
-            text = "창의력",
+            text = selectedCategory?.koreanName ?: "카테고리 선택",
             style = TextStyle(
                 fontSize = 20.sp,
                 fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
