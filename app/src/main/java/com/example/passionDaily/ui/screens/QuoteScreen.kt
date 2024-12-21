@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -70,6 +73,8 @@ fun QuoteScreenContent(
     selectedCategory: QuoteCategory?,
     onCategoryClicked: () -> Unit
 ) {
+    val currentQuote by sharedQuoteViewModel.currentQuote.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,14 +85,17 @@ fun QuoteScreenContent(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp)
+                .clickable { sharedQuoteViewModel.previousQuote() }
         ) {
             LeftArrow()
         }
 
+        // Right Arrow
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp)
+                .clickable { sharedQuoteViewModel.nextQuote() }
         ) {
             RightArrow()
         }
@@ -108,8 +116,10 @@ fun QuoteScreenContent(
                 .offset(y = 277.dp)
                 .align(Alignment.TopCenter)
         ) {
-            QuoteAndPerson()
-        }
+            QuoteAndPerson(
+                quote = currentQuote?.text ?: "",
+                author = currentQuote?.person ?: ""
+            )        }
 
         Row(
             modifier = Modifier
@@ -175,7 +185,7 @@ fun CategorySelectionButton(
             .clickable { onCategoryClicked() }
     ) {
         Text(
-            text = selectedCategory?.koreanName ?: "카테고리 선택",
+            text = selectedCategory?.koreanName ?: stringResource(id = R.string.select_category),
             style = TextStyle(
                 fontSize = 20.sp,
                 fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
@@ -193,26 +203,41 @@ fun CategorySelectionButton(
 
 @Composable
 fun QuoteAndPerson(
-    quote: String = "노력해라",
-    author: String = "사람 이름"
+    quote: String,
+    author: String,
 ) {
+//    LaunchedEffect(quote) {
+//        viewModel.updateQuoteStats(quoteId = currentQuote?.id ?: "", isViewed = true)
+//    }
+
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, // 중앙 정렬 추가
-        modifier = Modifier.fillMaxWidth() // 전체 너비 사용
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
     ) {
-        Text(
-            text = quote,
-            style = TextStyle(
-                fontSize = 20.sp,
-                lineHeight = 36.sp,
-                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                fontWeight = FontWeight(400),
-                color = Color(0xFFFFFFFF),
-                textAlign = TextAlign.Center,
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(300.dp)
+                .wrapContentHeight()
+        ) {
+            Text(
+                text = quote,
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    lineHeight = 36.sp,
+                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                    fontWeight = FontWeight(400),
+                    color = Color(0xFFFFFFFF),
+                    textAlign = TextAlign.Center,
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
         Spacer(modifier = Modifier.height(34.dp))
+
         Text(
             text = "-$author-",
             style = TextStyle(
@@ -223,7 +248,7 @@ fun QuoteAndPerson(
                 color = Color(0xFF929292),
                 textAlign = TextAlign.Center,
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.width(300.dp)
         )
     }
 }
@@ -282,13 +307,13 @@ fun NavigationBar(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center, // Center로 변경
+            horizontalArrangement = Arrangement.Center, 
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavigationButton(
                 unselectedIcon = painterResource(id = R.drawable.favorites_icon),
                 selectedIcon = painterResource(id = R.drawable.favorites_icon_filled),
-                text = "즐겨찾기",
+                text = stringResource(R.string.favorites),
                 isSelected = selectedTab == "favorites",
                 modifier = Modifier
                     .weight(1f)
@@ -301,7 +326,7 @@ fun NavigationBar(
             NavigationButton(
                 unselectedIcon = painterResource(id = R.drawable.home_icon),
                 selectedIcon = painterResource(id = R.drawable.home_icon_filled),
-                text = "홈",
+                text = stringResource(R.string.home),
                 isSelected = selectedTab == "home",
                 modifier = Modifier.weight(1f),
                 onClick = {
@@ -312,7 +337,7 @@ fun NavigationBar(
             NavigationButton(
                 unselectedIcon = painterResource(id = R.drawable.settings_icon),
                 selectedIcon = painterResource(id = R.drawable.settings_icon_filled),
-                text = "설정",
+                text = stringResource(R.string.settings),
                 isSelected = selectedTab == "settings",
                 modifier = Modifier
                     .weight(1f)

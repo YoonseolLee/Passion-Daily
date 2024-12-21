@@ -4,18 +4,28 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.util.QuoteCategory
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelInterface{
+class SharedQuoteViewModel @Inject constructor(
+    private val firestore: FirebaseFirestore
+) : ViewModel(), QuoteViewModelInterface{
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(null)
@@ -23,6 +33,91 @@ class SharedQuoteViewModel @Inject constructor() : ViewModel(), QuoteViewModelIn
 
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
+
+    private val _currentQuoteIndex = MutableStateFlow(0)
+    override val currentQuote: StateFlow<Quote?> = combine(_quotes, _currentQuoteIndex) { quotes, index ->
+        quotes.getOrNull(index)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    // Pagination parameters
+    private var isLoading = false
+    private var lastLoadedQuote: DocumentSnapshot? = null
+    private val pageSize = 20
+
+    override fun nextQuote() {
+        _currentQuoteIndex.update { currentIndex ->
+            val nextIndex = currentIndex + 1
+            if (nextIndex >= (_quotes.value.size - 5)) {
+                // Load more quotes when approaching the end
+                _selectedQuoteCategory.value?.let { loadMoreQuotes(it) }
+            }
+            if (nextIndex < _quotes.value.size) nextIndex else currentIndex
+        }
+    }
+
+    override fun previousQuote() {
+        _currentQuoteIndex.update { currentIndex ->
+            if (currentIndex > 0) currentIndex - 1 else currentIndex
+        }
+    }
+
+    private fun loadMoreQuotes(category: QuoteCategory) {
+        if (isLoading) return
+        isLoading = true
+
+        firestore.collection("categories")
+            .document(category.koreanName)
+            .collection("quotes")
+            .orderBy("createdAt")
+            .let { query ->
+                lastLoadedQuote?.let { query.startAfter(it) } ?: query
+            }
+            .limit(pageSize.toLong())
+            .get()
+            .addOnSuccessListener { result ->
+                val newQuotes = result.map { document ->
+                    Quote(
+                        id = document.id,
+                        category = document.getString("category") ?: "",
+                        text = document.getString("text") ?: "",
+                        person = document.getString("person") ?: "",
+                        imageUrl = document.getString("imageUrl") ?: "",
+                        createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                        modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
+                        isDeleted = document.getBoolean("isDeleted") ?: false,
+                        viewCount = document.getLong("viewCount")?.toInt() ?: 0,
+                        shareCount = document.getLong("shareCount")?.toInt() ?: 0,
+                    )
+                }
+                lastLoadedQuote = result.documents.lastOrNull()
+                _quotes.update { currentQuotes -> currentQuotes + newQuotes }
+                isLoading = false
+            }
+            .addOnFailureListener { exception ->
+                Log.e("FirestoreError", "Error fetching quotes: ${exception.message}")
+                isLoading = false
+            }
+    }
+
+    fun updateQuoteStats(quoteId: String, isShared: Boolean = false, isViewed: Boolean = false) {
+        val updates = mutableMapOf<String, Any>()
+
+        if (isShared) updates["shareCount"] = FieldValue.increment(1)
+        if (isViewed) updates["viewCount"] = FieldValue.increment(1)
+
+        if (updates.isEmpty()) return
+
+        val category = _selectedQuoteCategory.value ?: return
+
+        firestore.collection("categories")
+            .document(category.koreanName)
+            .collection("quotes")
+            .document(quoteId)
+            .update(updates)
+            .addOnFailureListener { e ->
+                Log.e("UpdateStats", "Error updating stats: ${e.message}")
+            }
+    }
 
     override fun getQuoteCategories(): List<String> {
         return quoteCategories
