@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.viewmodels
 
+
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -13,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,19 +27,20 @@ import javax.inject.Inject
 @HiltViewModel
 class SharedQuoteViewModel @Inject constructor(
     private val firestore: FirebaseFirestore
-) : ViewModel(), QuoteViewModelInterface{
+) : ViewModel(), QuoteViewModelInterface {
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(null)
-    val selectedQuoteCategory: StateFlow<QuoteCategory?> = _selectedQuoteCategory.asStateFlow()
+    override val selectedQuoteCategory: StateFlow<QuoteCategory?> = _selectedQuoteCategory.asStateFlow()
 
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
     private val _currentQuoteIndex = MutableStateFlow(0)
-    override val currentQuote: StateFlow<Quote?> = combine(_quotes, _currentQuoteIndex) { quotes, index ->
-        quotes.getOrNull(index)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    override val currentQuote: StateFlow<Quote?> =
+        combine(_quotes, _currentQuoteIndex) { quotes, index ->
+            quotes.getOrNull(index)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     // Pagination parameters
     private var isLoading = false
@@ -103,6 +106,7 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     override fun shareText(context: Context, text: String) {
+        // TODO: 공유 기능 완성
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain" // 공유 타입 설정
             putExtra(Intent.EXTRA_TEXT, text)
@@ -110,6 +114,25 @@ class SharedQuoteViewModel @Inject constructor(
         val chooser = Intent.createChooser(intent, "공유하기")
         context.startActivity(chooser)
     }
+
+    override fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
+        category?.let {
+            firestore.collection("categories")
+                .document(it.koreanName)
+                .collection("quotes")
+                .document(quoteId)
+                .update("shareCount", FieldValue.increment(1))
+                .addOnSuccessListener {
+                    Log.d("ShareCount", "Share count incremented successfully")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("ShareCount", "Error incrementing share count", e)
+                }
+        } ?: run {
+            Log.e("ShareCount", "Category is null")
+        }
+    }
+
 
     fun onCategorySelected(category: QuoteCategory?) {
         _selectedQuoteCategory.value = category

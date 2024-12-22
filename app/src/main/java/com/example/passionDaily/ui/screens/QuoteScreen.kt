@@ -1,5 +1,7 @@
 package com.example.passionDaily.ui.screens
 
+import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +21,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ColorMatrixColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -43,8 +47,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.request.transformations
+import coil3.size.Size
+import coil3.transform.Transformation
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.FakeQuoteViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModelInterface
@@ -74,13 +83,13 @@ fun QuoteScreenContent(
     onCategoryClicked: () -> Unit
 ) {
     val currentQuote by sharedQuoteViewModel.currentQuote.collectAsState()
+    val selectedQuoteCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            // TODO: 추후 이미지로 변경
-            .background(BlackBackground)
+        modifier = Modifier.fillMaxSize()
     ) {
+        BackgroundImage(imageUrl = currentQuote?.imageUrl)
+
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -119,7 +128,8 @@ fun QuoteScreenContent(
             QuoteAndPerson(
                 quote = currentQuote?.text ?: "",
                 author = currentQuote?.person ?: ""
-            )        }
+            )
+        }
 
         Row(
             modifier = Modifier
@@ -128,7 +138,9 @@ fun QuoteScreenContent(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Buttons(sharedQuoteViewModel)
+            currentQuote?.id?.let { quoteId ->
+                Buttons(sharedQuoteViewModel, currentQuoteId = quoteId, category = selectedQuoteCategory)
+            }
         }
 
         Row(
@@ -141,12 +153,17 @@ fun QuoteScreenContent(
 }
 
 @Composable
-fun BackgroundPhoto() {
-//    Image(
-//        painter = painterResource(id = R.drawable.image1),
-//        contentDescription = "image description",
-//        contentScale = ContentScale.FillBounds
-//    )
+fun BackgroundImage(imageUrl: String?) {
+    imageUrl?.let {
+        AsyncImage(
+            model = it,
+            contentDescription = "Background Image",
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer { alpha = 0.5f },
+            contentScale = ContentScale.Crop
+        )
+    }
 }
 
 @Composable
@@ -254,14 +271,14 @@ fun QuoteAndPerson(
 }
 
 @Composable
-fun Buttons(sharedQuoteViewModel: QuoteViewModelInterface) {
-    ShareButton(sharedQuoteViewModel)
+fun Buttons(sharedQuoteViewModel: QuoteViewModelInterface, currentQuoteId: String, category: QuoteCategory?) {
+    ShareButton(sharedQuoteViewModel, currentQuoteId, category)
     Spacer(modifier = Modifier.width(57.dp))
     AddToFavoritesButton()
 }
 
 @Composable
-fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface) {
+fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface, currentQuoteId: String, category: QuoteCategory?) {
     val context = LocalContext.current
 
     Image(
@@ -269,6 +286,7 @@ fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface) {
         contentDescription = "share icon",
         contentScale = ContentScale.None,
         modifier = Modifier.clickable {
+            sharedQuoteViewModel.incrementShareCount(currentQuoteId, category)
             sharedQuoteViewModel.shareText(context, "공유 텍스트")
         }
     )
@@ -307,7 +325,7 @@ fun NavigationBar(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center, 
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavigationButton(
