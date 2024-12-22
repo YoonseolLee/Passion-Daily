@@ -19,14 +19,10 @@ import androidx.room.PrimaryKey
     indices = [Index("category_id")],
 )
 data class QuoteEntity(
-    @PrimaryKey @ColumnInfo(name = "quote_id") val quoteId: Int,
+    @PrimaryKey @ColumnInfo(name = "quote_id") val quoteId: String,
     @ColumnInfo(name = "text") val text: String,
-    @ColumnInfo(name = "author") val author: String?,
-    @ColumnInfo(name = "image_url") val imageUrl: String?,
+    @ColumnInfo(name = "author") val author: String,
+    @ColumnInfo(name = "image_url") val imageUrl: String,
     @ColumnInfo(name = "category_id") val categoryId: Int,
-    @ColumnInfo(name = "views") val views: Int = 0,
-    @ColumnInfo(name = "shares") val shares: Int = 0,
-    @ColumnInfo(name = "created_date") val createdDate: Long,
-    @ColumnInfo(name = "modified_date") val modifiedDate: Long,
     @ColumnInfo(name = "is_synced") val isSynced: Boolean,
-    )
+)

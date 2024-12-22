@@ -8,7 +8,7 @@
 //import androidx.credentials.GetCredentialResponse
 //import androidx.credentials.exceptions.GetCredentialException
 //import com.example.passionDaily.data.remote.dto.UserDTO
-//import com.example.passionDaily.data.remote.model.user.User
+//import com.example.passionDaily.data.remote.model.User
 //import com.example.passionDaily.data.remote.model.user.UserOauth
 //import com.example.passionDaily.util.AgeGroup
 //import com.example.passionDaily.util.Gender

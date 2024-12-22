@@ -5,7 +5,7 @@ import androidx.room.Relation
 import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 
-data class QuoteWithCategory(
+data class QuoteWithQuoteCategory(
     @Embedded val quote: QuoteEntity,
     @Relation(
         parentColumn = "category_id",

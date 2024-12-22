@@ -1,6 +1,6 @@
 package com.example.passionDaily.util
 
-import com.example.passionDaily.data.remote.model.user.User
+import com.example.passionDaily.data.remote.model.User
 
 sealed class LoginState {
     object Idle : LoginState()

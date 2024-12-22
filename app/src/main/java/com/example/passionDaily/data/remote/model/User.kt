@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.remote.model.user
+package com.example.passionDaily.data.remote.model
 
 import com.example.passionDaily.util.AgeGroup
 import com.example.passionDaily.util.Gender
