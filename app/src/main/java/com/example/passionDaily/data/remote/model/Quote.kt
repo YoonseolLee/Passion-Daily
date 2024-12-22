@@ -12,6 +12,5 @@ data class Quote(
     val createdAt: Long,
     val modifiedAt: Long,
     val isDeleted: Boolean,
-    val viewCount: Int,
     val shareCount: Int
 )

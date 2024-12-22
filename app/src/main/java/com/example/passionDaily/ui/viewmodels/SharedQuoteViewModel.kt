@@ -85,7 +85,6 @@ class SharedQuoteViewModel @Inject constructor(
                         createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                         modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
                         isDeleted = document.getBoolean("isDeleted") ?: false,
-                        viewCount = document.getLong("viewCount")?.toInt() ?: 0,
                         shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                     )
                 }
@@ -96,26 +95,6 @@ class SharedQuoteViewModel @Inject constructor(
             .addOnFailureListener { exception ->
                 Log.e("FirestoreError", "Error fetching quotes: ${exception.message}")
                 isLoading = false
-            }
-    }
-
-    fun updateQuoteStats(quoteId: String, isShared: Boolean = false, isViewed: Boolean = false) {
-        val updates = mutableMapOf<String, Any>()
-
-        if (isShared) updates["shareCount"] = FieldValue.increment(1)
-        if (isViewed) updates["viewCount"] = FieldValue.increment(1)
-
-        if (updates.isEmpty()) return
-
-        val category = _selectedQuoteCategory.value ?: return
-
-        firestore.collection("categories")
-            .document(category.koreanName)
-            .collection("quotes")
-            .document(quoteId)
-            .update(updates)
-            .addOnFailureListener { e ->
-                Log.e("UpdateStats", "Error updating stats: ${e.message}")
             }
     }
 
@@ -161,7 +140,6 @@ class SharedQuoteViewModel @Inject constructor(
                             createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                             modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
                             isDeleted = document.getBoolean("isDeleted") ?: false,
-                            viewCount = document.getLong("viewCount")?.toInt() ?: 0,
                             shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                         )
                     }
