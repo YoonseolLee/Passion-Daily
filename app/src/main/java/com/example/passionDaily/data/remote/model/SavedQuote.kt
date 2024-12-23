@@ -1,5 +1,10 @@
 package com.example.passionDaily.data.remote.model
 
+import java.sql.Timestamp
+
+// saved_quotes 컬렉션의 quote_id 문서를 나타내는 클래스
 data class SavedQuote(
-    val quoteId: String = "",  // 문서 ID를 저장
+    val added_at: Timestamp,
+    val category: String = "",
+    val quote_id: String = ""
 )
