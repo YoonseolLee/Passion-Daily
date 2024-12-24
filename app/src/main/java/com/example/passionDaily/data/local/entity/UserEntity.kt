@@ -22,4 +22,5 @@ data class UserEntity(
     @ColumnInfo(name = "notification_enabled") val notificationEnabled: Boolean,
     @ColumnInfo(name = "last_sync_date") val lastSyncDate: Long,
     @ColumnInfo(name = "is_account_deleted") val isAccountDeleted: Boolean,
+    @ColumnInfo(defaultValue = "0", name = "is_current_user") val isCurrentUser: Boolean = false  // 현재 선택된 사용자 표시
 )
