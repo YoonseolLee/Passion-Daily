@@ -8,7 +8,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import com.example.passionDaily.data.local.entity.QuoteEntity
-import com.example.passionDaily.data.local.relation.QuoteWithCategory
+import com.example.passionDaily.data.local.relation.QuoteWithQuoteCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -33,5 +33,5 @@ interface QuoteDao {
 
     @Transaction
     @Query("SELECT * FROM quotes WHERE quote_id = :quoteId")
-    suspend fun getQuoteWithCategory(quoteId: Int): QuoteWithCategory?
+    suspend fun getQuoteWithCategory(quoteId: Int): QuoteWithQuoteCategory?
 }

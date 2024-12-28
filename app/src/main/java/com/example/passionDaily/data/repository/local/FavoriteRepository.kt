@@ -1,11 +1,9 @@
-//package com.example.passionDaily.data.repository.local
-//
-//import com.example.passionDaily.data.local.dao.FavoriteDao
-//import com.example.passionDaily.data.local.entity.FavoriteEntity
-//import kotlinx.coroutines.flow.Flow
-//import javax.inject.Inject
-//
-//class FavoriteRepository @Inject constructor(private val favoriteDao: FavoriteDao) {
+package com.example.passionDaily.data.repository.local
+
+import com.example.passionDaily.data.local.dao.FavoriteDao
+import javax.inject.Inject
+
+class FavoriteRepository @Inject constructor(private val favoriteDao: FavoriteDao) {
 //    fun getFavoritesByUserId(userId: Int): Flow<List<FavoriteEntity>> {
 //        return favoriteDao.getFavoritesByUserId(userId)
 //    }
@@ -25,4 +23,4 @@
 //    suspend fun deleteFavorite(userId: Int, quoteId: Int) {
 //        favoriteDao.deleteFavorite(userId, quoteId)
 //    }
-//}
+}

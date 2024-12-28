@@ -2,7 +2,6 @@ package com.example.passionDaily.data.repository.local
 
 import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.UserEntity
-import com.example.passionDaily.data.local.relation.UserWithFavorites
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
 
@@ -43,11 +42,7 @@ class UserRepository @Inject constructor(
         return userDao.getUsersByAccountStatus(isDeleted)
     }
 
-    suspend fun getUsersWithNotificationEnabled(): List<UserEntity> {
-        return userDao.getUsersWithNotificationsEnabled()
-    }
-
-    suspend fun getUserWithFavorites(userId: String): UserWithFavorites? {
-        return userDao.getUserWithFavorites(userId)
+    suspend fun getUsersWithNotifications(enabled: Boolean): List<UserEntity> {
+        return userDao.getUsersWithNotifications(enabled)
     }
 }
