@@ -24,4 +24,7 @@ interface QuoteCategoryDao {
 
     @Delete
     suspend fun deleteCategory(category: QuoteCategoryEntity)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM quote_categories WHERE category_id = :categoryId)")
+    suspend fun isCategoryExists(categoryId: Int): Boolean
 }

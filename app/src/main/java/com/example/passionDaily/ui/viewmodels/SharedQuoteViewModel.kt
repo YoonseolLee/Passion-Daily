@@ -6,15 +6,27 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.data.local.dao.FavoriteDao
+import com.example.passionDaily.data.local.dao.QuoteCategoryDao
+import com.example.passionDaily.data.local.dao.QuoteDao
+import com.example.passionDaily.data.local.dao.UserDao
+import com.example.passionDaily.data.local.entity.FavoriteEntity
+import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
+import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.util.QuoteCategory
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,16 +34,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class SharedQuoteViewModel @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val favoriteDao: FavoriteDao,
+    private val quoteDao: QuoteDao,
+    private val quoteCategoryDao: QuoteCategoryDao
 ) : ViewModel(), QuoteViewModelInterface {
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(null)
-    override val selectedQuoteCategory: StateFlow<QuoteCategory?> = _selectedQuoteCategory.asStateFlow()
+    override val selectedQuoteCategory: StateFlow<QuoteCategory?> =
+        _selectedQuoteCategory.asStateFlow()
 
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
@@ -42,8 +62,10 @@ class SharedQuoteViewModel @Inject constructor(
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     // Pagination parameters
-    private var isLoading = false
     private var lastLoadedQuote: DocumentSnapshot? = null
     private val pageSize = 20
 
@@ -65,19 +87,23 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     private fun loadMoreQuotes(category: QuoteCategory) {
-        if (isLoading) return
-        isLoading = true
+        if (_isLoading.value) return  // StateFlow를 체크
 
-        firestore.collection("categories")
-            .document(category.koreanName)
-            .collection("quotes")
-            .orderBy("createdAt")
-            .let { query ->
-                lastLoadedQuote?.let { query.startAfter(it) } ?: query
-            }
-            .limit(pageSize.toLong())
-            .get()
-            .addOnSuccessListener { result ->
+        viewModelScope.launch {
+            _isLoading.value = true  // StateFlow 업데이트
+
+            try {
+                val result = firestore.collection("categories")
+                    .document(category.koreanName)
+                    .collection("quotes")
+                    .orderBy("createdAt")
+                    .let { query ->
+                        lastLoadedQuote?.let { query.startAfter(it) } ?: query
+                    }
+                    .limit(pageSize.toLong())
+                    .get()
+                    .await()  // 코루틴으로 변환
+
                 val newQuotes = result.map { document ->
                     Quote(
                         id = document.id,
@@ -93,12 +119,12 @@ class SharedQuoteViewModel @Inject constructor(
                 }
                 lastLoadedQuote = result.documents.lastOrNull()
                 _quotes.update { currentQuotes -> currentQuotes + newQuotes }
-                isLoading = false
+            } catch (e: Exception) {
+                Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
+            } finally {
+                _isLoading.value = false  // StateFlow 업데이트
             }
-            .addOnFailureListener { exception ->
-                Log.e("FirestoreError", "Error fetching quotes: ${exception.message}")
-                isLoading = false
-            }
+        }
     }
 
     override fun getQuoteCategories(): List<String> {
@@ -175,5 +201,121 @@ class SharedQuoteViewModel @Inject constructor(
         } catch (e: Exception) {
             Log.e("FetchQuotes", "Unexpected error: ${e.message}")
         }
+    }
+
+    override fun addFavorite(quoteId: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+        val selectedCategory = _selectedQuoteCategory.value ?: return
+        val currentQuote = _quotes.value.find { it.id == quoteId } ?: return
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // 1. Category가 없으면 추가
+                if (!quoteCategoryDao.isCategoryExists(selectedCategory.ordinal)) {
+                    val categoryEntity = QuoteCategoryEntity(
+                        categoryId = selectedCategory.ordinal,
+                        categoryName = selectedCategory.koreanName
+                    )
+                    quoteCategoryDao.insertCategory(categoryEntity)
+                }
+
+                // 2. Quote가 없으면 추가
+                if (!quoteDao.isQuoteExists(quoteId)) {
+                    val quoteEntity = QuoteEntity(
+                        quoteId = quoteId,
+                        text = currentQuote.text,
+                        person = currentQuote.person,
+                        imageUrl = currentQuote.imageUrl ?: "",
+                        categoryId = selectedCategory.ordinal
+                    )
+                    quoteDao.insertQuote(quoteEntity)
+                }
+
+                // 3. Favorite 추가
+                coroutineScope {
+                    launch {
+                        val favoriteEntity = FavoriteEntity(
+                            userId = currentUser.uid,
+                            quoteId = quoteId
+                        )
+                        favoriteDao.insertFavorite(favoriteEntity)
+                    }
+                    launch { addFavoriteToFirestore(currentUser, quoteId) }
+                }
+            } catch (e: Exception) {
+                Log.e("Favorite", "즐겨찾기 추가 실패", e)
+                // TODO: 에러 처리
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private suspend fun addFavoriteToFirestore(currentUser: FirebaseUser, quoteId: String) {
+        val favoriteData = hashMapOf(
+            "added_at" to LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+            "quote_id" to quoteId,
+            "category" to _selectedQuoteCategory.value?.name
+        )
+
+        try {
+            firestore.collection("favorites")
+                .document(currentUser.uid)
+                .set(hashMapOf<String, Any>(), SetOptions.merge())
+                .await()
+
+            firestore.collection("favorites")
+                .document(currentUser.uid)
+                .collection("saved_quotes")
+                .document(quoteId)
+                .set(favoriteData)
+                .await()
+        } catch (e: Exception) {
+            Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
+            throw e
+        }
+    }
+
+    override fun removeFavorite(quoteId: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                coroutineScope {
+                    launch {
+                        val favoriteEntity = FavoriteEntity(
+                            userId = currentUser.uid,
+                            quoteId = quoteId,
+                            addedAt = System.currentTimeMillis()
+                        )
+                        favoriteDao.deleteFavorite(favoriteEntity)
+                    }
+                    launch {
+                        firestore.collection("favorites")
+                            .document(currentUser.uid)
+                            .collection("saved_quotes")
+                            .document(quoteId)
+                            .delete()
+                            .await()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("Favorite", "즐겨찾기 제거 실패", e)
+                // TODO: 에러 처리
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    override fun isFavorite(quoteId: String): Flow<Boolean> {
+        return favoriteDao.isQuoteFavorite(quoteId)
+    }
+
+    private fun getCurrentUser(): FirebaseUser? {
+        return FirebaseAuth.getInstance().currentUser
     }
 }

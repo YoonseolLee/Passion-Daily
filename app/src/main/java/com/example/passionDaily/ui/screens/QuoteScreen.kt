@@ -139,7 +139,11 @@ fun QuoteScreenContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             currentQuote?.id?.let { quoteId ->
-                Buttons(sharedQuoteViewModel, currentQuoteId = quoteId, category = selectedQuoteCategory)
+                Buttons(
+                    sharedQuoteViewModel,
+                    currentQuoteId = quoteId,
+                    category = selectedQuoteCategory
+                )
             }
         }
 
@@ -271,14 +275,22 @@ fun QuoteAndPerson(
 }
 
 @Composable
-fun Buttons(sharedQuoteViewModel: QuoteViewModelInterface, currentQuoteId: String, category: QuoteCategory?) {
+fun Buttons(
+    sharedQuoteViewModel: QuoteViewModelInterface,
+    currentQuoteId: String,
+    category: QuoteCategory?
+) {
     ShareButton(sharedQuoteViewModel, currentQuoteId, category)
     Spacer(modifier = Modifier.width(57.dp))
-    AddToFavoritesButton()
+    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId)
 }
 
 @Composable
-fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface, currentQuoteId: String, category: QuoteCategory?) {
+fun ShareButton(
+    sharedQuoteViewModel: QuoteViewModelInterface,
+    currentQuoteId: String,
+    category: QuoteCategory?
+) {
     val context = LocalContext.current
 
     Image(
@@ -292,22 +304,50 @@ fun ShareButton(sharedQuoteViewModel: QuoteViewModelInterface, currentQuoteId: S
     )
 }
 
+//@Composable
+//fun AddToFavoritesButton(
+//    modifier: Modifier = Modifier,
+//    onFavoriteToggle: (Boolean) -> Unit = {}
+//) {
+//    var isFavorite by remember { mutableStateOf(false) }
+//
+//    Image(
+//        painter = painterResource(id = R.drawable.add_to_favorites_icon),
+//        contentDescription = "add to favorites icon",
+//        contentScale = ContentScale.None,
+//        modifier = modifier.clickable {
+//            isFavorite = !isFavorite
+//            onFavoriteToggle(isFavorite)
+//        },
+//        colorFilter = if (isFavorite) ColorFilter.tint(Color.White) else null
+//    )
+//}
+
 @Composable
 fun AddToFavoritesButton(
-    modifier: Modifier = Modifier,
-    onFavoriteToggle: (Boolean) -> Unit = {}
+    sharedQuoteViewModel: QuoteViewModelInterface,
+    currentQuoteId: String,
 ) {
-    var isFavorite by remember { mutableStateOf(false) }
+
+    val isFavorite by sharedQuoteViewModel.isFavorite(currentQuoteId).collectAsState(initial = false)
+
+    val iconResource = if (isFavorite) {
+        R.drawable.remove_from_favorites_icon
+    } else {
+        R.drawable.add_to_favorites_icon
+    }
 
     Image(
-        painter = painterResource(id = R.drawable.add_to_favorites_icon),
-        contentDescription = "add to favorites icon",
+        painter = painterResource(id = iconResource),
+        contentDescription = if (isFavorite) "remove from favorites icon" else "add to favorites icon",
         contentScale = ContentScale.None,
-        modifier = modifier.clickable {
-            isFavorite = !isFavorite
-            onFavoriteToggle(isFavorite)
-        },
-        colorFilter = if (isFavorite) ColorFilter.tint(Color.White) else null
+        modifier = Modifier.clickable {
+            if (isFavorite) {
+                sharedQuoteViewModel.removeFavorite(currentQuoteId)
+            } else {
+                sharedQuoteViewModel.addFavorite(currentQuoteId)
+            }
+        }
     )
 }
 

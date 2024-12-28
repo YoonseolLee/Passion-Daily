@@ -21,8 +21,7 @@ import androidx.room.PrimaryKey
 data class QuoteEntity(
     @PrimaryKey @ColumnInfo(name = "quote_id") val quoteId: String,
     @ColumnInfo(name = "text") val text: String,
-    @ColumnInfo(name = "author") val author: String,
+    @ColumnInfo(name = "person") val person: String,
     @ColumnInfo(name = "image_url") val imageUrl: String,
     @ColumnInfo(name = "category_id") val categoryId: Int,
-    @ColumnInfo(name = "is_synced") val isSynced: Boolean,
 )

@@ -34,4 +34,7 @@ interface QuoteDao {
     @Transaction
     @Query("SELECT * FROM quotes WHERE quote_id = :quoteId")
     suspend fun getQuoteWithCategory(quoteId: Int): QuoteWithQuoteCategory?
+
+    @Query("SELECT EXISTS(SELECT 1 FROM quotes WHERE quote_id = :quoteId)")
+    suspend fun isQuoteExists(quoteId: String): Boolean
 }
