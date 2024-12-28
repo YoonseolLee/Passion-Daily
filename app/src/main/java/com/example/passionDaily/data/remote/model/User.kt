@@ -6,17 +6,17 @@ import com.example.passionDaily.util.UserRole
 import com.google.firebase.Timestamp
 
 data class User(
-    val id: String,
-    val nickname: String,
-    val email: String,
-    val role: UserRole,
-    val gender: Gender? = null,
-    val ageGroup: AgeGroup? = null,
-    val lastLoginDate: Timestamp,
-    val notificationEnabled: Boolean,
-    val promotionEnabled: Boolean,
-    val lastSyncDate: Timestamp,
-    val isAccountDeleted: Boolean,
-    val createdDate: Timestamp,
-    val modifiedDate: Timestamp
+    val id: String = "",
+    val nickname: String = "",
+    val email: String = "",
+    val role: UserRole = UserRole.USER,
+    val gender: Gender = Gender.UNKNOWN,
+    val ageGroup: AgeGroup = AgeGroup.UNKNOWN,
+    val lastLoginDate: String = "",
+    val notificationEnabled: Boolean = false,
+    val promotionEnabled: Boolean = false,
+    val lastSyncDate: String = "",
+    val isAccountDeleted: Boolean = false,
+    val createdDate: String = "",
+    val modifiedDate: String = "",
 )

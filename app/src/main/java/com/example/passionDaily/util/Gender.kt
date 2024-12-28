@@ -2,5 +2,6 @@ package com.example.passionDaily.util
 
 enum class Gender {
     M,
-    F
+    F,
+    UNKNOWN
 }
