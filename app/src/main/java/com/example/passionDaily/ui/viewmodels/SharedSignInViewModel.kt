@@ -14,7 +14,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
+import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.UserEntity
+import com.example.passionDaily.data.remote.model.User
 import com.example.passionDaily.data.repository.local.UserRepository
 import com.example.passionDaily.util.AgeGroup
 import com.example.passionDaily.util.Converters
@@ -39,8 +41,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONException
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -48,9 +53,9 @@ import javax.inject.Inject
 class SharedSignInViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
+    private val userDao: UserDao,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
-    // TODO: 테스트코드 작성
     private val tag = "SharedSignInViewModel: "
 
     private val firestore: FirebaseFirestore = Firebase.firestore
@@ -145,6 +150,12 @@ class SharedSignInViewModel @Inject constructor(
 
                     if (isRegistered) {
                         // 회원일 경우 바로 QuoteScreen으로 이동
+                        // Firestore에 정보 업데이트
+                        updateLastSyncDateOnFirestore(userId)
+
+                        // room db에 동기화
+                        syncFirestoreUserToRoom(userId, firestore)
+
                         _authState.value = AuthState.Authenticated(userId)
                     } else {
                         // 비회원일 경우 TermsConsentScreen으로 이동
@@ -156,6 +167,76 @@ class SharedSignInViewModel @Inject constructor(
             } catch (e: Exception) {
                 _authState.value = AuthState.Error("Authentication failed: ${e.message}")
             }
+        }
+    }
+
+    private suspend fun updateLastSyncDateOnFirestore(userId: String) {
+        try {
+            val now = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+
+            firestore.collection("users")
+                .document(userId)
+                .update(
+                    "lastSyncDate", now,
+                    "lastLoginDate", now
+                )
+                .await()
+
+            Log.d("UserSync", "lastSyncDate와 lastLoginDate 업데이트 성공: lastSyncDate = $now, lastLoginDate = $now")
+        } catch (e: Exception) {
+            Log.e("UserSync", "Firestore에서 lastSyncDate 또는 lastLoginDate 업데이트 실패: ${e.message}")
+        }
+    }
+
+    suspend fun syncFirestoreUserToRoom(
+        userId: String,
+        firestoreDb: FirebaseFirestore,
+    ) {
+        try {
+            // Firestore에서 사용자 데이터 가져오기
+            val userDoc = firestoreDb
+                .collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            val firestoreUser = userDoc.toObject(User::class.java)
+                ?: throw Exception("Firestore에서 사용자 데이터를 찾을 수 없습니다")
+
+            // Firestore User 객체를 Room UserEntity로 변환
+            val userEntity = UserEntity(
+                userId = firestoreUser.id,
+                nickname = firestoreUser.nickname,
+                email = firestoreUser.email,
+                gender = firestoreUser.gender,
+                ageGroup = firestoreUser.ageGroup,
+                notificationEnabled = firestoreUser.notificationEnabled,
+                lastSyncDate = parseTimestamp(firestoreUser.lastSyncDate),
+                isAccountDeleted = firestoreUser.isAccountDeleted,
+            )
+
+            userDao.insertUser(userEntity)
+
+        } catch (e: Exception) {
+            Log.e("UserSync", "사용자 데이터 동기화 실패: ${e.message}")
+            throw e
+        }
+    }
+
+    fun parseTimestamp(timestamp: String): Long {
+        return try {
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+            val date = dateFormat.parse(timestamp)
+                ?: throw IllegalArgumentException("유효하지 않은 날짜 형식: $timestamp")
+
+            Log.d("parseTimestamp", "date.time: ${date.time}")
+            date.time
+        } catch (e: Exception) {
+            Log.e("TimestampParsing", "Timestamp 파싱 실패: $timestamp", e)
+            System.currentTimeMillis()
         }
     }
 
@@ -385,6 +466,8 @@ class SharedSignInViewModel @Inject constructor(
 
             val id = userProfileMap["id"] as String
 
+            Log.d("addUserProfileToFireStore", "userProfileMap: ${userProfileMap}")
+
             val userDoc = firestore.collection("users").document(id).get().await()
 
             // Firestore에 사용자 정보가 없으면 등록
@@ -423,7 +506,7 @@ class SharedSignInViewModel @Inject constructor(
                 lastSyncDate = (userProfileMap["lastSyncDate"] as String).let {
                     Converters.fromStringToLong(it)
                 },
-                isAccountDeleted = userProfileMap["isAccountDeleted"] as Boolean
+                isAccountDeleted = userProfileMap["isAccountDeleted"] as Boolean,
             )
 
             // Room DB에 저장
