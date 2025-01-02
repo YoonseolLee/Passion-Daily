@@ -26,4 +26,28 @@ class Screens(private val navController: NavHostController) {
         navController.navigate("category") {
         }
     }
+
+    val navigateToQuoteFromNavBar: () -> Unit = {
+        navController.navigate("quote") {
+            popUpTo("quote") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    val navigateToFavorites: () -> Unit = {
+        navController.navigate("favorites") {
+            popUpTo("quote") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    val navigateToSettings: () -> Unit = {
+        navController.navigate("settings") {
+            popUpTo("quote") { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 }

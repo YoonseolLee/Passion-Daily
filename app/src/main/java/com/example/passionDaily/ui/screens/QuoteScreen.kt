@@ -49,21 +49,28 @@ import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.FakeQuoteViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModelInterface
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.util.CommonNavigationBar
 import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun QuoteScreen(
     sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel(),
     onNavigateToCategory: () -> Unit,
-//    onNavigateToFavorite: () -> Unit,
-//    onNavigateToSettings: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToQuote: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    currentScreen: NavigationBarScreens
 ) {
     val selectedCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
 
     QuoteScreenContent(
         sharedQuoteViewModel,
         selectedCategory = selectedCategory,
-        onCategoryClicked = onNavigateToCategory
+        onCategoryClicked = onNavigateToCategory,
+        onFavoritesClicked = onNavigateToFavorites,
+        onQuoteClicked = onNavigateToQuote,
+        onSettingsClicked = onNavigateToSettings,
+        currentScreen = currentScreen
     )
 }
 
@@ -71,7 +78,11 @@ fun QuoteScreen(
 fun QuoteScreenContent(
     sharedQuoteViewModel: QuoteViewModelInterface,
     selectedCategory: QuoteCategory?,
-    onCategoryClicked: () -> Unit
+    onCategoryClicked: () -> Unit,
+    onFavoritesClicked: () -> Unit,
+    onQuoteClicked: () -> Unit,
+    onSettingsClicked: () -> Unit,
+    currentScreen: NavigationBarScreens  // 현재 렌더링 중인 화면
 ) {
     val currentQuote by sharedQuoteViewModel.currentQuote.collectAsState()
     val selectedQuoteCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
@@ -143,7 +154,12 @@ fun QuoteScreenContent(
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
         ) {
-            NavigationBar()
+            CommonNavigationBar(
+                currentScreen = currentScreen,
+                onNavigateToFavorites = onFavoritesClicked,
+                onNavigateToQuote = onQuoteClicked,
+                onNavigateToSettings = onSettingsClicked
+            )
         }
     }
 }
@@ -302,7 +318,8 @@ fun AddToFavoritesButton(
     currentQuoteId: String,
 ) {
 
-    val isFavorite by sharedQuoteViewModel.isFavorite(currentQuoteId).collectAsState(initial = false)
+    val isFavorite by sharedQuoteViewModel.isFavorite(currentQuoteId)
+        .collectAsState(initial = false)
 
     val iconResource = if (isFavorite) {
         R.drawable.remove_from_favorites_icon
@@ -324,105 +341,16 @@ fun AddToFavoritesButton(
     )
 }
 
-@Composable
-fun NavigationBar(
-    onTabSelected: (String) -> Unit = {}
-) {
-    var selectedTab by remember { mutableStateOf("home") }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color(0xFF444444))
-            .padding(top = 16.dp, bottom = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavigationButton(
-                unselectedIcon = painterResource(id = R.drawable.favorites_icon),
-                selectedIcon = painterResource(id = R.drawable.favorites_icon_filled),
-                text = stringResource(R.string.favorites),
-                isSelected = selectedTab == "favorites",
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 40.dp),
-                onClick = {
-                    selectedTab = "favorites"
-                }
-            )
-
-            NavigationButton(
-                unselectedIcon = painterResource(id = R.drawable.home_icon),
-                selectedIcon = painterResource(id = R.drawable.home_icon_filled),
-                text = stringResource(R.string.home),
-                isSelected = selectedTab == "home",
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    selectedTab = "home"
-                }
-            )
-
-            NavigationButton(
-                unselectedIcon = painterResource(id = R.drawable.settings_icon),
-                selectedIcon = painterResource(id = R.drawable.settings_icon_filled),
-                text = stringResource(R.string.settings),
-                isSelected = selectedTab == "settings",
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 40.dp),
-                onClick = {
-                    selectedTab = "settings"
-                }
-            )
-        }
-    }
-}
-
-
-@Composable
-fun NavigationButton(
-    unselectedIcon: Painter,
-    selectedIcon: Painter,
-    text: String,
-    isSelected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .clickable(onClick = onClick)
-    ) {
-        Image(
-            painter = if (isSelected) selectedIcon else unselectedIcon,
-            contentDescription = text,
-            contentScale = ContentScale.None
-        )
-        Text(
-            text = text,
-            style = TextStyle(
-                fontSize = 12.sp,
-                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                fontWeight = FontWeight(400),
-                color = if (isSelected) Color.White else Color.Gray,
-                textAlign = TextAlign.Center,
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-fun QuoteScreenContentPreview() {
-    Passion_DailyTheme {
-        QuoteScreenContent(
-            sharedQuoteViewModel = FakeQuoteViewModel(),
-            selectedCategory = QuoteCategory.EFFORT,
-            onCategoryClicked = {},
-        )
-    }
-}
+//
+//@Preview
+//@Composable
+//fun QuoteScreenContentPreview() {
+//    Passion_DailyTheme {
+//        QuoteScreenContent(
+//            sharedQuoteViewModel = FakeQuoteViewModel(),
+//            selectedCategory = QuoteCategory.EFFORT,
+//            onCategoryClicked = {},
+//        )
+//    }
+//}

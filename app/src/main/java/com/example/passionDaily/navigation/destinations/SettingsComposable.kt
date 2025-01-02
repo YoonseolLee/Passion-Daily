@@ -3,24 +3,19 @@ package com.example.passionDaily.navigation.destinations
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.passionDaily.ui.screens.NavigationBarScreens
-import com.example.passionDaily.ui.screens.QuoteScreen
-import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.ui.screens.SettingsScreen
 
-fun NavGraphBuilder.quoteComposable(
-    onNavigateToCategory: () -> Unit,
-    sharedQuoteViewModel: SharedQuoteViewModel,
+fun NavGraphBuilder.settingsComposable(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    composable(route = "quote") {
-        QuoteScreen(
-            onNavigateToCategory = onNavigateToCategory,
+    composable(route = "settings") {
+        SettingsScreen(
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
-            sharedQuoteViewModel = sharedQuoteViewModel,
-            currentScreen = NavigationBarScreens.QUOTE,
+            currentScreen = NavigationBarScreens.SETTINGS
         )
     }
 }
