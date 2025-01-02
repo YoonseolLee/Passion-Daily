@@ -15,9 +15,12 @@ import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.util.QuoteCategory
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -159,7 +162,6 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
-
     fun onCategorySelected(category: QuoteCategory?) {
         _selectedQuoteCategory.value = category
         fetchQuotes(category)
@@ -200,6 +202,84 @@ class SharedQuoteViewModel @Inject constructor(
                 }
         } catch (e: Exception) {
             Log.e("FetchQuotes", "Unexpected error: ${e.message}")
+        }
+    }
+
+    override fun fetchFavoriteQuotes() {
+        try {
+            val db = Firebase.firestore
+            val currentUser = Firebase.auth.currentUser
+
+            if (currentUser == null) {
+                Log.e("FetchFavoriteQuotes", "User is not logged in")
+                return
+            }
+
+            // 사용자의 saved_quotes 컬렉션에서 모든 즐겨찾기 정보를 가져옵니다
+            db.collection("favorites")
+                .document(currentUser.uid)
+                .collection("saved_quotes")
+                .get()
+                .addOnSuccessListener { savedQuotesSnapshot ->
+                    // 각 문서에서 category와 quote_id 정보를 추출합니다
+                    val favoriteQuotesInfo = savedQuotesSnapshot.documents.mapNotNull { document ->
+                        val category = document.getString("category")
+                        val quoteId = document.getString("quote_id")
+                        if (category != null && quoteId != null) {
+                            Pair(category, quoteId)
+                        } else {
+                            Log.e("FetchFavoriteQuotes", "Invalid saved quote document: ${document.id}")
+                            null
+                        }
+                    }
+
+                    if (favoriteQuotesInfo.isEmpty()) {
+                        _quotes.value = emptyList()
+                        return@addOnSuccessListener
+                    }
+
+                    // 모든 즐겨찾기 명언을 가져오기 위한 작업들을 생성합니다
+                    val quoteTasks = favoriteQuotesInfo.map { (category, quoteId) ->
+                        db.collection("categories")
+                            .document(category)
+                            .collection("quotes")
+                            .document(quoteId)
+                            .get()
+                    }
+
+                    // 모든 작업을 동시에 실행하고 결과를 합칩니다
+                    Tasks.whenAllSuccess<DocumentSnapshot>(quoteTasks)
+                        .addOnSuccessListener { documentSnapshots ->
+                            val quotes = documentSnapshots.mapNotNull { document ->
+                                if (document.exists()) {
+                                    Quote(
+                                        id = document.id,
+                                        category = document.getString("category") ?: "",
+                                        text = document.getString("text") ?: "",
+                                        person = document.getString("person") ?: "",
+                                        imageUrl = document.getString("imageUrl") ?: "",
+                                        createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
+                                        modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
+                                        isDeleted = document.getBoolean("isDeleted") ?: false,
+                                        shareCount = document.getLong("shareCount")?.toInt() ?: 0,
+                                    )
+                                } else {
+                                    Log.e("FetchFavoriteQuotes", "Quote document doesn't exist: ${document.id}")
+                                    null
+                                }
+                            }
+                            Log.i("FetchFavoriteQuotes", "Favorite quotes: $quotes")
+                            _quotes.value = quotes
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.e("FetchFavoriteQuotes", "Error fetching quotes: ${exception.message}")
+                        }
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("FetchFavoriteQuotes", "Error fetching saved quotes: ${exception.message}")
+                }
+        } catch (e: Exception) {
+            Log.e("FetchFavoriteQuotes", "Unexpected error: ${e.message}")
         }
     }
 
@@ -257,7 +337,7 @@ class SharedQuoteViewModel @Inject constructor(
             "added_at" to LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
             "quote_id" to quoteId,
-            "category" to _selectedQuoteCategory.value?.name
+            "category" to _selectedQuoteCategory.value?.koreanName
         )
 
         try {

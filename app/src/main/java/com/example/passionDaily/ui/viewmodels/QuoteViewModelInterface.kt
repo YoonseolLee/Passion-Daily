@@ -18,4 +18,5 @@ interface QuoteViewModelInterface {
     fun addFavorite(quoteId: String)
     fun isFavorite(quoteId: String): Flow<Boolean>
     fun removeFavorite(quoteId: String)
+    fun fetchFavoriteQuotes()
 }
