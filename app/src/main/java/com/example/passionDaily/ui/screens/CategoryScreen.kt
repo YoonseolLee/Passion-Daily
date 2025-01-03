@@ -117,14 +117,6 @@ fun CategoryScreenContent(
 }
 
 @Composable
-fun BackButton() {
-    Image(
-        painter = painterResource(id = R.drawable.clarity_arrow_line),
-        contentDescription = "back_button"
-    )
-}
-
-@Composable
 fun Category() {
     Text(
         text = stringResource(id = R.string.category),
