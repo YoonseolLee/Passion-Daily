@@ -212,6 +212,7 @@ class SharedSignInViewModel @Inject constructor(
                 gender = firestoreUser.gender,
                 ageGroup = firestoreUser.ageGroup,
                 notificationEnabled = firestoreUser.notificationEnabled,
+                notificationTime = firestoreUser.notificationTime,
                 lastSyncDate = parseTimestamp(firestoreUser.lastSyncDate),
                 isAccountDeleted = firestoreUser.isAccountDeleted,
             )
@@ -258,7 +259,7 @@ class SharedSignInViewModel @Inject constructor(
             "ageGroup" to null,
             "lastLoginDate" to now,
             "notificationEnabled" to true,
-            "marketingConsentEnabled" to null,
+            "notificationTime" to "08:00",
             "privacyPolicyEnabled" to null,
             "termsOfServiceEnabled" to null,
             "lastSyncDate" to now,
@@ -506,6 +507,7 @@ class SharedSignInViewModel @Inject constructor(
                 lastSyncDate = (userProfileMap["lastSyncDate"] as String).let {
                     Converters.fromStringToLong(it)
                 },
+                notificationTime = userProfileMap["notificationTime"] as String,
                 isAccountDeleted = userProfileMap["isAccountDeleted"] as Boolean,
             )
 

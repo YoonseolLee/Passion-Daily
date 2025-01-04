@@ -14,7 +14,7 @@ data class User(
     val ageGroup: AgeGroup = AgeGroup.UNKNOWN,
     val lastLoginDate: String = "",
     val notificationEnabled: Boolean = false,
-    val promotionEnabled: Boolean = false,
+    val notificationTime: String = "08:00",
     val lastSyncDate: String = "",
     val isAccountDeleted: Boolean = false,
     val createdDate: String = "",

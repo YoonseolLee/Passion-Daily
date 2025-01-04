@@ -36,4 +36,10 @@ interface UserDao {
 
     @Query("DELETE FROM user WHERE user_id = :userId")
     suspend fun deleteUserById(userId: String)
+
+    @Query("UPDATE user SET notification_enabled = :enabled WHERE user_id = :userId")
+    suspend fun updateNotificationSetting(userId: String, enabled: Boolean)
+
+    @Query("UPDATE user SET notification_time = :time WHERE user_id = :userId")
+    suspend fun updateNotificationTime(userId: String, time: String)
 }

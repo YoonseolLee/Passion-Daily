@@ -1,5 +1,8 @@
 package com.example.passionDaily.ui.screens
 
+import android.app.TimePickerDialog
+import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +27,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +37,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -39,18 +46,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
+import com.example.passionDaily.ui.viewmodels.SettingsViewModel
 import com.example.passionDaily.util.CommonNavigationBar
+import java.time.LocalTime
 
 @Composable
 fun SettingsScreen(
+    settingsViewModel: SettingsViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
     SettingsScreenContent(
+        viewModel = settingsViewModel,
         onFavoritesClicked = onNavigateToFavorites,
         onQuoteClicked = onNavigateToQuote,
         onSettingsClicked = onNavigateToSettings,
@@ -60,6 +73,7 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsScreenContent(
+    viewModel: SettingsViewModel,
     onFavoritesClicked: () -> Unit,
     onQuoteClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
@@ -96,8 +110,8 @@ fun SettingsScreenContent(
         ) {
             // 알림 설정
             SettingsCategoryHeader(text = "알림 설정")
-            NotificationSettingItem()
-            AdsNotificationSettingItem()
+            NotificationSettingItem(viewModel)
+            NotificationTimeSettingItem(viewModel)
 
             // 프로필 설정
             SettingsCategoryHeader(text = "프로필 설정")
@@ -168,28 +182,47 @@ fun SettingsHeaderText() {
 
 // 알림 설정 항목들
 @Composable
-fun NotificationSettingItem() {
-    var isEnabled by remember { mutableStateOf(false) }
+fun NotificationSettingItem(
+    viewModel: SettingsViewModel
+) {
+    val isEnabled by viewModel.notificationEnabled.collectAsState()
+
     CommonToggleItem(
-        title = "알림 설정",
+        title = "데일리 명언 알림 설정",
         isEnabled = isEnabled,
-        onToggleChange = {
-            isEnabled = it
-            // 알림 설정 변경 로직
+        onToggleChange = { enabled ->
+            viewModel.updateNotificationSettings(enabled)
         }
     )
 }
 
 @Composable
-fun AdsNotificationSettingItem() {
-    var isEnabled by remember { mutableStateOf(false) }
-    CommonToggleItem(
-        title = "광고성 정보 수신 알림",
-        isEnabled = isEnabled,
-        onToggleChange = {
-            isEnabled = it
-            // 광고성 알림 설정 변경 로직
-        }
+fun NotificationTimeSettingItem(
+    viewModel: SettingsViewModel
+) {
+    val notificationTime by viewModel.notificationTime.collectAsState()
+    val context = LocalContext.current
+
+    var showTimePickerDialog by remember { mutableStateOf(false) }
+
+    if (showTimePickerDialog) {
+        TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                val selectedTime = LocalTime.of(selectedHour, selectedMinute)
+                viewModel.updateNotificationTime(selectedTime)
+                showTimePickerDialog = false
+            },
+            notificationTime?.hour ?: 8,
+            notificationTime?.minute ?: 0,
+            true
+        ).show()
+    }
+
+    CommonTextItem(
+        title = "알림 시간 설정",
+        value = notificationTime?.toString() ?: "08:00",
+        onClick = { showTimePickerDialog = true }
     )
 }
 
@@ -240,7 +273,8 @@ fun WithdrawalSettingItem() {
 fun VersionInfoItem() {
     CommonTextItem(
         title = "버전 정보",
-        value = "1.1.1"
+        value = "1.1.1",
+        onClick = {}
     )
 }
 
@@ -268,7 +302,7 @@ fun PrivacySettingItem() {
 @Composable
 fun PrivacyConsentSettingItem() {
     CommonNavigationItem(
-        title = "개인정보 방침 동의 및 철회",
+        title = "마케팅 정보 수신 동의",
         onClick = {
             // 개인정보 동의 화면으로 이동
         }
@@ -335,10 +369,9 @@ private fun CommonNavigationItem(
                 color = Color(0xFFFFFFFF),
             )
         )
-        Icon(
-            imageVector = Icons.Filled.ArrowForward,
-            contentDescription = null,
-            tint = Color.White
+        Image(
+            painter = painterResource(R.drawable.chevron_right),
+            contentDescription = "chevron_right",
         )
     }
 }
@@ -379,7 +412,8 @@ private fun CommonIconItem(
 @Composable
 private fun CommonTextItem(
     title: String,
-    value: String
+    value: String,
+    onClick: () -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -399,6 +433,7 @@ private fun CommonTextItem(
             )
         )
         Text(
+            modifier = Modifier.clickable(onClick = onClick),
             text = value,
             style = TextStyle(
                 fontSize = 15.sp,
@@ -417,11 +452,8 @@ fun PreviewSettingsScreen() {
         SettingsScreen(
             onNavigateToFavorites = { },
             onNavigateToQuote = { },
-            onNavigateToSettings = {  },
+            onNavigateToSettings = { },
             currentScreen = NavigationBarScreens.SETTINGS
         )
     }
 }
-
-
-
