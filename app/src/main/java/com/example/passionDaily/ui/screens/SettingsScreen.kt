@@ -459,12 +459,23 @@ fun WithdrawalSettingItem(
 
 @Composable
 fun VersionInfoItem() {
+    val context = LocalContext.current
+    val versionName = remember {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "Unknown"
+        } catch (e: Exception) {
+            "Unknown"
+        }
+    }
+
     CommonTextItem(
         title = "버전 정보",
-        value = "1.1.1",
+        value = versionName,
         onClick = {}
     )
 }
+
 
 // 약관 및 개인정보 항목들
 @Composable
