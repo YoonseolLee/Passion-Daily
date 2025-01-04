@@ -9,7 +9,7 @@ import com.example.passionDaily.ui.screens.TermsConsentScreen
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
-    onNavigateToGenderAgeSelection: (String) -> Unit
+    onNavigateToQuoteScreen: () -> Unit
 ) {
     composable(
         route = "termsConsent/{userProfileJson}",
@@ -23,7 +23,7 @@ fun NavGraphBuilder.termsConsentComposable(
         TermsConsentScreen(
             userProfileJson = userProfileJson,
             sharedSignInViewModel = sharedSignInViewModel,
-            onNavigateToGenderAgeSelection = onNavigateToGenderAgeSelection
+            onNavigateToQuoteScreen = onNavigateToQuoteScreen
         )
     }
 }

@@ -7,11 +7,8 @@ import com.google.firebase.Timestamp
 
 data class User(
     val id: String = "",
-    val nickname: String = "",
     val email: String = "",
     val role: UserRole = UserRole.USER,
-    val gender: Gender = Gender.UNKNOWN,
-    val ageGroup: AgeGroup = AgeGroup.UNKNOWN,
     val lastLoginDate: String = "",
     val notificationEnabled: Boolean = false,
     val notificationTime: String = "08:00",

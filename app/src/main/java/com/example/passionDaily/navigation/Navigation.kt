@@ -7,7 +7,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.example.passionDaily.navigation.destinations.categoryComposable
 import com.example.passionDaily.navigation.destinations.favoritesComposable
-import com.example.passionDaily.navigation.destinations.genderAgeSelectionComposable
 import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.settingsComposable
@@ -35,13 +34,8 @@ fun SetupNavigation(
             }
         )
         termsConsentComposable(
-            onNavigateToGenderAgeSelection = { userProfileJsonV2 ->
-                screens.navigateToGenderAgeSelection(userProfileJsonV2)
-            }
+            onNavigateToQuoteScreen = screens.navigateToQuote
         )
-        genderAgeSelectionComposable() {
-            screens.navigateToQuote
-        }
         quoteComposable(
             sharedQuoteViewModel = sharedQuoteViewModel,
             onNavigateToCategory = screens.navigateToCategory,

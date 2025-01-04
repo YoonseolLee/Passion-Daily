@@ -85,7 +85,7 @@ fun SignUpCompleteTitleSection() {
         Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = "닉네임님,\n환영합니다.",
+            text = "환영합니다.",
             style = TextStyle(
                 fontSize = 28.sp,
                 fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
@@ -102,24 +102,10 @@ fun BottomActionSection() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(bottom = 80.dp)
     ) {
-        NicknameGuideText()
-
         Spacer(modifier = Modifier.height(24.dp))
 
         StartServiceButton()
     }
-}
-
-@Composable
-fun NicknameGuideText() {
-    Text(
-        text = "닉네임 변경은 설정에서 가능해요.",
-        style = TextStyle(
-            fontSize = 16.sp,
-            fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-            color = Color(0xFFABABAB)
-        )
-    )
 }
 
 @Composable

@@ -69,9 +69,6 @@ class SharedSignInViewModel @Inject constructor(
     private val _userProfileJsonV2 = MutableStateFlow<String?>(null)
     val userProfileJsonV2: StateFlow<String?> = _userProfileJsonV2.asStateFlow()
 
-    private val _userProfileJsonV3 = MutableStateFlow<String?>(null)
-    val userProfileJsonV3: StateFlow<String?> = _userProfileJsonV3.asStateFlow()
-
     private val _isJsonValid = MutableLiveData<Boolean>()
     val isJsonValid: LiveData<Boolean> get() = _isJsonValid
 
@@ -83,15 +80,6 @@ class SharedSignInViewModel @Inject constructor(
 
     private val _privacyPolicyChecked = MutableStateFlow(false)
     val privacyPolicyChecked: StateFlow<Boolean> = _privacyPolicyChecked.asStateFlow()
-
-    private val _marketingConsentChecked = MutableStateFlow(false)
-    val marketingConsentChecked: StateFlow<Boolean> = _marketingConsentChecked.asStateFlow()
-
-    private val _selectedGender = MutableStateFlow<Gender?>(null)
-    val selectedGender: StateFlow<Gender?> = _selectedGender.asStateFlow()
-
-    private val _selectedAgeGroup = MutableStateFlow<AgeGroup?>(null)
-    val selectedAgeGroup: StateFlow<AgeGroup?> = _selectedAgeGroup.asStateFlow()
 
     /**
      * LoginScreen
@@ -183,7 +171,10 @@ class SharedSignInViewModel @Inject constructor(
                 )
                 .await()
 
-            Log.d("UserSync", "lastSyncDate와 lastLoginDate 업데이트 성공: lastSyncDate = $now, lastLoginDate = $now")
+            Log.d(
+                "UserSync",
+                "lastSyncDate와 lastLoginDate 업데이트 성공: lastSyncDate = $now, lastLoginDate = $now"
+            )
         } catch (e: Exception) {
             Log.e("UserSync", "Firestore에서 lastSyncDate 또는 lastLoginDate 업데이트 실패: ${e.message}")
         }
@@ -207,10 +198,7 @@ class SharedSignInViewModel @Inject constructor(
             // Firestore User 객체를 Room UserEntity로 변환
             val userEntity = UserEntity(
                 userId = firestoreUser.id,
-                nickname = firestoreUser.nickname,
                 email = firestoreUser.email,
-                gender = firestoreUser.gender,
-                ageGroup = firestoreUser.ageGroup,
                 notificationEnabled = firestoreUser.notificationEnabled,
                 notificationTime = firestoreUser.notificationTime,
                 lastSyncDate = parseTimestamp(firestoreUser.lastSyncDate),
@@ -252,11 +240,8 @@ class SharedSignInViewModel @Inject constructor(
 
         return mapOf(
             "id" to userId,
-            "nickname" to generateRandomNickname(),
             "email" to (firebaseUser.email),
             "role" to "USER",
-            "gender" to null,
-            "ageGroup" to null,
             "lastLoginDate" to now,
             "notificationEnabled" to true,
             "notificationTime" to "08:00",
@@ -282,6 +267,7 @@ class SharedSignInViewModel @Inject constructor(
     /**
      * TermsConsentScreen
      */
+
     fun verifyUserProfileJson(json: String?) {
         if (json.isNullOrEmpty()) {
             Log.e("SharedSignInViewModel", "Invalid JSON: null or empty")
@@ -304,7 +290,6 @@ class SharedSignInViewModel @Inject constructor(
         _isAgreeAllChecked.value = currentState
         _termsOfServiceChecked.value = currentState
         _privacyPolicyChecked.value = currentState
-        _marketingConsentChecked.value = currentState
     }
 
     // 개별 항목 토글 메서드
@@ -319,50 +304,49 @@ class SharedSignInViewModel @Inject constructor(
                 _privacyPolicyChecked.value = !_privacyPolicyChecked.value
                 updateAgreeAllState()
             }
-
-            "marketingConsent" -> {
-                _marketingConsentChecked.value = !_marketingConsentChecked.value
-                updateAgreeAllState()
-            }
         }
     }
 
     // 개별 체크박스 상태에 따라 전체 동의 상태 업데이트
     private fun updateAgreeAllState() {
-        _isAgreeAllChecked.value = _termsOfServiceChecked.value &&
-                _privacyPolicyChecked.value &&
-                _marketingConsentChecked.value
+        _isAgreeAllChecked.value = _termsOfServiceChecked.value && _privacyPolicyChecked.value
     }
 
     // 다음 버튼 클릭 핸들러
     fun handleNextClick(userProfileJson: String?) {
-        Log.d(tag, "Terms of Service Checked: ${_termsOfServiceChecked.value}")
-        Log.d(tag, "Privacy Policy Checked: ${_privacyPolicyChecked.value}")
-        Log.d(tag, "Marketing Consent Checked: ${_marketingConsentChecked.value}")
+        if (_termsOfServiceChecked.value && _privacyPolicyChecked.value) {
+            Log.d(tag, "Terms of Service Checked: ${_termsOfServiceChecked.value}")
+            Log.d(tag, "Privacy Policy Checked: ${_privacyPolicyChecked.value}")
 
-        val userProfileJsonV2 = handleUserProfileJson(userProfileJson)
-        _userProfileJsonV2.value = userProfileJsonV2
+            val userProfileJsonV2 = handleUserProfileJson(userProfileJson)
+            _userProfileJsonV2.value = userProfileJsonV2
+
+            userProfileJsonV2?.let { userProfileJsonV2 ->
+                viewModelScope.launch {
+                    // Firebase에 회원정보를 저장한다.
+                    addUserProfileToFireStore(userProfileJsonV2)
+
+                    // Local DB에 저장한다.
+                    addUserProfileToRoomDB(userProfileJsonV2)
+                }
+            }
+        } else {
+            Log.e(tag, "User did not agree to required terms")
+        }
     }
 
+    // JSON 처리 로직에서 마케팅 수신 관련 항목 제거
     fun handleUserProfileJson(userProfileJson: String?): String? {
         if (_isJsonValid.value == true) {
             try {
-                // 1. JSON 문자열을 JSONObject로 변환
                 val userProfileJsonObject = JSONObject(userProfileJson)
 
-                // 현재 상태(_termsOfServiceChecked, _privacyPolicyChecked, _marketingConsentChecked)를 변경 가능한 맵으로 복사
                 val consentStatesMap = mapOf(
                     "termsOfServiceChecked" to _termsOfServiceChecked.value,
-                    "privacyPolicyChecked" to _privacyPolicyChecked.value,
-                    "marketingConsentChecked" to _marketingConsentChecked.value
+                    "privacyPolicyChecked" to _privacyPolicyChecked.value
                 )
-                Log.d("SharedSignInViewModel", "updatedConsentStates: ${consentStatesMap}")
+                Log.d("SharedSignInViewModel", "updatedConsentStates: $consentStatesMap")
 
-                // 2. JSON에서 각 동의 상태 값을 추출하고 업데이트
-                userProfileJsonObject.put(
-                    "marketingConsentEnabled",
-                    consentStatesMap["marketingConsentChecked"] ?: false
-                )
                 userProfileJsonObject.put(
                     "privacyPolicyEnabled",
                     consentStatesMap["privacyPolicyChecked"] ?: false
@@ -377,7 +361,6 @@ class SharedSignInViewModel @Inject constructor(
                     "Updated userProfileJsonObject: $userProfileJsonObject"
                 )
 
-                // 3. 업데이트된 JSONObject를 문자열로 변환하여 리턴
                 return userProfileJsonObject.toString()
             } catch (e: JSONException) {
                 Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
@@ -392,76 +375,12 @@ class SharedSignInViewModel @Inject constructor(
         context.startActivity(intent)
     }
 
-    /**
-     * SelectGenderAndAgeGroupScreen
-     */
-
-    fun selectGender(gender: Gender?) {
-        _selectedGender.value = gender
-    }
-
-    fun selectAgeGroup(ageGroup: AgeGroup?) {
-        _selectedAgeGroup.value = ageGroup
-    }
-
-    fun isNextEnabled(): Boolean {
-        return selectedGender.value != null && selectedAgeGroup.value != null
-    }
-
-    fun handleNextClicked(userProfileJson_V2: String?) {
-        if (!isNextEnabled()) {
-            Log.e(tag, "성별과 연령대를 모두 선택해주세요.")
-            return
-        }
-
-        Log.d(
-            tag,
-            "gender: ${_selectedGender.value}, " +
-                    "agegroup: ${_selectedAgeGroup.value}, " +
-                    "isNextEnabled: ${isNextEnabled()}"
-        )
-
-        // JSON에다가 gender, ageGroup 추가한다.
-        addGenderAndAgeGroupToUserProfile(userProfileJson_V2)
-
-        userProfileJsonV3.value?.let { userProfileJsonV3 ->
-            viewModelScope.launch {
-                // Firebase에 회원정보를 저장한다.
-                addUserProfileToFireStore(userProfileJsonV3)
-
-                // Local DB에 저장한다.
-                addUserProfileToRoomDB(userProfileJsonV3)
-            }
-        }
-    }
-
-    private fun addGenderAndAgeGroupToUserProfile(userProfileJson_V2: String?) {
-        try {
-            val userProfileJsonObject = JSONObject(userProfileJson_V2)
-
-            userProfileJsonObject.put(
-                "gender", selectedGender.value
-            )
-            userProfileJsonObject.put(
-                "ageGroup", selectedAgeGroup.value
-            )
-
-            val userProfileJsonV3 = userProfileJsonObject.toString()
-            _userProfileJsonV3.value = userProfileJsonV3
-
-            Log.d(tag, "userProfileJsonObject: $userProfileJsonV3")
-
-        } catch (e: JSONException) {
-            Log.e("SharedSignInViewModel", "JSON 처리 중 오류 발생", e)
-        }
-    }
-
-    private suspend fun addUserProfileToFireStore(userProfileJsonV3: String) {
+    private suspend fun addUserProfileToFireStore(userProfileJsonV2: String) {
         try {
             val gson = Gson()
 
             val userProfileMap: Map<String, Any?> = gson.fromJson(
-                userProfileJsonV3,
+                userProfileJsonV2,
                 object : TypeToken<Map<String, Any?>>() {}.type
             )
 
@@ -487,22 +406,19 @@ class SharedSignInViewModel @Inject constructor(
         }
     }
 
-    private suspend fun addUserProfileToRoomDB(userProfileJsonV3: String) {
+    private suspend fun addUserProfileToRoomDB(userProfileJsonV2: String) {
         try {
             val gson = Gson()
 
             val userProfileMap: Map<String, Any?> = gson.fromJson(
-                userProfileJsonV3,
+                userProfileJsonV2,
                 object : TypeToken<Map<String, Any?>>() {}.type
             )
 
             // JSON 데이터를 UserEntity로 매핑
             val userEntity = UserEntity(
                 userId = userProfileMap["id"] as String,
-                nickname = userProfileMap["nickname"] as String,
                 email = userProfileMap["email"] as String,
-                gender = Gender.valueOf(userProfileMap["gender"] as String),
-                ageGroup = AgeGroup.valueOf(userProfileMap["ageGroup"] as String),
                 notificationEnabled = userProfileMap["notificationEnabled"] as Boolean,
                 lastSyncDate = (userProfileMap["lastSyncDate"] as String).let {
                     Converters.fromStringToLong(it)
@@ -525,32 +441,4 @@ class SharedSignInViewModel @Inject constructor(
             .create()
         return gson.toJson(map)
     }
-
-
-    /**
-     * 랜덤 닉네임 생성
-     */
-    private fun generateRandomNickname(): String {
-        val adjectives = listOf(
-            "배고픈", "빠른", "운동하는", "행복한", "지혜로운", "용감한", "귀여운", "차분한",
-            "똑똑한", "웃음많은", "말이많은", "조용한", "꿈꾸는", "성실한", "따뜻한", "시원한",
-            "활발한", "졸린", "호기심많은", "웃긴", "강한", "약한", "재빠른", "느긋한",
-            "밝은", "어두운", "자유로운", "친절한", "도전적인", "사려깊은", "화려한", "신비로운",
-            "활기찬", "평화로운", "고독한", "명랑한", "유쾌한", "냉정한", "사랑스러운", "근면한"
-        )
-        val nouns = listOf(
-            "독수리", "사자", "거북이", "모기", "팬더", "호랑이", "다람쥐", "고양이",
-            "강아지", "토끼", "늑대", "코끼리", "여우", "원숭이", "뱀", "하마",
-            "기린", "부엉이", "돼지", "참새", "펭귄", "개구리", "말", "사슴",
-            "표범", "곰", "치타", "바다사자", "돌고래", "거미", "코알라", "물고기",
-            "앵무새", "타조", "까치", "고래", "두더지", "고슴도치", "나비", "오리"
-        )
-        return "${adjectives.random()} ${nouns.random()}"
-    }
-
-    private fun logError(message: String) {
-        println("GoogleAuthClient: $message")
-    }
 }
-
-

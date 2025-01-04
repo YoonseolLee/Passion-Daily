@@ -7,11 +7,8 @@ import com.google.firebase.Timestamp
 
 data class UserDTO(
     val id: String,
-    val nickname: String,
     val email: String?,
     val role: UserRole,
-    val gender: Gender? = null,
-    val ageGroup: AgeGroup? = null,
     val lastLoginDate: Timestamp,
     val notificationEnabled: Boolean,
     val promotionEnabled: Boolean,

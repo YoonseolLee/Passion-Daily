@@ -18,12 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,12 +43,11 @@ import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 fun TermsConsentScreen(
     userProfileJson: String? = null,
     sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
-    onNavigateToGenderAgeSelection: (String) -> Unit
+    onNavigateToQuoteScreen: () -> Unit
 ) {
     val isAgreeAllChecked by sharedSignInViewModel.isAgreeAllChecked.collectAsState()
     val termsOfServiceChecked by sharedSignInViewModel.termsOfServiceChecked.collectAsState()
     val privacyPolicyChecked by sharedSignInViewModel.privacyPolicyChecked.collectAsState()
-    val marketingConsentChecked by sharedSignInViewModel.marketingConsentChecked.collectAsState()
     val userProfileJsonV2 by sharedSignInViewModel.userProfileJsonV2.collectAsState()
 
     // 사용자 프로필 JSON 검증
@@ -111,17 +106,6 @@ fun TermsConsentScreen(
                 url = stringResource(id = R.string.privacy_policy_url),
                 sharedSignInViewModel = sharedSignInViewModel
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 마케팅 수신 동의 체크박스
-            CheckboxItem(
-                text = stringResource(id = R.string.marketing_consent),
-                isChecked = marketingConsentChecked,
-                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("marketingConsent") },
-                url = stringResource(id = R.string.marketing_consent_url),
-                sharedSignInViewModel = sharedSignInViewModel
-            )
         }
 
         // 다음 버튼
@@ -136,7 +120,7 @@ fun TermsConsentScreen(
                 onNextClicked = {
                     sharedSignInViewModel.handleNextClick(userProfileJson)
                     userProfileJsonV2?.let {
-                        onNavigateToGenderAgeSelection(it)
+                        onNavigateToQuoteScreen()
                     }
                 }
             )
@@ -166,10 +150,7 @@ fun CheckboxItem(
                 .size(24.dp)
                 .clickable { onCheckedChange() },
             colorFilter = if (isChecked)
-                ColorFilter.tint(
-                    if (isAgreeAll) PrimaryColor
-                    else PrimaryColor
-                )
+                ColorFilter.tint(PrimaryColor)
             else
                 null
         )
@@ -225,4 +206,5 @@ fun NextButton(
         )
     }
 }
+
 

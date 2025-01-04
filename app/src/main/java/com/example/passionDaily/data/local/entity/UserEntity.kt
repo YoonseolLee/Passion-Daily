@@ -9,10 +9,7 @@ import com.example.passionDaily.util.Gender
 @Entity(tableName = "user")
 data class UserEntity(
     @PrimaryKey @ColumnInfo(name = "user_id") val userId: String,
-    @ColumnInfo(name = "nickname") val nickname: String,
     @ColumnInfo(name = "email") val email: String,
-    @ColumnInfo(name = "gender") val gender: Gender,
-    @ColumnInfo(name = "age_group") val ageGroup: AgeGroup,
     @ColumnInfo(name = "notification_enabled") val notificationEnabled: Boolean,
     @ColumnInfo(name = "notification_time") val notificationTime: String,
     @ColumnInfo(name = "last_sync_date") val lastSyncDate: Long,

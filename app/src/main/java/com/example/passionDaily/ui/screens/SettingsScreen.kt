@@ -115,7 +115,6 @@ fun SettingsScreenContent(
 
             // 프로필 설정
             SettingsCategoryHeader(text = "프로필 설정")
-            NicknameSettingItem()
             LogoutSettingItem()
 
             // 고객 지원
@@ -223,17 +222,6 @@ fun NotificationTimeSettingItem(
         title = "알림 시간 설정",
         value = notificationTime?.toString() ?: "08:00",
         onClick = { showTimePickerDialog = true }
-    )
-}
-
-// 프로필 설정 항목들
-@Composable
-fun NicknameSettingItem() {
-    CommonNavigationItem(
-        title = "닉네임 변경하기",
-        onClick = {
-            // 닉네임 변경 화면으로 이동
-        }
     )
 }
 
