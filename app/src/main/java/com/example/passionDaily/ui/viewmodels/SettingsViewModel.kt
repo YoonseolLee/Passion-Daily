@@ -1,6 +1,8 @@
 package com.example.passionDaily.ui.viewmodels
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.local.dao.UserDao
@@ -26,6 +28,9 @@ class SettingsViewModel @Inject constructor(
 
     private val _notificationTime = MutableStateFlow<LocalTime?>(null)
     val notificationTime: StateFlow<LocalTime?> = _notificationTime.asStateFlow()
+
+    private val _navigateToQuote = MutableStateFlow(false)
+    val navigateToQuote: StateFlow<Boolean> = _navigateToQuote.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -75,4 +80,27 @@ class SettingsViewModel @Inject constructor(
             _notificationTime.value = newTime
         }
     }
+
+    fun logOut(context: Context) {
+        viewModelScope.launch {
+            try {
+                if (Firebase.auth.currentUser == null) {
+                    Toast.makeText(context, "이미 로그아웃 되어 있습니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                Firebase.auth.signOut()
+                Toast.makeText(context, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+                _navigateToQuote.value = true
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "로그아웃 실패", e)
+            }
+        }
+    }
+
+    // 네비게이션 완료 후 호출
+    fun onNavigatedToQuote() {
+        _navigateToQuote.value = false
+    }
+
+
 }

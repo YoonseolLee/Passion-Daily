@@ -18,16 +18,20 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -115,7 +119,14 @@ fun SettingsScreenContent(
 
             // 프로필 설정
             SettingsCategoryHeader(text = "프로필 설정")
-            LogoutSettingItem()
+//            LoginSettingItem(
+//                viewModel,
+//            )
+
+            LogoutSettingItem(
+                viewModel,
+                onNavigateToQuote = onQuoteClicked
+            )
 
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
@@ -226,14 +237,79 @@ fun NotificationTimeSettingItem(
 }
 
 @Composable
-fun LogoutSettingItem() {
+fun LogoutSettingItem(
+    viewModel: SettingsViewModel,
+    onNavigateToQuote: () -> Unit
+) {
+    var showLogoutDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // 로그아웃 후 QuoteScreen으로 이동
+    val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
+
+    LaunchedEffect(shouldNavigateToQuote) {
+        if (shouldNavigateToQuote) {
+            onNavigateToQuote()
+            viewModel.onNavigatedToQuote()
+        }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = {
+                Text(
+                    text = "로그아웃",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = "로그아웃 하시겠습니까?",
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.logOut(context)
+                        showLogoutDialog = false
+                    }
+                ) {
+                    Text(
+                        "네",
+                        color = Color(0xFFFFFFFF)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false }
+                ) {
+                    Text(
+                        "아니오",
+                        color = Color(0xFFFFFFFF)
+                    )
+                }
+            },
+            containerColor = Color(0xFF0E1C41),
+            shape = RoundedCornerShape(8.dp)
+        )
+    }
+
     CommonNavigationItem(
         title = "로그아웃",
-        onClick = {
-            // 로그아웃 처리
-        }
+        onClick = { showLogoutDialog = true }
     )
 }
+
 
 // 고객 지원 항목들
 @Composable
