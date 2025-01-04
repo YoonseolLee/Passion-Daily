@@ -3,6 +3,7 @@ package com.example.passionDaily.ui.screens
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -476,36 +477,35 @@ fun VersionInfoItem() {
     )
 }
 
-
-// 약관 및 개인정보 항목들
 @Composable
 fun TermsSettingItem() {
+    val context = LocalContext.current
+
     CommonNavigationItem(
         title = "이용약관",
         onClick = {
-            // 이용약관 화면으로 이동
+            openUrl(context, "https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0")
         }
     )
 }
 
 @Composable
 fun PrivacySettingItem() {
+    val context = LocalContext.current
+
     CommonNavigationItem(
         title = "개인정보 처리방침",
         onClick = {
-            // 개인정보 처리방침 화면으로 이동
+            openUrl(context, "https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0")
         }
     )
 }
 
-@Composable
-fun PrivacyConsentSettingItem() {
-    CommonNavigationItem(
-        title = "마케팅 정보 수신 동의",
-        onClick = {
-            // 개인정보 동의 화면으로 이동
-        }
-    )
+fun openUrl(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = Uri.parse(url)
+    }
+    context.startActivity(intent)
 }
 
 // 공통 컴포넌트들
