@@ -32,6 +32,9 @@ class SettingsViewModel @Inject constructor(
     private val _navigateToQuote = MutableStateFlow(false)
     val navigateToQuote: StateFlow<Boolean> = _navigateToQuote.asStateFlow()
 
+    private val _navigateToLogin = MutableStateFlow(false)
+    val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
+
     init {
         viewModelScope.launch {
             val userId = Firebase.auth.currentUser?.uid ?: return@launch
@@ -81,6 +84,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun logIn(context: Context) {
+        viewModelScope.launch {
+            try {
+                if (Firebase.auth.currentUser != null) {
+                    Toast.makeText(context, "이미 로그인 되어 있습니다.", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+                _navigateToLogin.value = true
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "로그인 실패", e)
+            }
+        }
+    }
+
     fun logOut(context: Context) {
         viewModelScope.launch {
             try {
@@ -88,6 +105,7 @@ class SettingsViewModel @Inject constructor(
                     Toast.makeText(context, "이미 로그아웃 되어 있습니다.", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
+
                 Firebase.auth.signOut()
                 Toast.makeText(context, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
                 _navigateToQuote.value = true
@@ -97,10 +115,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // 네비게이션 완료 후 호출
     fun onNavigatedToQuote() {
         _navigateToQuote.value = false
     }
 
-
+    fun onNavigatedToLogin() {
+        _navigateToLogin.value = false
+    }
 }

@@ -120,9 +120,6 @@ fun LoginScreenContent(
     }
 }
 
-/**
- * 나중에 SplashScreen 주석 해제시 없애야함. 임시방편임.
- */
 @Composable
 fun LoginScreenSplashScreenLogo(modifier: Modifier = Modifier) {
     Column(

@@ -118,10 +118,11 @@ fun SettingsScreenContent(
             NotificationTimeSettingItem(viewModel)
 
             // 프로필 설정
-            SettingsCategoryHeader(text = "프로필 설정")
-//            LoginSettingItem(
-//                viewModel,
-//            )
+            SettingsCategoryHeader(text = "계정 관리")
+            LoginSettingItem(
+                viewModel,
+                onNavigateToLogin = onSettingsClicked
+            )
 
             LogoutSettingItem(
                 viewModel,
@@ -233,6 +234,30 @@ fun NotificationTimeSettingItem(
         title = "알림 시간 설정",
         value = notificationTime?.toString() ?: "08:00",
         onClick = { showTimePickerDialog = true }
+    )
+}
+
+@Composable
+fun LoginSettingItem(
+    viewModel: SettingsViewModel,
+    onNavigateToLogin: () -> Unit
+) {
+    val context = LocalContext.current
+
+    val shouldNavigateToLogin by viewModel.navigateToLogin.collectAsState()
+
+    LaunchedEffect(shouldNavigateToLogin) {
+        if (shouldNavigateToLogin) {
+            onNavigateToLogin()
+            viewModel.onNavigatedToLogin()
+        }
+    }
+
+    CommonNavigationItem(
+        title = "로그인",
+        onClick = {
+            viewModel.logIn(context)
+        }
     )
 }
 
