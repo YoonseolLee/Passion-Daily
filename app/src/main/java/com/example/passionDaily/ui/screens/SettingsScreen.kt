@@ -2,6 +2,8 @@ package com.example.passionDaily.ui.screens
 
 import android.app.TimePickerDialog
 import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -131,7 +133,7 @@ fun SettingsScreenContent(
 
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
-            SuggestionSettingItem()
+            SuggestionSettingItem(viewModel)
             WithdrawalSettingItem()
             VersionInfoItem()
 
@@ -243,8 +245,15 @@ fun LoginSettingItem(
     onNavigateToLogin: () -> Unit
 ) {
     val context = LocalContext.current
-
+    val toastMessage by viewModel.toastMessage.collectAsState()
     val shouldNavigateToLogin by viewModel.navigateToLogin.collectAsState()
+
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearToastMessage()
+        }
+    }
 
     LaunchedEffect(shouldNavigateToLogin) {
         if (shouldNavigateToLogin) {
@@ -255,9 +264,7 @@ fun LoginSettingItem(
 
     CommonNavigationItem(
         title = "로그인",
-        onClick = {
-            viewModel.logIn(context)
-        }
+        onClick = { viewModel.logIn() }
     )
 }
 
@@ -266,11 +273,17 @@ fun LogoutSettingItem(
     viewModel: SettingsViewModel,
     onNavigateToQuote: () -> Unit
 ) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    // 로그아웃 후 QuoteScreen으로 이동
+    val toastMessage by viewModel.toastMessage.collectAsState()
     val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearToastMessage()
+        }
+    }
 
     LaunchedEffect(shouldNavigateToQuote) {
         if (shouldNavigateToQuote) {
@@ -304,7 +317,7 @@ fun LogoutSettingItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.logOut(context)
+                        viewModel.logOut()
                         showLogoutDialog = false
                     }
                 ) {
@@ -338,12 +351,29 @@ fun LogoutSettingItem(
 
 // 고객 지원 항목들
 @Composable
-fun SuggestionSettingItem() {
+fun SuggestionSettingItem(
+    viewModel: SettingsViewModel
+) {
+    val context = LocalContext.current
+    val emailError by viewModel.emailError.collectAsState()
+
+    LaunchedEffect(emailError) {
+        emailError?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
+    }
+
     CommonIconItem(
         title = "제안 보내기",
         icon = Icons.Filled.Email,
         onClick = {
-            // 제안 작성 화면으로 이동
+            try {
+                val intent = viewModel.createEmailIntent()
+                context.startActivity(Intent.createChooser(intent, "이메일 앱 선택"))
+            } catch (e: Exception) {
+                viewModel.setError("이메일 전송에 실패했습니다.")
+            }
         }
     )
 }

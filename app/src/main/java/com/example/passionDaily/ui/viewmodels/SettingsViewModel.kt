@@ -1,6 +1,8 @@
 package com.example.passionDaily.ui.viewmodels
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -34,6 +36,12 @@ class SettingsViewModel @Inject constructor(
 
     private val _navigateToLogin = MutableStateFlow(false)
     val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
+
+    private val _toastMessage = MutableStateFlow<String?>(null)
+    val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
+
+    private val _emailError = MutableStateFlow<String?>(null)
+    val emailError: StateFlow<String?> = _emailError.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -84,11 +92,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun logIn(context: Context) {
+    fun logIn() {
         viewModelScope.launch {
             try {
                 if (Firebase.auth.currentUser != null) {
-                    Toast.makeText(context, "이미 로그인 되어 있습니다.", Toast.LENGTH_SHORT).show()
+                    _toastMessage.value = "이미 로그인 되어 있습니다."
                     return@launch
                 }
                 _navigateToLogin.value = true
@@ -98,21 +106,25 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun logOut(context: Context) {
+    fun logOut() {
         viewModelScope.launch {
             try {
                 if (Firebase.auth.currentUser == null) {
-                    Toast.makeText(context, "이미 로그아웃 되어 있습니다.", Toast.LENGTH_SHORT).show()
+                    _toastMessage.value = "이미 로그아웃 되어 있습니다."
                     return@launch
                 }
 
                 Firebase.auth.signOut()
-                Toast.makeText(context, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+                _toastMessage.value = "로그아웃 되었습니다."
                 _navigateToQuote.value = true
             } catch (e: Exception) {
                 Log.e("SettingsViewModel", "로그아웃 실패", e)
             }
         }
+    }
+
+    fun clearToastMessage() {
+        _toastMessage.value = null
     }
 
     fun onNavigatedToQuote() {
@@ -121,5 +133,19 @@ class SettingsViewModel @Inject constructor(
 
     fun onNavigatedToLogin() {
         _navigateToLogin.value = false
+    }
+
+    fun createEmailIntent(): Intent {
+        return Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:thisyoon97@gmail.com")
+        }
+    }
+
+    fun clearError() {
+        _emailError.value = null
+    }
+
+    fun setError(message: String) {
+        _emailError.value = message
     }
 }
