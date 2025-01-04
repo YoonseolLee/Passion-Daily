@@ -1,9 +1,6 @@
 package com.example.passionDaily.data.remote.model
 
-import com.example.passionDaily.util.AgeGroup
-import com.example.passionDaily.util.Gender
 import com.example.passionDaily.util.UserRole
-import com.google.firebase.Timestamp
 
 data class User(
     val id: String = "",

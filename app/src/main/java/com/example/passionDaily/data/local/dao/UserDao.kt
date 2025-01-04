@@ -16,8 +16,8 @@ interface UserDao {
     @Update
     suspend fun updateUser(user: UserEntity)
 
-    @Delete
-    suspend fun deleteUser(user: UserEntity)
+    @Query("DELETE FROM user WHERE user_id = :userId")
+    suspend fun deleteUser(userId: String)
 
     @Query("SELECT * FROM user")
     suspend fun getAllUsers(): List<UserEntity>

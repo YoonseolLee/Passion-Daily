@@ -134,14 +134,13 @@ fun SettingsScreenContent(
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
             SuggestionSettingItem(viewModel)
-            WithdrawalSettingItem()
+            WithdrawalSettingItem(viewModel, onNavigateToQuote = onQuoteClicked)
             VersionInfoItem()
 
             // 약관 및 개인정보
             SettingsCategoryHeader(text = "약관 및 개인정보 처리 동의")
             TermsSettingItem()
             PrivacySettingItem()
-            PrivacyConsentSettingItem()
         }
 
         Box(
@@ -379,12 +378,82 @@ fun SuggestionSettingItem(
 }
 
 @Composable
-fun WithdrawalSettingItem() {
+fun WithdrawalSettingItem(
+    viewModel: SettingsViewModel,
+    onNavigateToQuote: () -> Unit
+) {
+    val context = LocalContext.current
+    val toastMessage by viewModel.toastMessage.collectAsState()
+    val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
+    val showWithdrawalDialog by viewModel.showWithdrawalDialog.collectAsState()
+
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearToastMessage()
+        }
+    }
+
+    LaunchedEffect(shouldNavigateToQuote) {
+        if (shouldNavigateToQuote) {
+            onNavigateToQuote()
+            viewModel.onNavigatedToQuote()
+        }
+    }
+
+    if (showWithdrawalDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.updateShowWithdrawalDialog(false) },
+            title = {
+                Text(
+                    text = "회원 탈퇴",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = "정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.",
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.withdrawUser()
+                        viewModel.updateShowWithdrawalDialog(false)
+                    }
+                ) {
+                    Text(
+                        "네",
+                        color = Color(0xFFFFFFFF)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.updateShowWithdrawalDialog(false) }
+                ) {
+                    Text(
+                        "아니오",
+                        color = Color(0xFFFFFFFF)
+                    )
+                }
+            },
+            containerColor = Color(0xFF0E1C41),
+            shape = RoundedCornerShape(8.dp)
+        )
+    }
+
     CommonNavigationItem(
         title = "회원 탈퇴",
-        onClick = {
-            // 회원 탈퇴 화면으로 이동
-        }
+        onClick = { viewModel.updateShowWithdrawalDialog(true) }
     )
 }
 

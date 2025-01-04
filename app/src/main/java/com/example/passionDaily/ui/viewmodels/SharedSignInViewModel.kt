@@ -18,9 +18,7 @@ import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.UserEntity
 import com.example.passionDaily.data.remote.model.User
 import com.example.passionDaily.data.repository.local.UserRepository
-import com.example.passionDaily.util.AgeGroup
 import com.example.passionDaily.util.Converters
-import com.example.passionDaily.util.Gender
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.common.reflect.TypeToken

@@ -27,4 +27,7 @@ interface QuoteCategoryDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM quote_categories WHERE category_id = :categoryId)")
     suspend fun isCategoryExists(categoryId: Int): Boolean
+
+    @Query("DELETE FROM quote_categories")
+    suspend fun deleteAllCategories()
 }

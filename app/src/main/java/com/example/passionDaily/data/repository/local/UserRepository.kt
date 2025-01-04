@@ -18,31 +18,7 @@ class UserRepository @Inject constructor(
         userDao.updateUser(user)
     }
 
-    suspend fun deleteUser(user: UserEntity) {
-        userDao.deleteUser(user)
-    }
-
-    suspend fun deleteUserById(userId: String) {
-        userDao.deleteUserById(userId)
-    }
-
-    suspend fun getAllUsers(): List<UserEntity> {
-        return userDao.getAllUsers()
-    }
-
-    suspend fun getUserByUserId(userId: String): UserEntity? {
-        return userDao.getUserByUserId(userId)
-    }
-
-    suspend fun getUserByEmail(email: String): UserEntity? {
-        return userDao.getUserByEmail(email)
-    }
-
-    suspend fun getUsersByAccountStatus(isDeleted: Boolean): List<UserEntity> {
-        return userDao.getUsersByAccountStatus(isDeleted)
-    }
-
-    suspend fun getUsersWithNotifications(enabled: Boolean): List<UserEntity> {
-        return userDao.getUsersWithNotifications(enabled)
+    suspend fun deleteUser(userId: String) {
+        userDao.deleteUser(userId)
     }
 }

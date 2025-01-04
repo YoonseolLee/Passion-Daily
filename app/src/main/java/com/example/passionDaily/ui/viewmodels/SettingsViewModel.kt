@@ -1,12 +1,13 @@
 package com.example.passionDaily.ui.viewmodels
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.data.local.dao.FavoriteDao
+import com.example.passionDaily.data.local.dao.QuoteCategoryDao
+import com.example.passionDaily.data.local.dao.QuoteDao
 import com.example.passionDaily.data.local.dao.UserDao
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,13 +17,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val favoriteDao: FavoriteDao,
+    private val quoteDao: QuoteDao,
+    private val quoteCategoryDao: QuoteCategoryDao
 ) : ViewModel() {
 
     private val _notificationEnabled = MutableStateFlow(false)
@@ -42,6 +47,9 @@ class SettingsViewModel @Inject constructor(
 
     private val _emailError = MutableStateFlow<String?>(null)
     val emailError: StateFlow<String?> = _emailError.asStateFlow()
+
+    private val _showWithdrawalDialog = MutableStateFlow(false)
+    val showWithdrawalDialog: StateFlow<Boolean> = _showWithdrawalDialog.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -147,5 +155,41 @@ class SettingsViewModel @Inject constructor(
 
     fun setError(message: String) {
         _emailError.value = message
+    }
+
+    fun withdrawUser() {
+        viewModelScope.launch {
+            try {
+                val user = Firebase.auth.currentUser ?: run {
+                    _toastMessage.value = "로그인이 필요합니다."
+                    return@launch
+                }
+
+                // Firebase 데이터 삭제
+                val batch = firestore.batch()
+                batch.delete(firestore.collection("users").document(user.uid))
+                batch.delete(firestore.collection("favorites").document(user.uid))
+                batch.commit().await()
+
+                // Room의 모든 데이터 삭제
+                userDao.deleteUser(user.uid)
+                favoriteDao.deleteAllFavoritesByUserId(user.uid)
+                quoteDao.deleteAllQuotes()
+                quoteCategoryDao.deleteAllCategories()
+
+                // Firebase Auth 계정 삭제
+                user.delete().await()
+
+                _toastMessage.value = "탈퇴되었습니다."
+                _navigateToQuote.value = true
+            } catch (e: Exception) {
+                Log.e("SettingsViewModel", "탈퇴 실패", e)
+                _toastMessage.value = "탈퇴에 실패했습니다."
+            }
+        }
+    }
+
+    fun updateShowWithdrawalDialog(show: Boolean) {
+        _showWithdrawalDialog.value = show
     }
 }
