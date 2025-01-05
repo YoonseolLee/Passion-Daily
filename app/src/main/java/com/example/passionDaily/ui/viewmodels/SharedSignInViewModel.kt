@@ -200,7 +200,6 @@ class SharedSignInViewModel @Inject constructor(
                 notificationEnabled = firestoreUser.notificationEnabled,
                 notificationTime = firestoreUser.notificationTime,
                 lastSyncDate = parseTimestamp(firestoreUser.lastSyncDate),
-                isAccountDeleted = firestoreUser.isAccountDeleted,
             )
 
             userDao.insertUser(userEntity)
@@ -422,7 +421,6 @@ class SharedSignInViewModel @Inject constructor(
                     Converters.fromStringToLong(it)
                 },
                 notificationTime = userProfileMap["notificationTime"] as String,
-                isAccountDeleted = userProfileMap["isAccountDeleted"] as Boolean,
             )
 
             // Room DB에 저장

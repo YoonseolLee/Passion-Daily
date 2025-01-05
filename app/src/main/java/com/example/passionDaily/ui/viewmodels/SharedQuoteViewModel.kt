@@ -116,7 +116,6 @@ class SharedQuoteViewModel @Inject constructor(
                         imageUrl = document.getString("imageUrl") ?: "",
                         createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                         modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
-                        isDeleted = document.getBoolean("isDeleted") ?: false,
                         shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                     )
                 }
@@ -190,7 +189,6 @@ class SharedQuoteViewModel @Inject constructor(
                             imageUrl = document.getString("imageUrl") ?: "",
                             createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                             modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
-                            isDeleted = document.getBoolean("isDeleted") ?: false,
                             shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                         )
                     }
@@ -260,7 +258,6 @@ class SharedQuoteViewModel @Inject constructor(
                                         imageUrl = document.getString("imageUrl") ?: "",
                                         createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
                                         modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
-                                        isDeleted = document.getBoolean("isDeleted") ?: false,
                                         shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                                     )
                                 } else {

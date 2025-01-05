@@ -13,5 +13,4 @@ data class UserEntity(
     @ColumnInfo(name = "notification_enabled") val notificationEnabled: Boolean,
     @ColumnInfo(name = "notification_time") val notificationTime: String,
     @ColumnInfo(name = "last_sync_date") val lastSyncDate: Long,
-    @ColumnInfo(name = "is_account_deleted") val isAccountDeleted: Boolean,
 )
