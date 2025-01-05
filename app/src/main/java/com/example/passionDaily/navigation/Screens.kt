@@ -1,49 +1,55 @@
 package com.example.passionDaily.navigation
 
 import androidx.navigation.NavHostController
+import androidx.navigation.navOptions
 
 class Screens(private val navController: NavHostController) {
 
-    val navigateToLogin: () -> Unit = {
-        navController.navigate("login") {
+    private object Routes {
+        const val QUOTE = "quote"
+        const val LOGIN = "login"
+        const val TERMS_CONSENT = "termsConsent"
+        const val CATEGORY = "category"
+        const val FAVORITES = "favorites"
+        const val SETTINGS = "settings"
+    }
+
+    fun navigateToQuote() {
+        navController.navigate(Routes.QUOTE) {
+            popUpTo(Routes.LOGIN) { inclusive = true }
         }
     }
 
-    val navigateToTermsConsent: (String) -> Unit = { userProfileJson ->
-        navController.navigate("termsConsent/${userProfileJson}")
+    fun navigateToLogin() {
+        navController.navigate(Routes.LOGIN, simpleNavOptions)
     }
 
-    val navigateToQuote: () -> Unit = {
-        navController.navigate("quote") {
-        }
+    fun navigateToTermsConsent(userProfileJson: String) {
+        navController.navigate("${Routes.TERMS_CONSENT}/$userProfileJson", simpleNavOptions)
     }
 
-    val navigateToCategory: () -> Unit = {
-        navController.navigate("category") {
-        }
+    fun navigateToCategory() {
+        navController.navigate(Routes.CATEGORY, simpleNavOptions)
     }
 
-    val navigateToQuoteFromNavBar: () -> Unit = {
-        navController.navigate("quote") {
-            popUpTo("quote") { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+    fun navigateToQuoteFromNavBar() {
+        navController.navigate(Routes.QUOTE, statePreservingNavOptions)
     }
 
-    val navigateToFavorites: () -> Unit = {
-        navController.navigate("favorites") {
-            popUpTo("quote") { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+    fun navigateToFavoritesFromNavBar() {
+        navController.navigate(Routes.FAVORITES, statePreservingNavOptions)
     }
 
-    val navigateToSettings: () -> Unit = {
-        navController.navigate("settings") {
-            popUpTo("quote") { saveState = true }
-            launchSingleTop = true
-            restoreState = true
-        }
+    fun navigateToSettingsFromNavBar() {
+        navController.navigate(Routes.SETTINGS, simpleNavOptions)
+    }
+
+    private val statePreservingNavOptions = navOptions {
+        launchSingleTop = true
+        restoreState = true
+    }
+
+    private val simpleNavOptions = navOptions {
+        launchSingleTop = true
     }
 }

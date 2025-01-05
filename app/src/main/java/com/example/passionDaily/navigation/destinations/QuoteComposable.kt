@@ -12,6 +12,7 @@ fun NavGraphBuilder.quoteComposable(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
 ) {
     composable(route = "quote") {
         QuoteScreen(
@@ -21,6 +22,7 @@ fun NavGraphBuilder.quoteComposable(
             onNavigateToSettings = onNavigateToSettings,
             sharedQuoteViewModel = sharedQuoteViewModel,
             currentScreen = NavigationBarScreens.QUOTE,
+            onNavigateToLogin = onNavigateToLogin,
         )
     }
 }

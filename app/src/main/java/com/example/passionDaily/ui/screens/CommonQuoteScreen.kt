@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import coil3.compose.AsyncImage
 import com.example.passionDaily.R
 import com.example.passionDaily.util.CommonNavigationBar
 import com.example.passionDaily.util.QuoteCategory
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun CommonQuoteScreen(
@@ -49,6 +51,7 @@ fun CommonQuoteScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
     showCategorySelection: Boolean = true,
 ) {
@@ -111,7 +114,8 @@ fun CommonQuoteScreen(
                 Buttons(
                     viewModel,
                     currentQuoteId = quoteId,
-                    category = selectedCategory
+                    category = selectedCategory,
+                    onRequireLogin = onNavigateToLogin,
                 )
             }
         }
@@ -253,11 +257,12 @@ fun QuoteAndPerson(
 fun Buttons(
     sharedQuoteViewModel: QuoteViewModelInterface,
     currentQuoteId: String,
-    category: QuoteCategory?
+    category: QuoteCategory?,
+    onRequireLogin: () -> Unit
 ) {
     ShareButton(sharedQuoteViewModel, currentQuoteId, category)
     Spacer(modifier = Modifier.width(57.dp))
-    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId)
+    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId, onRequireLogin = onRequireLogin)
 }
 
 @Composable
@@ -283,7 +288,10 @@ fun ShareButton(
 fun AddToFavoritesButton(
     sharedQuoteViewModel: QuoteViewModelInterface,
     currentQuoteId: String,
+    onRequireLogin: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
     val isFavorite by sharedQuoteViewModel.isFavorite(currentQuoteId)
         .collectAsState(initial = false)
@@ -299,10 +307,21 @@ fun AddToFavoritesButton(
         contentDescription = if (isFavorite) "remove from favorites icon" else "add to favorites icon",
         contentScale = ContentScale.None,
         modifier = Modifier.clickable {
-            if (isFavorite) {
-                sharedQuoteViewModel.removeFavorite(currentQuoteId)
+            if (currentUser == null) {
+                // 로그인되지 않은 경우
+                Toast.makeText(
+                    context,
+                    "즐겨찾기 기능을 사용하려면 로그인이 필요합니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                onRequireLogin()
             } else {
-                sharedQuoteViewModel.addFavorite(currentQuoteId)
+                // 로그인된 경우 즐겨찾기 기능 실행
+                if (isFavorite) {
+                    sharedQuoteViewModel.removeFavorite(currentQuoteId)
+                } else {
+                    sharedQuoteViewModel.addFavorite(currentQuoteId)
+                }
             }
         }
     )

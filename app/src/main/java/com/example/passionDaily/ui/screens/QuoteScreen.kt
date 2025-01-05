@@ -11,6 +11,7 @@ fun QuoteScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
     CommonQuoteScreen(
@@ -20,6 +21,7 @@ fun QuoteScreen(
         onNavigateToQuote = onNavigateToQuote,
         onNavigateToSettings = onNavigateToSettings,
         currentScreen = currentScreen,
+        onNavigateToLogin = onNavigateToLogin,
         showCategorySelection = true
     )
 }

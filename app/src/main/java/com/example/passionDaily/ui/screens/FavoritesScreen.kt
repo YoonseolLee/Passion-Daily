@@ -24,7 +24,8 @@ fun FavoritesScreen(
         onNavigateToQuote = onNavigateToQuote,
         onNavigateToSettings = onNavigateToSettings,
         currentScreen = currentScreen,
-        showCategorySelection = false
+        showCategorySelection = false,
+        onNavigateToLogin = {}
     )
 }
 
