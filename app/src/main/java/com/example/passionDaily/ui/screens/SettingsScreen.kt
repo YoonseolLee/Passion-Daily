@@ -67,6 +67,7 @@ fun SettingsScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
     SettingsScreenContent(
@@ -74,6 +75,7 @@ fun SettingsScreen(
         onFavoritesClicked = onNavigateToFavorites,
         onQuoteClicked = onNavigateToQuote,
         onSettingsClicked = onNavigateToSettings,
+        onNavigateToLogin = onNavigateToLogin,
         currentScreen = currentScreen
     )
 }
@@ -84,6 +86,7 @@ fun SettingsScreenContent(
     onFavoritesClicked: () -> Unit,
     onQuoteClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
     Box(
@@ -124,7 +127,7 @@ fun SettingsScreenContent(
             SettingsCategoryHeader(text = "계정 관리")
             LoginSettingItem(
                 viewModel,
-                onNavigateToLogin = onSettingsClicked
+                onNavigateToLogin = onNavigateToLogin
             )
 
             LogoutSettingItem(
@@ -644,15 +647,3 @@ private fun CommonTextItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewSettingsScreen() {
-    Passion_DailyTheme {
-        SettingsScreen(
-            onNavigateToFavorites = { },
-            onNavigateToQuote = { },
-            onNavigateToSettings = { },
-            currentScreen = NavigationBarScreens.SETTINGS
-        )
-    }
-}

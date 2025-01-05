@@ -9,13 +9,15 @@ fun NavGraphBuilder.settingsComposable(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
 ) {
     composable(route = "settings") {
         SettingsScreen(
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
-            currentScreen = NavigationBarScreens.SETTINGS
+            onNavigateToLogin = onNavigateToLogin,
+            currentScreen = NavigationBarScreens.SETTINGS,
         )
     }
 }
