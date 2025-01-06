@@ -15,10 +15,13 @@ enum class QuoteCategory(val koreanName: String) {
         fun fromKoreanName(koreanName: String): QuoteCategory? {
             return entries.find { it.koreanName == koreanName }
         }
+
+        fun fromEnglishName(name: String): QuoteCategory? {
+            return entries.find { it.name.lowercase() == name.lowercase() }
+        }
     }
 
-    // toString()을 오버라이드하여 koreanName을 반환하도록 함
     override fun toString(): String {
-        return koreanName
+        return name.lowercase()
     }
 }

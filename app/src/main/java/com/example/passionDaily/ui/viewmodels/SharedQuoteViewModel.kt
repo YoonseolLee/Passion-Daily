@@ -90,14 +90,14 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     private fun loadMoreQuotes(category: QuoteCategory) {
-        if (_isLoading.value) return  // StateFlow를 체크
+        if (_isLoading.value) return
 
         viewModelScope.launch {
-            _isLoading.value = true  // StateFlow 업데이트
+            _isLoading.value = true
 
             try {
                 val result = firestore.collection("categories")
-                    .document(category.koreanName)
+                    .document(category.toString())
                     .collection("quotes")
                     .orderBy("createdAt")
                     .let { query ->
@@ -105,17 +105,18 @@ class SharedQuoteViewModel @Inject constructor(
                     }
                     .limit(pageSize.toLong())
                     .get()
-                    .await()  // 코루틴으로 변환
+                    .await()
 
                 val newQuotes = result.map { document ->
                     Quote(
                         id = document.id,
-                        category = document.getString("category") ?: "",
+                        category = QuoteCategory.fromEnglishName(document.getString("category") ?: "")
+                            ?: QuoteCategory.OTHER,
                         text = document.getString("text") ?: "",
                         person = document.getString("person") ?: "",
                         imageUrl = document.getString("imageUrl") ?: "",
-                        createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
-                        modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
+                        createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
+                        modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
                         shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                     )
                 }
@@ -179,19 +180,20 @@ class SharedQuoteViewModel @Inject constructor(
 
             val db = Firebase.firestore
             db.collection("categories")
-                .document(selectedCategory.koreanName)
+                .document(selectedCategory.toString())
                 .collection("quotes")
                 .get()
                 .addOnSuccessListener { result ->
                     val quotes = result.map { document ->
                         Quote(
                             id = document.id,
-                            category = document.getString("category") ?: "",
+                            category = QuoteCategory.fromKoreanName(document.getString("category") ?: "")
+                                ?: QuoteCategory.OTHER,
                             text = document.getString("text") ?: "",
                             person = document.getString("person") ?: "",
                             imageUrl = document.getString("imageUrl") ?: "",
-                            createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
-                            modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
+                            createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
+                            modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
                             shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                         )
                     }
@@ -255,12 +257,13 @@ class SharedQuoteViewModel @Inject constructor(
                                 if (document.exists()) {
                                     Quote(
                                         id = document.id,
-                                        category = document.getString("category") ?: "",
+                                        category = QuoteCategory.fromKoreanName(document.getString("category") ?: "")
+                                            ?: QuoteCategory.OTHER,
                                         text = document.getString("text") ?: "",
                                         person = document.getString("person") ?: "",
                                         imageUrl = document.getString("imageUrl") ?: "",
-                                        createdAt = document.getTimestamp("createdAt")?.toDate()?.time ?: 0L,
-                                        modifiedAt = document.getTimestamp("modifiedAt")?.toDate()?.time ?: 0L,
+                                        createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
+                                        modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
                                         shareCount = document.getLong("shareCount")?.toInt() ?: 0,
                                     )
                                 } else {
@@ -295,7 +298,7 @@ class SharedQuoteViewModel @Inject constructor(
                 if (!quoteCategoryDao.isCategoryExists(selectedCategory.ordinal)) {
                     val categoryEntity = QuoteCategoryEntity(
                         categoryId = selectedCategory.ordinal,
-                        categoryName = selectedCategory.koreanName
+                        categoryName = selectedCategory.toString()
                     )
                     quoteCategoryDao.insertCategory(categoryEntity)
                 }
@@ -337,7 +340,7 @@ class SharedQuoteViewModel @Inject constructor(
             "added_at" to LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
             "quote_id" to quoteId,
-            "category" to _selectedQuoteCategory.value?.koreanName
+            "category" to _selectedQuoteCategory.value?.toString()
         )
 
         try {
