@@ -163,6 +163,9 @@ class SharedQuoteViewModel @Inject constructor(
 
     fun onCategorySelected(category: QuoteCategory?) {
         _selectedQuoteCategory.value = category
+        lastLoadedQuote = null  // 페이지네이션 상태 초기화
+        _currentQuoteIndex.value = 0  // 현재 인덱스도 초기화
+        _quotes.value = emptyList()  // 기존 quotes 초기화
         fetchQuotes(category)
     }
 
@@ -390,9 +393,5 @@ class SharedQuoteViewModel @Inject constructor(
 
     override fun isFavorite(quoteId: String): Flow<Boolean> {
         return favoriteDao.isQuoteFavorite(quoteId)
-    }
-
-    private fun getCurrentUser(): FirebaseUser? {
-        return FirebaseAuth.getInstance().currentUser
     }
 }
