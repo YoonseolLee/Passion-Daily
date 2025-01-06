@@ -22,7 +22,8 @@ fun QuoteScreen(
         onNavigateToSettings = onNavigateToSettings,
         currentScreen = currentScreen,
         onNavigateToLogin = onNavigateToLogin,
-        showCategorySelection = true
+        showCategorySelection = true,
+        isFavoriteQuotesEmpty = false
     )
 }
 

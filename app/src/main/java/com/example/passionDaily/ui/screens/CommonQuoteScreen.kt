@@ -54,6 +54,7 @@ fun CommonQuoteScreen(
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
     showCategorySelection: Boolean = true,
+    isFavoriteQuotesEmpty: Boolean,
 ) {
     val selectedCategory by viewModel.selectedQuoteCategory.collectAsState()
     val currentQuote by viewModel.currentQuote.collectAsState()
@@ -92,15 +93,45 @@ fun CommonQuoteScreen(
             }
         }
 
-        Column(
-            modifier = Modifier
-                .offset(y = 277.dp)
-                .align(Alignment.TopCenter)
-        ) {
-            QuoteAndPerson(
-                quote = currentQuote?.text ?: "",
-                author = currentQuote?.person ?: ""
-            )
+        if (isFavoriteQuotesEmpty) {
+            Box(
+                modifier = Modifier
+                    .offset(y = 300.dp)
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.sentiment_dissatisfied_icon),
+                        contentDescription = "sentiment_dissatisfied_icon",
+                        contentScale = ContentScale.None
+                    )
+                    Spacer(modifier = Modifier.height(60.dp))
+                    Text(
+                        text = "아직 즐겨찾기한 명언이 없어요.",
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                            fontWeight = FontWeight(400),
+                            color = Color(0xFFFFFFFF),
+                        )
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .offset(y = 277.dp)
+                    .align(Alignment.TopCenter)
+            ) {
+                QuoteAndPerson(
+                    quote = currentQuote?.text ?: "",
+                    author = currentQuote?.person ?: ""
+                )
+            }
         }
 
         Row(
@@ -206,9 +237,6 @@ fun QuoteAndPerson(
     quote: String,
     author: String,
 ) {
-//    LaunchedEffect(quote) {
-//        viewModel.updateQuoteStats(quoteId = currentQuote?.id ?: "", isViewed = true)
-//    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
