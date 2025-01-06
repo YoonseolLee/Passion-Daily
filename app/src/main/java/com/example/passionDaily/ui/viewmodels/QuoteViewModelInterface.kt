@@ -2,6 +2,7 @@ package com.example.passionDaily.ui.viewmodels
 
 import android.content.Context
 import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.util.FavoriteQuoteId
 import com.example.passionDaily.util.QuoteCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface QuoteViewModelInterface {
     val currentQuote: StateFlow<Quote?>
     val selectedQuoteCategory: StateFlow<QuoteCategory?>
+    val favoriteIds: StateFlow<Set<FavoriteQuoteId>>
 
     fun getQuoteCategories(): List<String>
     fun shareText(context: Context, text: String)

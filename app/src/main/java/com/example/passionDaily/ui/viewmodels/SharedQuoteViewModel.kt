@@ -9,25 +9,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.local.dao.FavoriteDao
 import com.example.passionDaily.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.data.local.dao.QuoteDao
-import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.util.FavoriteQuoteId
 import com.example.passionDaily.util.QuoteCategory
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +54,9 @@ class SharedQuoteViewModel @Inject constructor(
     override val selectedQuoteCategory: StateFlow<QuoteCategory?> =
         _selectedQuoteCategory.asStateFlow()
 
+    private val _favoriteIds = MutableStateFlow<Set<FavoriteQuoteId>>(emptySet())
+    override val favoriteIds: StateFlow<Set<FavoriteQuoteId>> = _favoriteIds.asStateFlow()
+
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
@@ -67,6 +68,17 @@ class SharedQuoteViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            favoriteDao.getAllFavoriteIdsWithCategory()
+                .collect { favorites ->
+                    _favoriteIds.value = favorites.map { (quoteId, categoryId) ->
+                        FavoriteQuoteId(quoteId, categoryId)
+                    }.toSet()
+                }
+        }
+    }
 
     // Pagination parameters
     private var lastLoadedQuote: DocumentSnapshot? = null
@@ -395,6 +407,8 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     override fun isFavorite(quoteId: String): Flow<Boolean> {
-        return favoriteDao.isQuoteFavorite(quoteId)
+        return favoriteIds.combine(_selectedQuoteCategory) { favorites, category ->
+            favorites.any { it.quoteId == quoteId && it.categoryId == category?.ordinal }
+        }
     }
 }
