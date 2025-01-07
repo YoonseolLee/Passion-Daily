@@ -69,6 +69,9 @@ class SharedQuoteViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _hasReachedEnd = MutableStateFlow(false)
+    private val _hasReachedStart = MutableStateFlow(true)
+
     init {
         viewModelScope.launch {
             // 즐겨찾기 데이터 초기화
@@ -99,24 +102,34 @@ class SharedQuoteViewModel @Inject constructor(
         _currentQuoteIndex.update { currentIndex ->
             val nextIndex = currentIndex + 1
 
-            // 남은 quotes 수가 loadingThreshold보다 적을 때 다음 페이지 로딩 시작
-            if ((_quotes.value.size - nextIndex) <= loadingThreshold) {
+            // 마지막 인덱스에 도달했고 더 로드할 데이터가 있다면
+            if (nextIndex >= _quotes.value.size && !_hasReachedEnd.value) {
                 _selectedQuoteCategory.value?.let { category ->
-                    // 이미 로딩 중이 아니고 마지막 페이지가 아닐 때만 로딩
                     if (!_isLoading.value && lastLoadedQuote != null) {
                         loadQuotes(category)
                     }
                 }
+                currentIndex // 로딩 중에는 현재 인덱스 유지
+            } else if (nextIndex >= _quotes.value.size) {
+                0 // 마지막 데이터까지 모두 로드된 경우에만 처음으로 순환
+            } else {
+                nextIndex
             }
-
-            // 현재 로딩 상태와 관계없이 다음 인덱스로 이동
-            if (nextIndex < _quotes.value.size) nextIndex else currentIndex
         }
     }
 
     override fun previousQuote() {
         _currentQuoteIndex.update { currentIndex ->
-            if (currentIndex > 0) currentIndex - 1 else currentIndex
+            if (currentIndex == 0) {
+                // 첫 페이지이고 이전 데이터가 없다면 마지막으로 이동 시도
+                if (_hasReachedEnd.value) {
+                    _quotes.value.size - 1
+                } else {
+                    currentIndex // 이전 데이터가 있다면 현재 위치 유지
+                }
+            } else {
+                currentIndex - 1
+            }
         }
     }
 
@@ -137,7 +150,6 @@ class SharedQuoteViewModel @Inject constructor(
 
                 val result = query.get().await()
 
-                // 새로운 quotes가 있을 때만 상태 업데이트
                 if (!result.isEmpty) {
                     val newQuotes = result.map { document ->
                         Quote(
@@ -157,6 +169,8 @@ class SharedQuoteViewModel @Inject constructor(
                     _quotes.update { currentQuotes ->
                         if (lastLoadedQuote == null) newQuotes else currentQuotes + newQuotes
                     }
+                } else {
+                    _hasReachedEnd.value = true
                 }
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
