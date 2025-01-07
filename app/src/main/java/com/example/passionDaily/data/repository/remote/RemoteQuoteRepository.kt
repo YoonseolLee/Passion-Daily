@@ -5,7 +5,12 @@ import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 
 interface RemoteQuoteRepository {
-    suspend fun getQuotes(category: QuoteCategory, lastQuote: DocumentSnapshot?, pageSize: Int): List<Quote>
+
+    suspend fun getQuotesByCategory(
+        category: QuoteCategory, pageSize: Int,
+        lastLoadedQuote: DocumentSnapshot?
+    ): RemoteQuoteRepositoryImpl.QuoteResult
+
     suspend fun getFavoriteQuotes(): List<Quote>
     suspend fun addToFavorites(quote: Quote, userId: String)
     suspend fun removeFromFavorites(quoteId: String, userId: String)

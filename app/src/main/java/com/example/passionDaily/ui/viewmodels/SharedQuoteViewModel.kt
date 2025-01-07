@@ -135,41 +135,23 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
-    private fun loadQuotes(category: QuoteCategory) {
+    fun loadQuotes(category: QuoteCategory) {
         if (_isLoading.value) return
 
         viewModelScope.launch {
             _isLoading.value = true
+
             try {
-                val query = firestore.collection("categories")
-                    .document(category.toString())
-                    .collection("quotes")
-                    .orderBy("createdAt")
-                    .let { query ->
-                        lastLoadedQuote?.let { query.startAfter(it) } ?: query
-                    }
-                    .limit(pageSize.toLong())
+                val result = repository.getQuotesByCategory(
+                    category = category,
+                    pageSize = pageSize,
+                    lastLoadedQuote = lastLoadedQuote
+                )
 
-                val result = query.get().await()
-
-                if (!result.isEmpty) {
-                    val newQuotes = result.map { document ->
-                        Quote(
-                            id = document.id,
-                            category = QuoteCategory.fromEnglishName(document.getString("category") ?: "")
-                                ?: QuoteCategory.OTHER,
-                            text = document.getString("text") ?: "",
-                            person = document.getString("person") ?: "",
-                            imageUrl = document.getString("imageUrl") ?: "",
-                            createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
-                            modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
-                            shareCount = document.getLong("shareCount")?.toInt() ?: 0
-                        )
-                    }
-
-                    lastLoadedQuote = result.documents.lastOrNull()
+                if (result.quotes.isNotEmpty()) {
+                    lastLoadedQuote = result.lastDocument
                     _quotes.update { currentQuotes ->
-                        if (lastLoadedQuote == null) newQuotes else currentQuotes + newQuotes
+                        if (lastLoadedQuote == null) result.quotes else currentQuotes + result.quotes
                     }
                 } else {
                     _hasReachedEnd.value = true

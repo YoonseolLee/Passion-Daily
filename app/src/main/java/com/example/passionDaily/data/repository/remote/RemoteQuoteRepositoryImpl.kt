@@ -8,9 +8,13 @@ import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepositoryImpl
 import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.util.QuoteConstants
+import com.example.passionDaily.util.QuoteConstants.DEFAULT_TIMESTAMP
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
@@ -25,40 +29,66 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
     private val remoteFavoriteRepository: RemoteFavoriteRepository,
     private val quoteCategoryDao: QuoteCategoryDao
 ) : RemoteQuoteRepository{
-    override suspend fun getQuotes(
+
+    data class QuoteResult(
+        val quotes: List<Quote>,
+        val lastDocument: DocumentSnapshot?
+    )
+
+    override suspend fun getQuotesByCategory(
         category: QuoteCategory,
-        lastQuote: DocumentSnapshot?,
-        pageSize: Int
-    ): List<Quote> = withContext(Dispatchers.IO) {
-        TODO("Not yet implemented")
+        pageSize: Int,
+        lastLoadedQuote: DocumentSnapshot?
+    ): QuoteResult = withContext(Dispatchers.IO) {
+        try {
+            val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
+            val result = query.get().await()
+            result.toQuoteResult()
+        } catch (e: Exception) {
+            Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
+            throw e
+        }
     }
 
-//    override suspend fun getFavoriteQuotes(): List<Quote> = withContext(Dispatchers.IO) {
-//        val currentUser = Firebase.auth.currentUser ?: return@withContext emptyList()
-//
-//        try {
-//            val favorites = firestore.collection("favorites")
-//                .document(currentUser.uid)
-//                .collection("saved_quotes")
-//                .get()
-//                .await()
-//                .documents
-//                .mapNotNull { it.toObject(FavoriteQuote::class.java) }
-//
-//            favorites.mapNotNull { favorite ->
-//                firestore.collection("categories")
-//                    .document(favorite.category.toString())
-//                    .collection("quotes")
-//                    .document(favorite.quoteId)
-//                    .get()
-//                    .await()
-//                    .toObject(Quote::class.java)
-//            }
-//        } catch (e: Exception) {
-//            Log.e("Repository", "Error fetching favorite quotes", e)
-//            emptyList()
-//        }
-//    }
+    private fun buildCategoryQuery(
+        category: QuoteCategory,
+        pageSize: Int,
+        lastLoadedQuote: DocumentSnapshot?
+    ): Query {
+        return firestore.collection("categories")
+            .document(category.toString())
+            .collection("quotes")
+            .orderBy("createdAt")
+            .let { query ->
+                lastLoadedQuote?.let { query.startAfter(it) } ?: query
+            }
+            .limit(pageSize.toLong())
+    }
+
+    private fun QuerySnapshot.toQuoteResult(): QuoteResult {
+        return if (isEmpty) {
+            QuoteResult(emptyList(), null)
+        } else {
+            QuoteResult(
+                quotes = documents.map { it.toQuote() },
+                lastDocument = documents.lastOrNull()
+            )
+        }
+    }
+
+    private fun DocumentSnapshot.toQuote(): Quote {
+        return Quote(
+            id = id,
+            category = QuoteCategory.fromEnglishName(getString("category") ?: "") ?: QuoteCategory.OTHER,
+            text = getString("text") ?: "",
+            person = getString("person") ?: "",
+            imageUrl = getString("imageUrl") ?: "",
+            createdAt = getString("createdAt") ?: DEFAULT_TIMESTAMP,
+            modifiedAt = getString("modifiedAt") ?: DEFAULT_TIMESTAMP,
+            shareCount = getLong("shareCount")?.toInt() ?: 0
+        )
+    }
+
 
     override suspend fun getFavoriteQuotes(): List<Quote> = withContext(Dispatchers.IO) {
         val currentUser = Firebase.auth.currentUser ?: return@withContext emptyList()
