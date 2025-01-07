@@ -6,7 +6,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
@@ -52,5 +51,4 @@ interface FavoriteDao {
         @ColumnInfo(name = "category_id")
         val categoryId: Int
     )
-
 }

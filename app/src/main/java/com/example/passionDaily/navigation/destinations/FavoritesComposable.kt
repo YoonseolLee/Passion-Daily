@@ -2,6 +2,7 @@ package com.example.passionDaily.navigation.destinations
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.ui.screens.FavoritesScreen
 import com.example.passionDaily.ui.screens.NavigationBarScreens
 

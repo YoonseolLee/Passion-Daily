@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.navigation.destinations.categoryComposable
 import com.example.passionDaily.navigation.destinations.favoritesComposable
 import com.example.passionDaily.navigation.destinations.loginComposable
@@ -51,7 +52,7 @@ fun SetupNavigation(
         favoritesComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
-            onNavigateToSettings = { screens.navigateToSettingsFromNavBar() }
+            onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
         )
         settingsComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
