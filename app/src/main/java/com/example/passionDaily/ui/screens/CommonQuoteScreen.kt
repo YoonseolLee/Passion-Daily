@@ -136,7 +136,7 @@ fun CommonQuoteScreen(
             }
         }
 
-        if (quotes.isEmpty()) {
+        if (quotes.isEmpty() && currentScreen == NavigationBarScreens.QUOTE) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
