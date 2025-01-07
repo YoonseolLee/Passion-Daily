@@ -50,7 +50,7 @@ class SharedQuoteViewModel @Inject constructor(
 ) : ViewModel(), QuoteViewModelInterface {
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
-    private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(null)
+    private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(QuoteCategory.EFFORT)
     override val selectedQuoteCategory: StateFlow<QuoteCategory?> =
         _selectedQuoteCategory.asStateFlow()
 
@@ -58,7 +58,7 @@ class SharedQuoteViewModel @Inject constructor(
     override val favoriteIds: StateFlow<Set<FavoriteQuoteId>> = _favoriteIds.asStateFlow()
 
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
-    val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
+    override val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
     private val _currentQuoteIndex = MutableStateFlow(0)
     override val currentQuote: StateFlow<Quote?> =
@@ -71,26 +71,45 @@ class SharedQuoteViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            favoriteDao.getAllFavoriteIdsWithCategory()
-                .collect { favorites ->
-                    _favoriteIds.value = favorites.map { (quoteId, categoryId) ->
-                        FavoriteQuoteId(quoteId, categoryId)
-                    }.toSet()
+            // 즐겨찾기 데이터 초기화
+            launch {
+                favoriteDao.getAllFavoriteIdsWithCategory()
+                    .collect { favorites ->
+                        _favoriteIds.value = favorites.map { (quoteId, categoryId) ->
+                            FavoriteQuoteId(quoteId, categoryId)
+                        }.toSet()
+                    }
+            }
+
+            // 초기 데이터 로드
+            launch {
+                _selectedQuoteCategory.value?.let { category ->
+                    loadQuotes(category)
                 }
+            }
         }
     }
 
     // Pagination parameters
     private var lastLoadedQuote: DocumentSnapshot? = null
     private val pageSize = 20
+    private val loadingThreshold = 10
 
     override fun nextQuote() {
         _currentQuoteIndex.update { currentIndex ->
             val nextIndex = currentIndex + 1
-            if (nextIndex >= (_quotes.value.size - 5)) {
-                // Load more quotes when approaching the end
-                _selectedQuoteCategory.value?.let { loadMoreQuotes(it) }
+
+            // 남은 quotes 수가 loadingThreshold보다 적을 때 다음 페이지 로딩 시작
+            if ((_quotes.value.size - nextIndex) <= loadingThreshold) {
+                _selectedQuoteCategory.value?.let { category ->
+                    // 이미 로딩 중이 아니고 마지막 페이지가 아닐 때만 로딩
+                    if (!_isLoading.value && lastLoadedQuote != null) {
+                        loadQuotes(category)
+                    }
+                }
             }
+
+            // 현재 로딩 상태와 관계없이 다음 인덱스로 이동
             if (nextIndex < _quotes.value.size) nextIndex else currentIndex
         }
     }
@@ -101,14 +120,13 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
-    private fun loadMoreQuotes(category: QuoteCategory) {
+    private fun loadQuotes(category: QuoteCategory) {
         if (_isLoading.value) return
 
         viewModelScope.launch {
             _isLoading.value = true
-
             try {
-                val result = firestore.collection("categories")
+                val query = firestore.collection("categories")
                     .document(category.toString())
                     .collection("quotes")
                     .orderBy("createdAt")
@@ -116,28 +134,34 @@ class SharedQuoteViewModel @Inject constructor(
                         lastLoadedQuote?.let { query.startAfter(it) } ?: query
                     }
                     .limit(pageSize.toLong())
-                    .get()
-                    .await()
 
-                val newQuotes = result.map { document ->
-                    Quote(
-                        id = document.id,
-                        category = QuoteCategory.fromEnglishName(document.getString("category") ?: "")
-                            ?: QuoteCategory.OTHER,
-                        text = document.getString("text") ?: "",
-                        person = document.getString("person") ?: "",
-                        imageUrl = document.getString("imageUrl") ?: "",
-                        createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
-                        modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
-                        shareCount = document.getLong("shareCount")?.toInt() ?: 0,
-                    )
+                val result = query.get().await()
+
+                // 새로운 quotes가 있을 때만 상태 업데이트
+                if (!result.isEmpty) {
+                    val newQuotes = result.map { document ->
+                        Quote(
+                            id = document.id,
+                            category = QuoteCategory.fromEnglishName(document.getString("category") ?: "")
+                                ?: QuoteCategory.OTHER,
+                            text = document.getString("text") ?: "",
+                            person = document.getString("person") ?: "",
+                            imageUrl = document.getString("imageUrl") ?: "",
+                            createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
+                            modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
+                            shareCount = document.getLong("shareCount")?.toInt() ?: 0
+                        )
+                    }
+
+                    lastLoadedQuote = result.documents.lastOrNull()
+                    _quotes.update { currentQuotes ->
+                        if (lastLoadedQuote == null) newQuotes else currentQuotes + newQuotes
+                    }
                 }
-                lastLoadedQuote = result.documents.lastOrNull()
-                _quotes.update { currentQuotes -> currentQuotes + newQuotes }
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
             } finally {
-                _isLoading.value = false  // StateFlow 업데이트
+                _isLoading.value = false
             }
         }
     }
@@ -179,46 +203,46 @@ class SharedQuoteViewModel @Inject constructor(
         lastLoadedQuote = null  // 페이지네이션 상태 초기화
         _currentQuoteIndex.value = 0  // 현재 인덱스도 초기화
         _quotes.value = emptyList()  // 기존 quotes 초기화
-        fetchQuotes(category)
+        category?.let { loadQuotes(it)}
     }
 
-    private fun fetchQuotes(selectedCategory: QuoteCategory?) {
-        try {
-            if (selectedCategory == null) {
-                Log.e("FetchQuotes", "Category is null")
-                return
-            }
-            Log.i("FetchQuotes", "selectedCategory : ${selectedCategory}")
-
-            val db = Firebase.firestore
-            db.collection("categories")
-                .document(selectedCategory.toString())
-                .collection("quotes")
-                .get()
-                .addOnSuccessListener { result ->
-                    val quotes = result.map { document ->
-                        Quote(
-                            id = document.id,
-                            category = QuoteCategory.fromKoreanName(document.getString("category") ?: "")
-                                ?: QuoteCategory.OTHER,
-                            text = document.getString("text") ?: "",
-                            person = document.getString("person") ?: "",
-                            imageUrl = document.getString("imageUrl") ?: "",
-                            createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
-                            modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
-                            shareCount = document.getLong("shareCount")?.toInt() ?: 0,
-                        )
-                    }
-                    Log.i("FetchQuotes", "quotes : ${quotes}")
-                    _quotes.value = quotes
-                }
-                .addOnFailureListener { exception ->
-                    Log.e("FirestoreError", "Error fetching quotes: ${exception.message}")
-                }
-        } catch (e: Exception) {
-            Log.e("FetchQuotes", "Unexpected error: ${e.message}")
-        }
-    }
+//    private fun fetchQuotes(selectedCategory: QuoteCategory?) {
+//        try {
+//            if (selectedCategory == null) {
+//                Log.e("FetchQuotes", "Category is null")
+//                return
+//            }
+//            Log.i("FetchQuotes", "selectedCategory : ${selectedCategory}")
+//
+//            val db = Firebase.firestore
+//            db.collection("categories")
+//                .document(selectedCategory.toString())
+//                .collection("quotes")
+//                .get()
+//                .addOnSuccessListener { result ->
+//                    val quotes = result.map { document ->
+//                        Quote(
+//                            id = document.id,
+//                            category = QuoteCategory.fromKoreanName(document.getString("category") ?: "")
+//                                ?: QuoteCategory.OTHER,
+//                            text = document.getString("text") ?: "",
+//                            person = document.getString("person") ?: "",
+//                            imageUrl = document.getString("imageUrl") ?: "",
+//                            createdAt = document.getString("createdAt") ?: "1970-01-01 00:00",
+//                            modifiedAt = document.getString("modifiedAt") ?: "1970-01-01 00:00",
+//                            shareCount = document.getLong("shareCount")?.toInt() ?: 0,
+//                        )
+//                    }
+//                    Log.i("FetchQuotes", "quotes : ${quotes}")
+//                    _quotes.value = quotes
+//                }
+//                .addOnFailureListener { exception ->
+//                    Log.e("FirestoreError", "Error fetching quotes: ${exception.message}")
+//                }
+//        } catch (e: Exception) {
+//            Log.e("FetchQuotes", "Unexpected error: ${e.message}")
+//        }
+//    }
 
     override fun fetchFavoriteQuotes() {
         try {
@@ -321,7 +345,7 @@ class SharedQuoteViewModel @Inject constructor(
                         quoteId = quoteId,
                         text = currentQuote.text,
                         person = currentQuote.person,
-                        imageUrl = currentQuote.imageUrl ?: "",
+                        imageUrl = currentQuote.imageUrl,
                         categoryId = selectedCategory.ordinal
                     )
                     quoteDao.insertQuote(quoteEntity)

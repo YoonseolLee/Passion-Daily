@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface QuoteViewModelInterface {
+    val quotes: StateFlow<List<Quote>>
     val currentQuote: StateFlow<Quote?>
     val selectedQuoteCategory: StateFlow<QuoteCategory?>
     val favoriteIds: StateFlow<Set<FavoriteQuoteId>>

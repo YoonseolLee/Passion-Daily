@@ -1,8 +1,12 @@
 package com.example.passionDaily.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun QuoteScreen(
@@ -14,6 +18,13 @@ fun QuoteScreen(
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
+
+    val selectedCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
+
+    LaunchedEffect(Unit) {
+        sharedQuoteViewModel.onCategorySelected(selectedCategory)
+    }
+
     CommonQuoteScreen(
         viewModel = sharedQuoteViewModel,
         onNavigateToCategory = onNavigateToCategory,

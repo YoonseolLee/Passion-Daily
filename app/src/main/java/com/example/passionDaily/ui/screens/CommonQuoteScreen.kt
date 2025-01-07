@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,6 +59,7 @@ fun CommonQuoteScreen(
 ) {
     val selectedCategory by viewModel.selectedQuoteCategory.collectAsState()
     val currentQuote by viewModel.currentQuote.collectAsState()
+    val quotes by viewModel.quotes.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundImage(imageUrl = currentQuote?.imageUrl)
@@ -134,20 +136,27 @@ fun CommonQuoteScreen(
             }
         }
 
-        Row(
-            modifier = Modifier
-                .offset(y = -168.dp)
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            currentQuote?.id?.let { quoteId ->
-                Buttons(
-                    viewModel,
-                    currentQuoteId = quoteId,
-                    category = selectedCategory,
-                    onRequireLogin = onNavigateToLogin,
-                )
+        if (quotes.isEmpty()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .offset(y = -168.dp)
+                    .align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                currentQuote?.id?.let { quoteId ->
+                    Buttons(
+                        viewModel,
+                        currentQuoteId = quoteId,
+                        category = selectedCategory,
+                        onRequireLogin = onNavigateToLogin,
+                    )
+                }
             }
         }
 
@@ -165,6 +174,7 @@ fun CommonQuoteScreen(
         }
     }
 }
+
 
 @Composable
 fun BackgroundImage(imageUrl: String?) {

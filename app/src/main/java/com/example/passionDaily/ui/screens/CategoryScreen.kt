@@ -1,6 +1,5 @@
 package com.example.passionDaily.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -87,7 +86,7 @@ fun CategoryScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp)
+                .padding(top = 32.dp)
                 .align(Alignment.TopCenter)
         ) {
             Row(
