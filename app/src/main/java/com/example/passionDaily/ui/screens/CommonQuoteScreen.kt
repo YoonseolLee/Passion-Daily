@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.screens
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -300,7 +301,7 @@ fun Buttons(
 ) {
     ShareButton(sharedQuoteViewModel, currentQuoteId, category)
     Spacer(modifier = Modifier.width(57.dp))
-    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId, onRequireLogin = onRequireLogin)
+    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId, category, onRequireLogin = onRequireLogin)
 }
 
 @Composable
@@ -326,12 +327,16 @@ fun ShareButton(
 fun AddToFavoritesButton(
     sharedQuoteViewModel: QuoteViewModelInterface,
     currentQuoteId: String,
+    category: QuoteCategory?,
     onRequireLogin: () -> Unit,
 ) {
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
 
-    val isFavorite by sharedQuoteViewModel.isFavorite(currentQuoteId)
+    val categoryId = category?.categoryId ?: 0
+    val userId = currentUser?.uid ?: ""
+
+    val isFavorite by sharedQuoteViewModel.isFavorite(userId, currentQuoteId, categoryId)
         .collectAsState(initial = false)
 
     val iconResource = if (isFavorite) {
@@ -356,8 +361,10 @@ fun AddToFavoritesButton(
             } else {
                 // 로그인된 경우 즐겨찾기 기능 실행
                 if (isFavorite) {
+                    Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
                     sharedQuoteViewModel.removeFavorite(currentQuoteId)
                 } else {
+                    Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
                     sharedQuoteViewModel.addFavorite(currentQuoteId)
                 }
             }

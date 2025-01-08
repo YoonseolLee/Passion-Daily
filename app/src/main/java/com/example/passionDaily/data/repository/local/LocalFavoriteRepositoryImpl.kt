@@ -15,15 +15,11 @@ class LocalFavoriteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun insertFavorite(favorite: FavoriteEntity) {
-        TODO("Not yet implemented")
+        favoriteDao.insertFavorite(favorite)
     }
 
-    override suspend fun deleteFavorite(favorite: FavoriteEntity) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun isQuoteFavorite(quoteId: String): Flow<Boolean> {
-        TODO("Not yet implemented")
+    override suspend fun deleteFavorite(userId: String, quoteId: String, categoryId: Int) {
+        favoriteDao.deleteFavorite(userId, quoteId, categoryId)
     }
 
     override suspend fun deleteAllFavoritesByUserId(userId: String) {
@@ -36,5 +32,9 @@ class LocalFavoriteRepositoryImpl @Inject constructor(
 
     override suspend fun getAllFavoriteIdsWithCategory(userId: String): Flow<List<FavoriteWithCategory>> {
         return favoriteDao.getAllFavoriteIdsWithCategory(userId)
+    }
+
+    override fun checkFavoriteEntity(userId: String, quoteId: String, categoryId: Int): Flow<FavoriteEntity?> {
+        return favoriteDao.checkFavoriteEntity(userId, quoteId, categoryId)
     }
 }

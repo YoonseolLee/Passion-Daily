@@ -14,13 +14,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface QuoteDao {
     @Query("SELECT * FROM quotes WHERE quote_id = :quoteId")
-    suspend fun getQuoteById(quoteId: Int): QuoteEntity?
+    suspend fun getQuoteById(quoteId: String): QuoteEntity?
 
     @Query("SELECT * FROM quotes WHERE quote_id IN (:quoteIds)")
-    suspend fun getQuotesByIds(quoteIds: List<Int>): List<QuoteEntity>
+    suspend fun getQuotesByIds(quoteIds: List<String>): List<QuoteEntity>
 
     @Query("SELECT * FROM quotes WHERE category_id = :categoryId")
-    fun getQuotesByCategory(categoryId: Int): Flow<List<QuoteEntity>>
+    fun getQuotesByCategory(categoryId: String): Flow<List<QuoteEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuote(quote: QuoteEntity)
@@ -28,12 +28,12 @@ interface QuoteDao {
     @Update
     suspend fun updateQuote(quote: QuoteEntity)
 
-    @Delete
-    suspend fun deleteQuote(quote: QuoteEntity)
+    @Query("DELETE FROM quotes WHERE quote_id = :quoteId")
+    suspend fun deleteQuote(quoteId: String)
 
     @Transaction
     @Query("SELECT * FROM quotes WHERE quote_id = :quoteId")
-    suspend fun getQuoteWithCategory(quoteId: Int): QuoteWithQuoteCategory?
+    suspend fun getQuoteWithCategory(quoteId: String): QuoteWithQuoteCategory?
 
     @Query("SELECT EXISTS(SELECT 1 FROM quotes WHERE quote_id = :quoteId)")
     suspend fun isQuoteExists(quoteId: String): Boolean

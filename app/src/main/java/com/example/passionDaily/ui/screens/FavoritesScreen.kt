@@ -20,7 +20,7 @@ fun FavoritesScreen(
         sharedQuoteViewModel.fetchFavoriteQuotes()
     }
 
-    val favoriteQuotes by sharedQuoteViewModel.quotes.collectAsState()
+    val favoriteQuotes by sharedQuoteViewModel.favoriteQuotes.collectAsState()
     val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
 
     if (isFavoriteQuotesEmpty) {
