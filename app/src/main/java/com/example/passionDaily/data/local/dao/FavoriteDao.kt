@@ -1,13 +1,12 @@
 package com.example.passionDaily.data.local.dao
 
-import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.passionDaily.data.local.dto.FavoriteWithCategory
 import com.example.passionDaily.data.local.entity.FavoriteEntity
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -29,9 +28,7 @@ interface FavoriteDao {
     suspend fun deleteAllFavoritesByUserId(userId: String)
 
     @Query("SELECT quote_id FROM favorites WHERE user_id = :userId")
-    fun getAllFavoriteIds(
-        userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    ): Flow<List<String>>
+    fun getAllFavoriteIds(userId: String): Flow<List<String>>
 
     @Query(
         """
@@ -41,14 +38,6 @@ interface FavoriteDao {
             WHERE f.user_id = :userId
         """
     )
-    fun getAllFavoriteIdsWithCategory(
-        userId: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    ): Flow<List<FavoriteWithCategory>>
-
-    data class FavoriteWithCategory(
-        @ColumnInfo(name = "quote_id")
-        val quoteId: String,
-        @ColumnInfo(name = "category_id")
-        val categoryId: Int
-    )
+    fun getAllFavoriteIdsWithCategory(userId: String):
+            Flow<List<FavoriteWithCategory>>
 }

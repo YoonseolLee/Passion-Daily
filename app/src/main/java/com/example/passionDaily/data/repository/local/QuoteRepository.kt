@@ -17,7 +17,6 @@ class QuoteRepository @Inject constructor(private val quoteDao: QuoteDao) {
         return quoteDao.getQuotesByIds(quoteIds)
     }
 
-
     fun getQuotesByCategory(categoryId: Int): Flow<List<QuoteEntity>> {
         return quoteDao.getQuotesByCategory(categoryId)
     }

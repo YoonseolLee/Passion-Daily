@@ -13,6 +13,9 @@ import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
+import com.example.passionDaily.data.repository.local.LocalFavoriteRepositoryImpl
+import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.util.FavoriteQuoteId
 import com.example.passionDaily.util.QuoteCategory
@@ -48,7 +51,8 @@ class SharedQuoteViewModel @Inject constructor(
     private val favoriteDao: FavoriteDao,
     private val quoteDao: QuoteDao,
     private val quoteCategoryDao: QuoteCategoryDao,
-    private val repository: RemoteQuoteRepositoryImpl
+    private val remoteQuoteRepository: RemoteQuoteRepository,
+    private val localFavoriteRepository: LocalFavoriteRepository,
 ) : ViewModel(), QuoteViewModelInterface {
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
@@ -74,11 +78,13 @@ class SharedQuoteViewModel @Inject constructor(
     private val _hasReachedEnd = MutableStateFlow(false)
     private val _hasReachedStart = MutableStateFlow(true)
 
+    private val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
     init {
         viewModelScope.launch {
             // 즐겨찾기 데이터 초기화
             launch {
-                favoriteDao.getAllFavoriteIdsWithCategory()
+                localFavoriteRepository.getAllFavoriteIdsWithCategory(userId)
                     .collect { favorites ->
                         _favoriteIds.value = favorites.map { (quoteId, categoryId) ->
                             FavoriteQuoteId(quoteId, categoryId)
@@ -142,7 +148,7 @@ class SharedQuoteViewModel @Inject constructor(
             _isLoading.value = true
 
             try {
-                val result = repository.getQuotesByCategory(
+                val result = remoteQuoteRepository.getQuotesByCategory(
                     category = category,
                     pageSize = pageSize,
                     lastLoadedQuote = lastLoadedQuote
@@ -200,13 +206,13 @@ class SharedQuoteViewModel @Inject constructor(
         lastLoadedQuote = null  // 페이지네이션 상태 초기화
         _currentQuoteIndex.value = 0  // 현재 인덱스도 초기화
         _quotes.value = emptyList()  // 기존 quotes 초기화
-        category?.let { loadQuotes(it)}
+        category?.let { loadQuotes(it) }
     }
 
     override fun fetchFavoriteQuotes() {
         // TODO: _quotes를 _favoritequotes로 변경 후 페이지네이션 적용
         viewModelScope.launch {
-            val favoriteQuotes  = repository.getFavoriteQuotes()
+            val favoriteQuotes = remoteQuoteRepository.getFavoriteQuotes()
             _quotes.value = favoriteQuotes
         }
     }

@@ -1,6 +1,7 @@
 package com.example.passionDaily.data.repository.remote
 
 import android.util.Log
+import com.example.passionDaily.data.local.dao.FavoriteDao
 import com.example.passionDaily.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.data.local.dao.QuoteDao
 import com.example.passionDaily.data.remote.model.FavoriteQuote
@@ -18,6 +19,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
