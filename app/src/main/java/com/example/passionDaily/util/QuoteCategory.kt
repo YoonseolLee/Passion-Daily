@@ -21,7 +21,11 @@ enum class QuoteCategory(val koreanName: String) {
         }
     }
 
-    override fun toString(): String {
+    fun getLowercaseCategoryId(): String {
         return name.lowercase()
+    }
+
+    override fun toString(): String {
+        return koreanName
     }
 }

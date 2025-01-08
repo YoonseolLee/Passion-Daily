@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
-import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun QuoteScreen(
@@ -22,7 +21,9 @@ fun QuoteScreen(
     val selectedCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
 
     LaunchedEffect(Unit) {
-        sharedQuoteViewModel.onCategorySelected(selectedCategory)
+        if (selectedCategory != null) {
+            sharedQuoteViewModel.onCategorySelected(selectedCategory)
+        }
     }
 
     CommonQuoteScreen(

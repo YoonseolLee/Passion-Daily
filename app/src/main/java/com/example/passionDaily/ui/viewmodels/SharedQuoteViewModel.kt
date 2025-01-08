@@ -17,6 +17,7 @@ import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepositoryImpl
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
+import com.example.passionDaily.domain.usecase.QuoteUseCases
 import com.example.passionDaily.util.FavoriteQuoteId
 import com.example.passionDaily.util.QuoteCategory
 import com.google.android.gms.tasks.Tasks
@@ -53,7 +54,15 @@ class SharedQuoteViewModel @Inject constructor(
     private val quoteCategoryDao: QuoteCategoryDao,
     private val remoteQuoteRepository: RemoteQuoteRepository,
     private val localFavoriteRepository: LocalFavoriteRepository,
+    private val quoteUseCases: QuoteUseCases,
 ) : ViewModel(), QuoteViewModelInterface {
+    // Pagination parameters
+    companion object {
+        private var lastLoadedQuote: DocumentSnapshot? = null
+        private val pageSize: Int = 20
+        private val loadingThreshold: Int = 10
+    }
+
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(QuoteCategory.EFFORT)
@@ -101,11 +110,6 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
-    // Pagination parameters
-    private var lastLoadedQuote: DocumentSnapshot? = null
-    private val pageSize = 20
-    private val loadingThreshold = 10
-
     override fun nextQuote() {
         _currentQuoteIndex.update { currentIndex ->
             val nextIndex = currentIndex + 1
@@ -146,6 +150,7 @@ class SharedQuoteViewModel @Inject constructor(
 
         viewModelScope.launch {
             _isLoading.value = true
+            Log.d("SharedQuoteViewModel", "Using pageSize: $pageSize") // 로그 추가
 
             try {
                 val result = remoteQuoteRepository.getQuotesByCategory(
@@ -154,10 +159,13 @@ class SharedQuoteViewModel @Inject constructor(
                     lastLoadedQuote = lastLoadedQuote
                 )
 
+                Log.d("loadQuotes", "result: $result")
+
                 if (result.quotes.isNotEmpty()) {
                     lastLoadedQuote = result.lastDocument
                     _quotes.update { currentQuotes ->
-                        if (lastLoadedQuote == null) result.quotes else currentQuotes + result.quotes
+                        if (lastLoadedQuote == null) result.quotes
+                        else currentQuotes + result.quotes
                     }
                 } else {
                     _hasReachedEnd.value = true
@@ -175,27 +183,18 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     override fun shareText(context: Context, text: String) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain" // 공유 타입 설정
-            putExtra(Intent.EXTRA_TEXT, text)
-        }
-        val chooser = Intent.createChooser(intent, "공유하기")
-        context.startActivity(chooser)
+        quoteUseCases.shareText(context, text)
     }
 
     override fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
         category?.let {
-            firestore.collection("categories")
-                .document(it.koreanName)
-                .collection("quotes")
-                .document(quoteId)
-                .update("shareCount", FieldValue.increment(1))
-                .addOnSuccessListener {
-                    Log.d("ShareCount", "Share count incremented successfully")
-                }
-                .addOnFailureListener { e ->
+            viewModelScope.launch {
+                try {
+                    remoteQuoteRepository.incrementShareCount(quoteId, it)
+                } catch (e: Exception) {
                     Log.e("ShareCount", "Error incrementing share count", e)
                 }
+            }
         } ?: run {
             Log.e("ShareCount", "Category is null")
         }
@@ -210,7 +209,6 @@ class SharedQuoteViewModel @Inject constructor(
     }
 
     override fun fetchFavoriteQuotes() {
-        // TODO: _quotes를 _favoritequotes로 변경 후 페이지네이션 적용
         viewModelScope.launch {
             val favoriteQuotes = remoteQuoteRepository.getFavoriteQuotes()
             _quotes.value = favoriteQuotes
@@ -229,7 +227,7 @@ class SharedQuoteViewModel @Inject constructor(
                 if (!quoteCategoryDao.isCategoryExists(selectedCategory.ordinal)) {
                     val categoryEntity = QuoteCategoryEntity(
                         categoryId = selectedCategory.ordinal,
-                        categoryName = selectedCategory.toString()
+                        categoryName = selectedCategory.getLowercaseCategoryId()
                     )
                     quoteCategoryDao.insertCategory(categoryEntity)
                 }
@@ -271,7 +269,7 @@ class SharedQuoteViewModel @Inject constructor(
             "addedAt" to LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
             "quoteId" to quoteId,
-            "category" to _selectedQuoteCategory.value?.toString()
+            "category" to _selectedQuoteCategory.value?.getLowercaseCategoryId()
         )
 
         try {
