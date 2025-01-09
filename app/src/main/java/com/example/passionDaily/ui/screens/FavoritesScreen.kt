@@ -5,11 +5,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
 
 @Composable
 fun FavoritesScreen(
-    sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel(),
+//    sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel(),
+    favoritesViewModel: FavoritesViewModel = hiltViewModel(),
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -17,15 +19,18 @@ fun FavoritesScreen(
 ) {
 
     LaunchedEffect(key1 = Unit) {
-        sharedQuoteViewModel.fetchFavoriteQuotes()
+//        sharedQuoteViewModel.fetchFavoriteQuotes()
+        favoritesViewModel.fetchFavoriteQuotes()
     }
 
-    val favoriteQuotes by sharedQuoteViewModel.favoriteQuotes.collectAsState()
+//    val favoriteQuotes by sharedQuoteViewModel.favoriteQuotes.collectAsState()
+    val favoriteQuotes by favoritesViewModel.favoriteQuotes.collectAsState()
     val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
 
     if (isFavoriteQuotesEmpty) {
         CommonQuoteScreen(
-            viewModel = sharedQuoteViewModel,
+            viewModel = favoritesViewModel,
+//            viewModel = sharedQuoteViewModel,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
@@ -36,7 +41,8 @@ fun FavoritesScreen(
         )
     } else {
         CommonQuoteScreen(
-            viewModel = sharedQuoteViewModel,
+            viewModel = favoritesViewModel,
+//            viewModel = sharedQuoteViewModel,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,

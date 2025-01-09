@@ -3,6 +3,7 @@ package com.example.passionDaily.data.repository.local
 import com.example.passionDaily.data.local.dao.FavoriteDao
 import com.example.passionDaily.data.local.dto.FavoriteWithCategory
 import com.example.passionDaily.data.local.entity.FavoriteEntity
+import com.example.passionDaily.data.local.entity.QuoteEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -10,8 +11,8 @@ import javax.inject.Inject
 class LocalFavoriteRepositoryImpl @Inject constructor(
     private val favoriteDao: FavoriteDao
 ) : LocalFavoriteRepository {
-    override suspend fun getAllFavorites(): Flow<List<FavoriteEntity>> {
-        TODO("Not yet implemented")
+    override suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>> {
+        return favoriteDao.getAllFavorites(userId)
     }
 
     override suspend fun insertFavorite(favorite: FavoriteEntity) {
@@ -34,7 +35,11 @@ class LocalFavoriteRepositoryImpl @Inject constructor(
         return favoriteDao.getAllFavoriteIdsWithCategory(userId)
     }
 
-    override fun checkFavoriteEntity(userId: String, quoteId: String, categoryId: Int): Flow<FavoriteEntity?> {
+    override fun checkFavoriteEntity(
+        userId: String,
+        quoteId: String,
+        categoryId: Int
+    ): Flow<FavoriteEntity?> {
         return favoriteDao.checkFavoriteEntity(userId, quoteId, categoryId)
     }
 }

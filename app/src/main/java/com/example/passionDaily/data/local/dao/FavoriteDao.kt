@@ -14,6 +14,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FavoriteDao {
 
+    @Query("""
+    SELECT q.* 
+    FROM quotes q
+    INNER JOIN favorites f ON q.quote_id = f.quote_id 
+    WHERE f.user_id = :userId
+    """)
+    suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(favorite: FavoriteEntity)
 
@@ -39,19 +47,15 @@ interface FavoriteDao {
 
     @Query(
         """
-            SELECT f.quote_id, q.category_id 
-            FROM favorites f 
-            INNER JOIN quotes q ON f.quote_id = q.quote_id 
+            SELECT f.quote_id, q.category_id
+            FROM favorites f
+            INNER JOIN quotes q ON f.quote_id = q.quote_id
             WHERE f.user_id = :userId
         """
     )
     fun getAllFavoriteIdsWithCategory(userId: String):
             Flow<List<FavoriteWithCategory>>
 
-    @Query("SELECT * FROM favorites")
-    suspend fun getAllFavorites(): List<FavoriteEntity>
-
     @Query("SELECT * FROM quotes")
     suspend fun getAllQuotes(): List<QuoteEntity>
-
 }
