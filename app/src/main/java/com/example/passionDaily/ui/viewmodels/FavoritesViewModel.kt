@@ -1,6 +1,7 @@
 package com.example.passionDaily.ui.viewmodels
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.local.entity.FavoriteEntity
@@ -35,8 +36,13 @@ class FavoritesViewModel @Inject constructor(
     private val remoteFavoriteRepository: RemoteFavoriteRepository,
     private val localQuoteRepository: LocalQuoteRepository,
     private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
-    private val quoteStateHolder: QuoteStateHolder
+    private val quoteStateHolder: QuoteStateHolder,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel(), QuoteInteractionHandler {
+
+    companion object {
+        private const val KEY_FAVORITE_INDEX = "favorite_quote_index"
+    }
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -46,7 +52,7 @@ class FavoritesViewModel @Inject constructor(
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     val quotes = quoteStateHolder.quotes
 
-    private val _currentQuoteIndex = MutableStateFlow(0)
+    private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_FAVORITE_INDEX, 0)
     val currentFavoriteQuote: StateFlow<QuoteEntity?> =
         combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
@@ -57,37 +63,22 @@ class FavoritesViewModel @Inject constructor(
 
 
     override fun previousQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            val quotesSize = _favoriteQuotes.value.size
-
-            when {
-                // 현재 인덱스가 0이면서 즐겨찾기가 있는 경우 -> 마지막 즐겨찾기로
-                currentIndex == 0 && quotesSize > 0 -> quotesSize - 1
-
-                // 현재 인덱스가 0이면서 즐겨찾기가 없는 경우 -> 현재 위치 유지
-                currentIndex == 0 -> currentIndex
-
-                // 이전 즐겨찾기로 이동
-                else -> currentIndex - 1
-            }
+        val quotesSize = _favoriteQuotes.value.size
+        savedStateHandle[KEY_FAVORITE_INDEX] = when {
+            _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
+            _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
+            else -> _currentQuoteIndex.value - 1
         }
     }
 
     override fun nextQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            val nextIndex = currentIndex + 1
-            val quotesSize = _favoriteQuotes.value.size
+        val nextIndex = _currentQuoteIndex.value + 1
+        val quotesSize = _favoriteQuotes.value.size
 
-            when {
-                // 다음 인덱스가 즐겨찾기 크기보다 크고, 즐겨찾기가 있는 경우 -> 처음으로
-                nextIndex >= quotesSize && quotesSize > 0 -> 0
-
-                // 다음 인덱스가 즐겨찾기 크기보다 크고, 즐겨찾기가 없는 경우 -> 현재 위치 유지
-                nextIndex >= quotesSize -> currentIndex
-
-                // 정상적인 다음 인덱스로 이동
-                else -> nextIndex
-            }
+        savedStateHandle[KEY_FAVORITE_INDEX] = when {
+            nextIndex >= quotesSize && quotesSize > 0 -> 0
+            nextIndex >= quotesSize -> _currentQuoteIndex.value
+            else -> nextIndex
         }
     }
 
@@ -106,7 +97,7 @@ class FavoritesViewModel @Inject constructor(
 
                 // 인덱스가 범위를 벗어났다면 0으로 리셋
                 if (_currentQuoteIndex.value >= favorites.size) {
-                    _currentQuoteIndex.value = 0
+                    savedStateHandle[KEY_FAVORITE_INDEX] = 0
                 }
 
                 Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
@@ -130,38 +121,34 @@ class FavoritesViewModel @Inject constructor(
     }
 
     fun addFavorite(quoteId: String) {
-        // TODO: 코루틴 도전
         val currentUser = FirebaseAuth.getInstance().currentUser ?: return
         val selectedCategory = selectedQuoteCategory.value ?: return
         val currentQuote = quotes.value.find { it.id == quoteId } ?: return
 
         viewModelScope.launch {
             try {
-                if (!localQuoteCategoryRepository.isCategoryExists(selectedCategory.ordinal)) {
-                    // 1. 카테고리가 없으면 기기에 추가
-                    val categoryEntity = QuoteCategoryEntity(
-                        categoryId = selectedCategory.ordinal,
-                        categoryName = selectedCategory.getLowercaseCategoryId()
-                    )
-                    localQuoteCategoryRepository.insertCategory(categoryEntity)
-                }
-                Log.d("Favorite", "insertCategory: $quoteId")
-
-                // 2. Quote가 없으면 기기에 추가
-                if (!localQuoteRepository.isQuoteExists(quoteId)) {
-                    val quoteEntity = QuoteEntity(
-                        quoteId = quoteId,
-                        text = currentQuote.text,
-                        person = currentQuote.person,
-                        imageUrl = currentQuote.imageUrl,
-                        categoryId = selectedCategory.ordinal
-                    )
-                    localQuoteRepository.insertQuote(quoteEntity)
-                }
-                Log.d("Favorite", "즐겨찾기 추가: $quoteId")
-                // 3. Favorite에 추가
+                // 즐겨찾기 추가 후 현재 인덱스 업데이트
                 coroutineScope {
                     launch {
+                        if (!localQuoteCategoryRepository.isCategoryExists(selectedCategory.ordinal)) {
+                            val categoryEntity = QuoteCategoryEntity(
+                                categoryId = selectedCategory.ordinal,
+                                categoryName = selectedCategory.getLowercaseCategoryId()
+                            )
+                            localQuoteCategoryRepository.insertCategory(categoryEntity)
+                        }
+
+                        if (!localQuoteRepository.isQuoteExists(quoteId)) {
+                            val quoteEntity = QuoteEntity(
+                                quoteId = quoteId,
+                                text = currentQuote.text,
+                                person = currentQuote.person,
+                                imageUrl = currentQuote.imageUrl,
+                                categoryId = selectedCategory.ordinal
+                            )
+                            localQuoteRepository.insertQuote(quoteEntity)
+                        }
+
                         val favoriteEntity = FavoriteEntity(
                             userId = currentUser.uid,
                             quoteId = quoteId,
@@ -171,6 +158,9 @@ class FavoritesViewModel @Inject constructor(
                     }
                     launch { addFavoriteToFirestore(currentUser, quoteId) }
                 }
+
+                // 즐겨찾기 추가 후 목록 새로고침
+                loadFavorites()
             } catch (e: Exception) {
                 Log.e("Favorite", "즐겨찾기 추가 실패", e)
             }
@@ -214,6 +204,9 @@ class FavoritesViewModel @Inject constructor(
                         remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId)
                     }
                 }
+
+                // 즐겨찾기 제거 후 목록 새로고침
+                loadFavorites()
             } catch (e: Exception) {
                 Log.e("Favorite", "즐겨찾기 제거 실패", e)
             }
