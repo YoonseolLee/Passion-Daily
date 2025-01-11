@@ -3,6 +3,7 @@ package com.example.passionDaily.ui.viewmodels
 
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.remote.model.Quote
@@ -26,12 +27,14 @@ import javax.inject.Inject
 class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
     private val quoteUseCases: QuoteUseCases,
-    private val quoteStateHolder: QuoteStateHolder
+    private val quoteStateHolder: QuoteStateHolder,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel(), QuoteInteractionHandler {
 
     companion object {
         private var lastLoadedQuote: DocumentSnapshot? = null
         private val pageSize: Int = 20
+        private const val KEY_QUOTE_INDEX = "quote_index"
     }
 
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
@@ -39,7 +42,7 @@ class QuoteViewModel @Inject constructor(
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     val quotes = quoteStateHolder.quotes
 
-    private val _currentQuoteIndex = MutableStateFlow(0)
+    private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
     val currentQuote: StateFlow<Quote?> = combine(quotes, _currentQuoteIndex) { quotes, index ->
         quotes.getOrNull(index)
     }.stateIn(viewModelScope, SharingStarted.Lazily, null)
@@ -48,6 +51,8 @@ class QuoteViewModel @Inject constructor(
     val isQuoteLoading: StateFlow<Boolean> = _isQuoteLoading.asStateFlow()
 
     private val _hasQuoteReachedEnd = MutableStateFlow(false)
+
+    private var savedQuoteIndex: Int = 0
 
     init {
         viewModelScope.launch {
@@ -59,38 +64,40 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    override fun previousQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            when {
-                // 현재 인덱스가 0이고, 명언 리스트의 끝(_hasReachedEnd.value)에 도달한 경우 -> 리스트의 마지막 명언으로 이동
-                currentIndex == 0 && _hasQuoteReachedEnd.value -> quotes.value.size - 1
-
-                // 현재 인덱스가 0이지만 리스트의 끝에 도달하지 않은 경우 -> 인덱스 유지
-                currentIndex == 0 -> currentIndex
-
-                // 현재 인덱스를 1 감소시켜(currentIndex - 1) 이전 명언으로 이동
-                else -> currentIndex - 1
+    fun loadInitialQuotes(category: QuoteCategory?) {
+        viewModelScope.launch {
+            _isQuoteLoading.value = true
+            try {
+                category?.let {
+                    loadQuotes(it)
+                }
+            } finally {
+                _isQuoteLoading.value = false
             }
         }
     }
 
+    override fun previousQuote() {
+        savedStateHandle[KEY_QUOTE_INDEX] = when {
+            _currentQuoteIndex.value == 0 && _hasQuoteReachedEnd.value -> quotes.value.size - 1
+            _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
+            else -> _currentQuoteIndex.value - 1
+        }
+    }
+
     override fun nextQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            val nextIndex = currentIndex + 1
-
-            when {
-                nextIndex >= quotes.value.size && !_hasQuoteReachedEnd.value -> {
-                    selectedQuoteCategory.value?.let { category ->
-                        if (!_isQuoteLoading.value && lastLoadedQuote != null) {
-                            loadQuotes(category)
-                        }
+        val nextIndex = _currentQuoteIndex.value + 1
+        savedStateHandle[KEY_QUOTE_INDEX] = when {
+            nextIndex >= quotes.value.size && !_hasQuoteReachedEnd.value -> {
+                selectedQuoteCategory.value?.let { category ->
+                    if (!_isQuoteLoading.value && lastLoadedQuote != null) {
+                        loadQuotes(category)
                     }
-                    currentIndex
                 }
-
-                nextIndex >= quotes.value.size -> 0
-                else -> nextIndex
+                _currentQuoteIndex.value
             }
+            nextIndex >= quotes.value.size -> 0
+            else -> nextIndex
         }
     }
 
@@ -148,9 +155,9 @@ class QuoteViewModel @Inject constructor(
 
     fun onCategorySelected(category: QuoteCategory?) {
         quoteStateHolder.updateSelectedCategory(category)
-        lastLoadedQuote = null  // 페이지네이션 상태 초기화
-        _currentQuoteIndex.value = 0  // 현재 인덱스도 초기화
-        quoteStateHolder.clearQuotes()  // 기존 quotes 초기화
+        lastLoadedQuote = null
+        savedStateHandle[KEY_QUOTE_INDEX] = 0
+        quoteStateHolder.clearQuotes()
         category?.let { loadQuotes(it) }
     }
 }

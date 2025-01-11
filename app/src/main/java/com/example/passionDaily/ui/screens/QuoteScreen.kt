@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -59,9 +60,9 @@ fun QuoteScreen(
     val quotes by quoteViewModel.quotes.collectAsState()
     val isQuoteLoading by quoteViewModel.isQuoteLoading.collectAsState()
 
-    LaunchedEffect(currentScreen) {
-        if (currentScreen == NavigationBarScreens.QUOTE && selectedCategory != null) {
-            quoteViewModel.onCategorySelected(selectedCategory)
+    LaunchedEffect(selectedCategory) {
+        if (quotes.isEmpty()) {
+            quoteViewModel.loadInitialQuotes(selectedCategory)
         }
     }
 
