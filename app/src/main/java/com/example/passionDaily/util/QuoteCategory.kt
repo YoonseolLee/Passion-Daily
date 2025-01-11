@@ -27,6 +27,10 @@ enum class QuoteCategory(
             return values().find { it.categoryId == categoryId }
                 ?: throw IllegalArgumentException("Invalid category ID: $categoryId")
         }
+
+        fun Int.toQuoteCategory(): QuoteCategory {
+            return QuoteCategory.fromCategoryId(this)
+        }
     }
 
     fun getLowercaseCategoryId(): String {

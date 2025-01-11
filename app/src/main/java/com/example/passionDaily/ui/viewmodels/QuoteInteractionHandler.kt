@@ -1,7 +1,7 @@
 package com.example.passionDaily.ui.viewmodels
 
 
-interface QuoteViewModelInterface {
+interface QuoteInteractionHandler {
     fun nextQuote()
     fun previousQuote()
 }

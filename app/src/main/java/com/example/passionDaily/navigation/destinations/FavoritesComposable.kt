@@ -10,12 +10,15 @@ fun NavGraphBuilder.favoritesComposable(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit,
+
 ) {
     composable(route = "favorites") {
         FavoritesScreen(
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
+            onNavigateToLogin = onNavigateToLogin,
             currentScreen = NavigationBarScreens.FAVORITES,
         )
     }

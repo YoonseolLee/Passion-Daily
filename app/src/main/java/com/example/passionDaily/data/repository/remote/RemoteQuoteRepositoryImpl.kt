@@ -88,7 +88,6 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
     }
 
     private fun DocumentSnapshot.toQuote(): Quote {
-        Log.d("toQuote", "toQuote 진입")
         return Quote(
             id = id,
             category = QuoteCategory.fromEnglishName(getString("category") ?: "") ?: QuoteCategory.OTHER,

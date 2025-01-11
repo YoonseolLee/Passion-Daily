@@ -6,6 +6,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.example.passionDaily.data.local.dto.FavoriteWithCategory
 import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
@@ -14,13 +15,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FavoriteDao {
 
+    @Transaction
     @Query("""
-    SELECT q.* 
-    FROM quotes q
-    INNER JOIN favorites f ON q.quote_id = f.quote_id 
-    WHERE f.user_id = :userId
+        SELECT q.* 
+        FROM quotes q
+        INNER JOIN favorites f ON q.quote_id = f.quote_id 
+        WHERE f.user_id = :userId
     """)
-    suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
+    fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(favorite: FavoriteEntity)

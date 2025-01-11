@@ -1,11 +1,9 @@
-package com.example.passionDaily.ui.screens
+package com.example.passionDaily.ui.components
 
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.runtime.Composable
-import com.example.passionDaily.ui.viewmodels.QuoteViewModelInterface
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,14 +13,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -42,140 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.passionDaily.R
-import com.example.passionDaily.util.CommonNavigationBar
+import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
+import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
-
-@Composable
-fun CommonQuoteScreen(
-    viewModel: QuoteViewModelInterface,
-    onNavigateToCategory: () -> Unit = {},
-    onNavigateToFavorites: () -> Unit,
-    onNavigateToQuote: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit,
-    currentScreen: NavigationBarScreens,
-    showCategorySelection: Boolean = true,
-    isFavoriteQuotesEmpty: Boolean,
-) {
-    val selectedCategory by viewModel.selectedQuoteCategory.collectAsState()
-    val currentQuote by viewModel.currentQuote.collectAsState()
-    val quotes by viewModel.quotes.collectAsState()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        BackgroundImage(imageUrl = currentQuote?.imageUrl)
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
-                .clickable { viewModel.previousQuote() }
-        ) {
-            LeftArrow()
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 16.dp)
-                .clickable { viewModel.nextQuote() }
-        ) {
-            RightArrow()
-        }
-
-        if (showCategorySelection) {
-            Row(
-                modifier = Modifier
-                    .offset(y = 110.dp)
-                    .align(Alignment.TopCenter)
-            ) {
-                CategorySelectionButton(
-                    onCategoryClicked = onNavigateToCategory,
-                    selectedCategory = selectedCategory,
-                )
-            }
-        }
-
-        if (isFavoriteQuotesEmpty) {
-            Box(
-                modifier = Modifier
-                    .offset(y = 300.dp)
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.sentiment_dissatisfied_icon),
-                        contentDescription = "sentiment_dissatisfied_icon",
-                        contentScale = ContentScale.None
-                    )
-                    Spacer(modifier = Modifier.height(60.dp))
-                    Text(
-                        text = "아직 즐겨찾기한 명언이 없어요.",
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                            fontWeight = FontWeight(400),
-                            color = Color(0xFFFFFFFF),
-                        )
-                    )
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .offset(y = 277.dp)
-                    .align(Alignment.TopCenter)
-            ) {
-                QuoteAndPerson(
-                    quote = currentQuote?.text ?: "",
-                    author = currentQuote?.person ?: ""
-                )
-            }
-        }
-
-        if (quotes.isEmpty() && currentScreen == NavigationBarScreens.QUOTE) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.Center)
-            )
-        } else {
-            Row(
-                modifier = Modifier
-                    .offset(y = -168.dp)
-                    .align(Alignment.BottomCenter),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                currentQuote?.id?.let { quoteId ->
-                    Buttons(
-                        viewModel,
-                        currentQuoteId = quoteId,
-                        category = selectedCategory,
-                        onRequireLogin = onNavigateToLogin,
-                    )
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-        ) {
-            CommonNavigationBar(
-                currentScreen = currentScreen,
-                onNavigateToFavorites = onNavigateToFavorites,
-                onNavigateToQuote = onNavigateToQuote,
-                onNavigateToSettings = onNavigateToSettings
-            )
-        }
-    }
-}
-
 
 @Composable
 fun BackgroundImage(imageUrl: String?) {
@@ -294,19 +160,20 @@ fun QuoteAndPerson(
 
 @Composable
 fun Buttons(
-    sharedQuoteViewModel: QuoteViewModelInterface,
+    quoteViewModel: QuoteViewModel,
+    favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
     category: QuoteCategory?,
     onRequireLogin: () -> Unit
 ) {
-    ShareButton(sharedQuoteViewModel, currentQuoteId, category)
+    ShareButton(quoteViewModel, currentQuoteId, category)
     Spacer(modifier = Modifier.width(57.dp))
-    AddToFavoritesButton(sharedQuoteViewModel, currentQuoteId, category, onRequireLogin = onRequireLogin)
+    AddToFavoritesButton(favoritesViewModel, currentQuoteId, category, onRequireLogin = onRequireLogin)
 }
 
 @Composable
 fun ShareButton(
-    sharedQuoteViewModel: QuoteViewModelInterface,
+    quoteViewModel: QuoteViewModel,
     currentQuoteId: String,
     category: QuoteCategory?
 ) {
@@ -317,15 +184,15 @@ fun ShareButton(
         contentDescription = "share icon",
         contentScale = ContentScale.None,
         modifier = Modifier.clickable {
-            sharedQuoteViewModel.incrementShareCount(currentQuoteId, category)
-            sharedQuoteViewModel.shareText(context, "공유 텍스트")
+            quoteViewModel.incrementShareCount(currentQuoteId, category)
+            quoteViewModel.shareText(context, "공유 텍스트")
         }
     )
 }
 
 @Composable
 fun AddToFavoritesButton(
-    sharedQuoteViewModel: QuoteViewModelInterface,
+    favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
     category: QuoteCategory?,
     onRequireLogin: () -> Unit,
@@ -336,7 +203,7 @@ fun AddToFavoritesButton(
     val categoryId = category?.categoryId ?: 0
     val userId = currentUser?.uid ?: ""
 
-    val isFavorite by sharedQuoteViewModel.isFavorite(userId, currentQuoteId, categoryId)
+    val isFavorite by favoritesViewModel.isFavorite(userId, currentQuoteId, categoryId)
         .collectAsState(initial = false)
 
     val iconResource = if (isFavorite) {
@@ -362,10 +229,10 @@ fun AddToFavoritesButton(
                 // 로그인된 경우 즐겨찾기 기능 실행
                 if (isFavorite) {
                     Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
-                    sharedQuoteViewModel.removeFavorite(currentQuoteId)
+                    favoritesViewModel.removeFavorite(currentQuoteId)
                 } else {
                     Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
-                    sharedQuoteViewModel.addFavorite(currentQuoteId)
+                    favoritesViewModel.addFavorite(currentQuoteId)
                 }
             }
         }

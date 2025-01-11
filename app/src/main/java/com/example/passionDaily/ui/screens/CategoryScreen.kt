@@ -24,37 +24,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
-import com.example.passionDaily.ui.theme.Passion_DailyTheme
-import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun CategoryScreen(
-    sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel(),
+    quoteViewModel: QuoteViewModel = hiltViewModel(),
     onNavigateToQuote: () -> Unit,
 ) {
-    val categories = sharedQuoteViewModel.getQuoteCategories()
-    val selectedCategory by sharedQuoteViewModel.selectedQuoteCategory.collectAsState()
+    val categories = quoteViewModel.getQuoteCategories()
+    val selectedCategory by quoteViewModel.selectedQuoteCategory.collectAsState()
 
     CategoryScreenContent(
         categories = categories,
         selectedCategory = selectedCategory,
         onNavigateToQuote = onNavigateToQuote,
         onCategoryClicked = { category ->
-            sharedQuoteViewModel.onCategorySelected(category)
+            quoteViewModel.onCategorySelected(category)
             onNavigateToQuote()
         }
     )
@@ -178,7 +175,6 @@ fun CategoryBoxes(
     }
 }
 
-
 @Composable
 fun SingleCategoryBox(
     category: String,
@@ -211,16 +207,3 @@ fun SingleCategoryBox(
         )
     }
 }
-
-//@Preview
-//@Composable
-//fun CategoryScreenContentPreview() {
-//    Passion_DailyTheme {
-//        CategoryScreenContent(
-//            categories = ,
-//            selectedCategory = null,
-//            onCategoryClicked = {},
-//            onNavigateToQuote = {}
-//        )
-//    }
-//}

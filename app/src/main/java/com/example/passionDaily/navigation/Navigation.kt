@@ -5,14 +5,13 @@ import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.navigation.destinations.categoryComposable
 import com.example.passionDaily.navigation.destinations.favoritesComposable
 import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.settingsComposable
 import com.example.passionDaily.navigation.destinations.termsConsentComposable
-import com.example.passionDaily.ui.viewmodels.SharedQuoteViewModel
+import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 
 @Composable
 fun SetupNavigation(
@@ -22,7 +21,7 @@ fun SetupNavigation(
         Screens(navController = navController)
     }
 
-    val sharedQuoteViewModel: SharedQuoteViewModel = hiltViewModel()
+    val quoteViewModel: QuoteViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -38,7 +37,7 @@ fun SetupNavigation(
             onNavigateToQuoteScreen = { screens.navigateToQuote() }
         )
         quoteComposable(
-            sharedQuoteViewModel = sharedQuoteViewModel,
+            quoteViewModel = quoteViewModel,
             onNavigateToCategory = { screens.navigateToCategory() },
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
@@ -47,12 +46,13 @@ fun SetupNavigation(
         )
         categoryComposable(
             onNavigateToQuote = { screens.navigateToQuote() },
-            sharedQuoteViewModel = sharedQuoteViewModel
+            quoteViewModel = quoteViewModel
         )
         favoritesComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
+            onNavigateToLogin = { screens.navigateToLogin() }
         )
         settingsComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },

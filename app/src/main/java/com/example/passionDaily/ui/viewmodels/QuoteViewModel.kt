@@ -15,6 +15,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -22,11 +23,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedQuoteViewModel @Inject constructor(
+class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
     private val quoteUseCases: QuoteUseCases,
     private val quoteStateHolder: QuoteStateHolder
-) : ViewModel(), QuoteViewModelInterface {
+) : ViewModel(), QuoteInteractionHandler {
 
     companion object {
         private var lastLoadedQuote: DocumentSnapshot? = null
@@ -43,7 +44,8 @@ class SharedQuoteViewModel @Inject constructor(
         quotes.getOrNull(index)
     }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    val isLoading = quoteStateHolder.isLoading
+    private val _isQuoteLoading = MutableStateFlow(false)
+    val isQuoteLoading: StateFlow<Boolean> = _isQuoteLoading.asStateFlow()
 
     private val _hasReachedEnd = MutableStateFlow(false)
 
@@ -57,6 +59,21 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
+    override fun previousQuote() {
+        _currentQuoteIndex.update { currentIndex ->
+            when {
+                // 현재 인덱스가 0이고, 명언 리스트의 끝(_hasReachedEnd.value)에 도달한 경우 -> 리스트의 마지막 명언으로 이동
+                currentIndex == 0 && _hasReachedEnd.value -> quotes.value.size - 1
+
+                // 현재 인덱스가 0이지만 리스트의 끝에 도달하지 않은 경우 -> 인덱스 유지
+                currentIndex == 0 -> currentIndex
+
+                // 현재 인덱스를 1 감소시켜(currentIndex - 1) 이전 명언으로 이동
+                else -> currentIndex - 1
+            }
+        }
+    }
+
     override fun nextQuote() {
         _currentQuoteIndex.update { currentIndex ->
             val nextIndex = currentIndex + 1
@@ -64,7 +81,7 @@ class SharedQuoteViewModel @Inject constructor(
             when {
                 nextIndex >= quotes.value.size && !_hasReachedEnd.value -> {
                     selectedQuoteCategory.value?.let { category ->
-                        if (!isLoading.value && lastLoadedQuote != null) {
+                        if (!_isQuoteLoading.value && lastLoadedQuote != null) {
                             loadQuotes(category)
                         }
                     }
@@ -77,21 +94,11 @@ class SharedQuoteViewModel @Inject constructor(
         }
     }
 
-    override fun previousQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            when {
-                currentIndex == 0 && _hasReachedEnd.value -> quotes.value.size - 1
-                currentIndex == 0 -> currentIndex
-                else -> currentIndex - 1
-            }
-        }
-    }
-
     fun loadQuotes(category: QuoteCategory) {
-        if (isLoading.value) return
+        if (_isQuoteLoading.value) return
 
         viewModelScope.launch {
-            quoteStateHolder.startLoading()
+            _isQuoteLoading.value = true
 
             try {
                 val result = remoteQuoteRepository.getQuotesByCategory(
@@ -112,7 +119,7 @@ class SharedQuoteViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
             } finally {
-                quoteStateHolder.stopLoading()
+                _isQuoteLoading.value = false
             }
         }
     }

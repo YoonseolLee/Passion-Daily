@@ -36,7 +36,11 @@ class FavoritesViewModel @Inject constructor(
     private val localQuoteRepository: LocalQuoteRepository,
     private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
     private val quoteStateHolder: QuoteStateHolder
-) : ViewModel(), QuoteViewModelInterface {
+) : ViewModel(), QuoteInteractionHandler {
+
+    companion object {
+        private var lastLoadedFavorite: QuoteEntity? = null
+    }
 
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
@@ -44,59 +48,65 @@ class FavoritesViewModel @Inject constructor(
     val favoriteQuotes: StateFlow<List<QuoteEntity>> = _favoriteQuotes.asStateFlow()
 
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
-    val isLoading = quoteStateHolder.isLoading
     val quotes = quoteStateHolder.quotes
 
     private val _currentQuoteIndex = MutableStateFlow(0)
-    val currentQuote: StateFlow<QuoteEntity?> = combine(
-        favoriteQuotes,
-        _currentQuoteIndex
-    ) { quotes, index ->
-        quotes.getOrNull(index)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    val currentFavoriteQuote: StateFlow<QuoteEntity?> =
+        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
+            quotes.getOrNull(index)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+    private val _isFavoriteLoading = MutableStateFlow(false)
+    val isFavoriteLoading: StateFlow<Boolean> = _isFavoriteLoading.asStateFlow()
+
+    private val _hasReachedEnd = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
-            fetchFavoriteQuotes()
-        }
-    }
-
-    fun fetchFavoriteQuotes() {
-        viewModelScope.launch {
-            localFavoriteRepository.getAllFavorites(userId)
-                .collect { quotes ->
-                    _favoriteQuotes.value = quotes
-                }
-        }
-    }
-
-    override fun nextQuote() {
-        _currentQuoteIndex.update { currentIndex ->
-            val quotesSize = _favoriteQuotes.value.size
-            when {
-                quotesSize == 0 -> 0
-                currentIndex >= quotesSize - 1 -> 0
-                else -> currentIndex + 1
-            }
+            loadFavorites(userId)
         }
     }
 
     override fun previousQuote() {
         _currentQuoteIndex.update { currentIndex ->
-            val quotesSize = _favoriteQuotes.value.size
             when {
-                quotesSize == 0 -> 0
-                currentIndex == 0 -> quotesSize - 1
+                // 현재 인덱스가 0이고, 명언 리스트의 끝(_hasReachedEnd.value)에 도달한 경우 -> 리스트의 마지막 명언으로 이동
+                currentIndex == 0 && _hasReachedEnd.value -> quotes.value.size - 1
+
+                // 현재 인덱스가 0이지만 리스트의 끝에 도달하지 않은 경우 -> 인덱스 유지
+                currentIndex == 0 -> currentIndex
+
+                // 현재 인덱스를 1 감소시켜(currentIndex - 1) 이전 명언으로 이동
                 else -> currentIndex - 1
             }
         }
     }
 
+    override fun nextQuote() {
+        _currentQuoteIndex.update { currentIndex ->
+            val nextIndex = currentIndex + 1
+
+            when {
+                nextIndex >= quotes.value.size && !_hasReachedEnd.value -> {
+                    selectedQuoteCategory.value?.let { category ->
+                        if (!isFavoriteLoading.value && lastLoadedFavorite != null) {
+                            loadFavorites(userId)
+                        }
+                    }
+                    currentIndex
+                }
+
+                nextIndex >= quotes.value.size -> 0
+                else -> nextIndex
+            }
+        }
+    }
+
     fun loadFavorites(userId: String) {
-        if (quoteStateHolder.isLoading.value) return
+        if (isFavoriteLoading.value) return
 
         viewModelScope.launch {
-            quoteStateHolder.startLoading()
+            _isFavoriteLoading.value = true
 
             try {
                 localFavoriteRepository.getAllFavorites(userId)
@@ -106,7 +116,7 @@ class FavoritesViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("Database", "Error fetching favorites: ${e.message}")
             } finally {
-                quoteStateHolder.stopLoading()
+                _isFavoriteLoading.value = false
             }
         }
     }

@@ -17,19 +17,8 @@ class QuoteStateHolder @Inject constructor() {
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
     val quotes: StateFlow<List<Quote>> = _quotes.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
     private val _hasReachedEnd = MutableStateFlow(false)
     val hasReachedEnd: StateFlow<Boolean> = _hasReachedEnd.asStateFlow()
-
-    fun startLoading() {
-        _isLoading.value = true
-    }
-
-    fun stopLoading() {
-        _isLoading.value = false
-    }
 
     fun setHasReachedEnd(reached: Boolean) {
         _hasReachedEnd.value = reached
@@ -57,7 +46,6 @@ class QuoteStateHolder @Inject constructor() {
 
     fun reset() {
         _hasReachedEnd.value = false
-        _isLoading.value = false
         clearQuotes()
     }
 }
