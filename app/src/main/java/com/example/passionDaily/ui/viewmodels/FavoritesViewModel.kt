@@ -38,10 +38,6 @@ class FavoritesViewModel @Inject constructor(
     private val quoteStateHolder: QuoteStateHolder
 ) : ViewModel(), QuoteInteractionHandler {
 
-    companion object {
-        private var lastLoadedFavorite: QuoteEntity? = null
-    }
-
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
     private val _favoriteQuotes = MutableStateFlow<List<QuoteEntity>>(emptyList())
@@ -59,24 +55,19 @@ class FavoritesViewModel @Inject constructor(
     private val _isFavoriteLoading = MutableStateFlow(false)
     val isFavoriteLoading: StateFlow<Boolean> = _isFavoriteLoading.asStateFlow()
 
-    private val _hasReachedEnd = MutableStateFlow(false)
-
-//    init {
-//        viewModelScope.launch {
-//            loadFavorites(userId)
-//        }
-//    }
 
     override fun previousQuote() {
         _currentQuoteIndex.update { currentIndex ->
-            when {
-                // 현재 인덱스가 0이고, 명언 리스트의 끝(_hasReachedEnd.value)에 도달한 경우 -> 리스트의 마지막 명언으로 이동
-                currentIndex == 0 && _hasReachedEnd.value -> quotes.value.size - 1
+            val quotesSize = _favoriteQuotes.value.size
 
-                // 현재 인덱스가 0이지만 리스트의 끝에 도달하지 않은 경우 -> 인덱스 유지
+            when {
+                // 현재 인덱스가 0이면서 즐겨찾기가 있는 경우 -> 마지막 즐겨찾기로
+                currentIndex == 0 && quotesSize > 0 -> quotesSize - 1
+
+                // 현재 인덱스가 0이면서 즐겨찾기가 없는 경우 -> 현재 위치 유지
                 currentIndex == 0 -> currentIndex
 
-                // 현재 인덱스를 1 감소시켜(currentIndex - 1) 이전 명언으로 이동
+                // 이전 즐겨찾기로 이동
                 else -> currentIndex - 1
             }
         }
@@ -85,18 +76,16 @@ class FavoritesViewModel @Inject constructor(
     override fun nextQuote() {
         _currentQuoteIndex.update { currentIndex ->
             val nextIndex = currentIndex + 1
+            val quotesSize = _favoriteQuotes.value.size
 
             when {
-                nextIndex >= quotes.value.size && !_hasReachedEnd.value -> {
-                    selectedQuoteCategory.value?.let { category ->
-                        if (!isFavoriteLoading.value && lastLoadedFavorite != null) {
-                            loadFavorites()
-                        }
-                    }
-                    currentIndex
-                }
+                // 다음 인덱스가 즐겨찾기 크기보다 크고, 즐겨찾기가 있는 경우 -> 처음으로
+                nextIndex >= quotesSize && quotesSize > 0 -> 0
 
-                nextIndex >= quotes.value.size -> 0
+                // 다음 인덱스가 즐겨찾기 크기보다 크고, 즐겨찾기가 없는 경우 -> 현재 위치 유지
+                nextIndex >= quotesSize -> currentIndex
+
+                // 정상적인 다음 인덱스로 이동
                 else -> nextIndex
             }
         }
@@ -115,9 +104,12 @@ class FavoritesViewModel @Inject constructor(
                 val favorites = localFavoriteRepository.getAllFavorites(userId)
                 _favoriteQuotes.value = favorites
 
-                Log.d("loadFavorites", "Favorites loaded")
-                Log.d("loadFavorites", "_favoriteQuotes: ${_favoriteQuotes.value}")
+                // 인덱스가 범위를 벗어났다면 0으로 리셋
+                if (_currentQuoteIndex.value >= favorites.size) {
+                    _currentQuoteIndex.value = 0
+                }
 
+                Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
             } catch (e: Exception) {
                 Log.e("loadFavorites", "Error fetching favorites: ${e.message}")
             } finally {

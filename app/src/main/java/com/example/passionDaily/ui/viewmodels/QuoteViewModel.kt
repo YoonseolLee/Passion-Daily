@@ -47,7 +47,7 @@ class QuoteViewModel @Inject constructor(
     private val _isQuoteLoading = MutableStateFlow(false)
     val isQuoteLoading: StateFlow<Boolean> = _isQuoteLoading.asStateFlow()
 
-    private val _hasReachedEnd = MutableStateFlow(false)
+    private val _hasQuoteReachedEnd = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -63,7 +63,7 @@ class QuoteViewModel @Inject constructor(
         _currentQuoteIndex.update { currentIndex ->
             when {
                 // 현재 인덱스가 0이고, 명언 리스트의 끝(_hasReachedEnd.value)에 도달한 경우 -> 리스트의 마지막 명언으로 이동
-                currentIndex == 0 && _hasReachedEnd.value -> quotes.value.size - 1
+                currentIndex == 0 && _hasQuoteReachedEnd.value -> quotes.value.size - 1
 
                 // 현재 인덱스가 0이지만 리스트의 끝에 도달하지 않은 경우 -> 인덱스 유지
                 currentIndex == 0 -> currentIndex
@@ -79,7 +79,7 @@ class QuoteViewModel @Inject constructor(
             val nextIndex = currentIndex + 1
 
             when {
-                nextIndex >= quotes.value.size && !_hasReachedEnd.value -> {
+                nextIndex >= quotes.value.size && !_hasQuoteReachedEnd.value -> {
                     selectedQuoteCategory.value?.let { category ->
                         if (!_isQuoteLoading.value && lastLoadedQuote != null) {
                             loadQuotes(category)
@@ -114,7 +114,7 @@ class QuoteViewModel @Inject constructor(
                         isNewCategory = lastLoadedQuote == null
                     )
                 } else {
-                    _hasReachedEnd.value = true
+                    _hasQuoteReachedEnd.value = true
                 }
             } catch (e: Exception) {
                 Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
