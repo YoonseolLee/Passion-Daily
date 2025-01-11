@@ -40,7 +40,7 @@ import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun CategoryScreen(
-    quoteViewModel: QuoteViewModel = hiltViewModel(),
+    quoteViewModel: QuoteViewModel,
     onNavigateToQuote: () -> Unit,
 ) {
     val categories = quoteViewModel.getQuoteCategories()

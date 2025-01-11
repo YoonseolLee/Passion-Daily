@@ -11,6 +11,7 @@ import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.settingsComposable
 import com.example.passionDaily.navigation.destinations.termsConsentComposable
+import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 
 @Composable
@@ -22,6 +23,7 @@ fun SetupNavigation(
     }
 
     val quoteViewModel: QuoteViewModel = hiltViewModel()
+    val favoritesViewModel: FavoritesViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -38,6 +40,7 @@ fun SetupNavigation(
         )
         quoteComposable(
             quoteViewModel = quoteViewModel,
+            favoritesViewModel = favoritesViewModel,
             onNavigateToCategory = { screens.navigateToCategory() },
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
@@ -49,6 +52,8 @@ fun SetupNavigation(
             quoteViewModel = quoteViewModel
         )
         favoritesComposable(
+            quoteViewModel = quoteViewModel,
+            favoritesViewModel = favoritesViewModel,
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },

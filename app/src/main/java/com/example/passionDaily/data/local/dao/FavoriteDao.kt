@@ -17,12 +17,12 @@ interface FavoriteDao {
 
     @Transaction
     @Query("""
-        SELECT q.* 
-        FROM quotes q
-        INNER JOIN favorites f ON q.quote_id = f.quote_id 
-        WHERE f.user_id = :userId
-    """)
-    fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
+    SELECT q.* 
+    FROM quotes q 
+    INNER JOIN favorites f ON q.quote_id = f.quote_id 
+    WHERE f.user_id = :userId
+""")
+    suspend fun getAllFavorites(userId: String): List<QuoteEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(favorite: FavoriteEntity)

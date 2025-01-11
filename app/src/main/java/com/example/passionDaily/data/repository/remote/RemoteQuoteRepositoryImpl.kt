@@ -40,6 +40,7 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         lastLoadedQuote: DocumentSnapshot?
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
+            Log.d("getQuotesByCategory", "getQuotesByCategory 진입")
             val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
             val result = query.get().await()
             result.toQuoteResult()

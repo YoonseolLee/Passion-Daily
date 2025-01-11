@@ -4,11 +4,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
+import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 
 fun NavGraphBuilder.quoteComposable(
-    onNavigateToCategory: () -> Unit,
     quoteViewModel: QuoteViewModel,
+    favoritesViewModel: FavoritesViewModel,
+    onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -16,13 +18,14 @@ fun NavGraphBuilder.quoteComposable(
 ) {
     composable(route = "quote") {
         QuoteScreen(
+            quoteViewModel = quoteViewModel,
+            favoritesViewModel = favoritesViewModel,
             onNavigateToCategory = onNavigateToCategory,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
-            quoteViewModel = quoteViewModel,
-            currentScreen = NavigationBarScreens.QUOTE,
             onNavigateToLogin = onNavigateToLogin,
+            currentScreen = NavigationBarScreens.QUOTE,
         )
     }
 }

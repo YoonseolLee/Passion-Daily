@@ -44,8 +44,8 @@ import com.example.passionDaily.util.CommonNavigationBar
 
 @Composable
 fun QuoteScreen(
-    favoritesViewModel: FavoritesViewModel = hiltViewModel(),
-    quoteViewModel: QuoteViewModel = hiltViewModel(),
+    favoritesViewModel: FavoritesViewModel,
+    quoteViewModel: QuoteViewModel,
     onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
@@ -57,9 +57,10 @@ fun QuoteScreen(
     val selectedCategory by quoteViewModel.selectedQuoteCategory.collectAsState()
     val currentQuote by quoteViewModel.currentQuote.collectAsState()
     val quotes by quoteViewModel.quotes.collectAsState()
+    val isQuoteLoading by quoteViewModel.isQuoteLoading.collectAsState()
 
-    LaunchedEffect(Unit) {
-        if (selectedCategory != null) {
+    LaunchedEffect(currentScreen) {
+        if (currentScreen == NavigationBarScreens.QUOTE && selectedCategory != null) {
             quoteViewModel.onCategorySelected(selectedCategory)
         }
     }
@@ -108,7 +109,7 @@ fun QuoteScreen(
         }
 
 
-        if (quotes.isEmpty() && currentScreen == NavigationBarScreens.QUOTE) {
+        if (isQuoteLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)

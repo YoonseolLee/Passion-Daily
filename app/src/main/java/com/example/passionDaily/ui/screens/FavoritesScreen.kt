@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,19 +45,24 @@ import com.example.passionDaily.util.QuoteCategory.Companion.toQuoteCategory
 
 @Composable
 fun FavoritesScreen(
-    favoritesViewModel: FavoritesViewModel = hiltViewModel(),
-    quoteViewModel: QuoteViewModel = hiltViewModel(),
+    favoritesViewModel: FavoritesViewModel,
+    quoteViewModel: QuoteViewModel,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens
 ) {
-
     val favoriteQuotes by favoritesViewModel.favoriteQuotes.collectAsState()
     val currentFavoriteQuote by favoritesViewModel.currentFavoriteQuote.collectAsState()
     val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
-    val isLoading by favoritesViewModel.isFavoriteLoading.collectAsState()
+    val isFavoriteLoading by favoritesViewModel.isFavoriteLoading.collectAsState()
+
+    LaunchedEffect(currentScreen) {
+        if (currentScreen == NavigationBarScreens.FAVORITES) {
+            favoritesViewModel.loadFavorites()
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         BackgroundImage(imageUrl = currentFavoriteQuote?.imageUrl ?: "")
@@ -120,7 +127,9 @@ fun FavoritesScreen(
         }
 
         // 로딩 중이라면
-        if (isLoading) {
+        if (isFavoriteLoading) {
+            Log.d("FavoritesScreen", "isFavoriteLoading: $isFavoriteLoading")
+            Log.d("FavoritesScreen", "favoriteQuotes: $favoriteQuotes")
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -158,4 +167,3 @@ fun FavoritesScreen(
         }
     }
 }
-

@@ -61,11 +61,11 @@ class FavoritesViewModel @Inject constructor(
 
     private val _hasReachedEnd = MutableStateFlow(false)
 
-    init {
-        viewModelScope.launch {
-            loadFavorites(userId)
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            loadFavorites(userId)
+//        }
+//    }
 
     override fun previousQuote() {
         _currentQuoteIndex.update { currentIndex ->
@@ -90,7 +90,7 @@ class FavoritesViewModel @Inject constructor(
                 nextIndex >= quotes.value.size && !_hasReachedEnd.value -> {
                     selectedQuoteCategory.value?.let { category ->
                         if (!isFavoriteLoading.value && lastLoadedFavorite != null) {
-                            loadFavorites(userId)
+                            loadFavorites()
                         }
                     }
                     currentIndex
@@ -102,19 +102,24 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    fun loadFavorites(userId: String) {
-        if (isFavoriteLoading.value) return
+    fun loadFavorites() {
+        if (userId.isEmpty()) {
+            Log.e("FavoritesViewModel", "User ID is empty")
+            return
+        }
 
         viewModelScope.launch {
             _isFavoriteLoading.value = true
 
             try {
-                localFavoriteRepository.getAllFavorites(userId)
-                    .collect { favorites ->
-                        _favoriteQuotes.value = favorites
-                    }
+                val favorites = localFavoriteRepository.getAllFavorites(userId)
+                _favoriteQuotes.value = favorites
+
+                Log.d("loadFavorites", "Favorites loaded")
+                Log.d("loadFavorites", "_favoriteQuotes: ${_favoriteQuotes.value}")
+
             } catch (e: Exception) {
-                Log.e("Database", "Error fetching favorites: ${e.message}")
+                Log.e("loadFavorites", "Error fetching favorites: ${e.message}")
             } finally {
                 _isFavoriteLoading.value = false
             }
