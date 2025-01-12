@@ -15,6 +15,7 @@ import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +62,14 @@ class FavoritesViewModel @Inject constructor(
     private val _isFavoriteLoading = MutableStateFlow(false)
     val isFavoriteLoading: StateFlow<Boolean> = _isFavoriteLoading.asStateFlow()
 
+    private var favoritesJob: Job? = null
+
+    init {
+        if (userId.isEmpty()) {
+            Log.e("FavoritesViewModel", "User ID is empty")
+        }
+    }
+
 
     override fun previousQuote() {
         val quotesSize = _favoriteQuotes.value.size
@@ -88,19 +97,23 @@ class FavoritesViewModel @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        // 기존 Job 취소
+        favoritesJob?.cancel()
+
+        favoritesJob = viewModelScope.launch {
             _isFavoriteLoading.value = true
-
             try {
-                val favorites = localFavoriteRepository.getAllFavorites(userId)
-                _favoriteQuotes.value = favorites
+                // Flow 수집 시작
+                localFavoriteRepository.getAllFavorites(userId).collect { favorites ->
+                    _favoriteQuotes.value = favorites
 
-                // 인덱스가 범위를 벗어났다면 0으로 리셋
-                if (_currentQuoteIndex.value >= favorites.size) {
-                    savedStateHandle[KEY_FAVORITE_INDEX] = 0
+                    // 인덱스가 범위를 벗어났다면 0으로 리셋
+                    if (_currentQuoteIndex.value >= favorites.size) {
+                        savedStateHandle[KEY_FAVORITE_INDEX] = 0
+                    }
+
+                    Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
                 }
-
-                Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
             } catch (e: Exception) {
                 Log.e("loadFavorites", "Error fetching favorites: ${e.message}")
             } finally {
@@ -211,5 +224,10 @@ class FavoritesViewModel @Inject constructor(
                 Log.e("Favorite", "즐겨찾기 제거 실패", e)
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        favoritesJob?.cancel()
     }
 }

@@ -6,7 +6,7 @@ import com.example.passionDaily.data.local.entity.QuoteEntity
 import kotlinx.coroutines.flow.Flow
 
 interface LocalFavoriteRepository {
-    suspend fun getAllFavorites(userId: String): List<QuoteEntity>
+    suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
     suspend fun insertFavorite(favorite: FavoriteEntity)
     suspend fun deleteFavorite(userId: String, quoteId: String, categoryId: Int)
     suspend fun deleteAllFavoritesByUserId(userId: String)

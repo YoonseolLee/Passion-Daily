@@ -11,7 +11,7 @@ import javax.inject.Inject
 class LocalFavoriteRepositoryImpl @Inject constructor(
     private val favoriteDao: FavoriteDao
 ) : LocalFavoriteRepository {
-    override suspend fun getAllFavorites(userId: String): List<QuoteEntity> {
+    override suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>> {
         return favoriteDao.getAllFavorites(userId)
     }
 
