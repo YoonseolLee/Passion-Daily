@@ -28,16 +28,16 @@ interface QuoteDao {
     @Update
     suspend fun updateQuote(quote: QuoteEntity)
 
-    @Query("DELETE FROM quotes WHERE quote_id = :quoteId")
-    suspend fun deleteQuote(quoteId: String)
+    @Query("DELETE FROM quotes WHERE quote_id = :quoteId AND category_id = :categoryId")
+    suspend fun deleteQuote(quoteId: String, categoryId: Int)
 
     @Transaction
     @Query("SELECT * FROM quotes WHERE quote_id = :quoteId")
     suspend fun getQuoteWithCategory(quoteId: String): QuoteWithQuoteCategory?
 
-    @Query("SELECT EXISTS(SELECT 1 FROM quotes WHERE quote_id = :quoteId)")
-    suspend fun isQuoteExists(quoteId: String): Boolean
-
     @Query("DELETE FROM quotes")
     suspend fun deleteAllQuotes()
+
+    @Query("SELECT EXISTS(SELECT 1 FROM quotes WHERE quote_id = :quoteId AND category_id = :categoryId)")
+    suspend fun isQuoteExistsInCategory(quoteId: String, categoryId: Int): Boolean
 }

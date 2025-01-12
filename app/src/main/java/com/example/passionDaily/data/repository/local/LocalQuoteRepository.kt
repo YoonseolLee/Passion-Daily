@@ -11,9 +11,9 @@ interface LocalQuoteRepository {
     suspend fun getQuotesByCategory(categoryId: String): Flow<List<QuoteEntity>>
     suspend fun insertQuote(quote: QuoteEntity)
     suspend fun updateQuote(quote: QuoteEntity)
-    suspend fun deleteQuote(quoteId: String)
+    suspend fun deleteQuote(quoteId: String, categoryId: Int)
     suspend fun getQuoteWithCategory(quoteId: String): QuoteWithQuoteCategory?
-    suspend fun isQuoteExists(quoteId: String): Boolean
     suspend fun deleteAllQuotes()
+    suspend fun isQuoteExistsInCategory(quoteId: String, categoryId: Int): Boolean
 
 }

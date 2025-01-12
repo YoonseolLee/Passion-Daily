@@ -30,19 +30,21 @@ class LocalQuoteRepositoryImpl @Inject constructor(
         quoteDao.updateQuote(quote)
     }
 
-    override suspend fun deleteQuote(quoteId: String) {
-        quoteDao.deleteQuote(quoteId)
+    override suspend fun deleteQuote(quoteId: String, categoryId: Int) {
+        quoteDao.deleteQuote(quoteId, categoryId)
     }
 
     override suspend fun getQuoteWithCategory(quoteId: String): QuoteWithQuoteCategory? {
         return quoteDao.getQuoteWithCategory(quoteId)
     }
 
-    override suspend fun isQuoteExists(quoteId: String): Boolean {
-        return quoteDao.isQuoteExists(quoteId)
+    override suspend fun isQuoteExistsInCategory(quoteId: String, categoryId: Int): Boolean {
+        return quoteDao.isQuoteExistsInCategory(quoteId, categoryId)
     }
 
     override suspend fun deleteAllQuotes() {
         quoteDao.deleteAllQuotes()
     }
+
+
 }

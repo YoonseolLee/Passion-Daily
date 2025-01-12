@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "quotes",
+    primaryKeys = ["quote_id", "category_id"],
     foreignKeys = [
         ForeignKey(
             entity = QuoteCategoryEntity::class,
@@ -16,10 +17,13 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("category_id")],
+    indices = [
+        Index("category_id"),
+        Index(value = ["quote_id", "category_id"], unique = true)
+    ]
 )
 data class QuoteEntity(
-    @PrimaryKey @ColumnInfo(name = "quote_id") val quoteId: String,
+    @ColumnInfo(name = "quote_id") val quoteId: String,
     @ColumnInfo(name = "text") val text: String,
     @ColumnInfo(name = "person") val person: String,
     @ColumnInfo(name = "image_url") val imageUrl: String,

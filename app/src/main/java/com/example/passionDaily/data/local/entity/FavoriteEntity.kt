@@ -18,8 +18,8 @@ import androidx.room.PrimaryKey
         ),
         ForeignKey(
             entity = QuoteEntity::class,
-            parentColumns = ["quote_id"],
-            childColumns = ["quote_id"],
+            parentColumns = ["quote_id", "category_id"],  // 복합 외래 키로 수정
+            childColumns = ["quote_id", "category_id"],   // 복합 외래 키로 수정
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -31,7 +31,7 @@ import androidx.room.PrimaryKey
     ],
     indices = [
         Index(value = ["user_id"]),
-        Index(value = ["quote_id"]),
+        Index(value = ["quote_id", "category_id"]),  // 복합 인덱스로 수정
         Index(value = ["category_id"])
     ]
 )

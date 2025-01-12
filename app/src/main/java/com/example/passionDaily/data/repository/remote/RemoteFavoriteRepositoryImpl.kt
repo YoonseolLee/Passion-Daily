@@ -27,7 +27,7 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
             firestore.collection("favorites")
                 .document(currentUser.uid)
                 .collection("saved_quotes")
-                .document(documentId)
+                .document(documentId)  // 예: "love_quote_000001", "business_quote_000001"
                 .set(favoriteData)
         } catch (e: Exception) {
             Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
@@ -63,7 +63,18 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            return@withContext snapshot.size().toLong()
+            if (snapshot.isEmpty) return@withContext 0L
+
+            // 가장 큰 문서 ID 번호 찾기
+            var maxNumber = 0L
+            snapshot.documents.forEach { doc ->
+                val number = doc.id.substring(6).toLong() // "quote_" 이후의 숫자 부분
+                if (number > maxNumber) {
+                    maxNumber = number
+                }
+            }
+
+            return@withContext maxNumber
         } catch (e: Exception) {
             Log.e("Firestore", "마지막 quote 번호 가져오기 실패", e)
             throw e
