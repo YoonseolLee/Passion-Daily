@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -62,10 +63,10 @@ fun TermsConsentScreen(
     ) {
         Column(
             modifier = Modifier
-                .offset(x = 34.dp, y = 100.dp)
+                .padding(horizontal = 34.dp)
+                .padding(top = 100.dp)
                 .align(Alignment.TopStart)
         ) {
-            // 화면 헤더
             Text(
                 text = stringResource(id = R.string.terms_consent),
                 style = TextStyle(
@@ -77,7 +78,6 @@ fun TermsConsentScreen(
 
             Spacer(modifier = Modifier.height(38.dp))
 
-            // 전체 동의 체크박스
             CheckboxItem(
                 text = stringResource(id = R.string.agree_all),
                 isChecked = isAgreeAllChecked,
@@ -87,7 +87,6 @@ fun TermsConsentScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // 서비스 이용약관 체크박스
             CheckboxItem(
                 text = stringResource(id = R.string.terms_of_service),
                 isChecked = termsOfServiceChecked,
@@ -98,7 +97,6 @@ fun TermsConsentScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 개인정보 처리방침 체크박스
             CheckboxItem(
                 text = stringResource(id = R.string.privacy_policy_agreement),
                 isChecked = privacyPolicyChecked,
@@ -108,7 +106,6 @@ fun TermsConsentScreen(
             )
         }
 
-        // 다음 버튼
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -140,37 +137,47 @@ fun CheckboxItem(
     val context = LocalContext.current
 
     Row(
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.check_without_circle),
-            contentDescription = "checkbox",
+        // 체크박스와 텍스트를 포함하는 영역
+        Row(
             modifier = Modifier
-                .size(24.dp)
+                .weight(1f)
                 .clickable { onCheckedChange() },
-            colorFilter = if (isChecked)
-                ColorFilter.tint(PrimaryColor)
-            else
-                null
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.check_without_circle),
+                contentDescription = "checkbox",
+                modifier = Modifier.size(24.dp),
+                colorFilter = if (isChecked)
+                    ColorFilter.tint(PrimaryColor)
+                else
+                    null
+            )
 
-        Text(
-            text = text,
-            style = TextStyle(
-                fontSize = if (isAgreeAll) 18.sp else 16.sp,
-                fontWeight = FontWeight(500),
-                color = GrayScaleWhite
-            ),
-            modifier = Modifier.weight(1f)
-        )
+            Text(
+                text = text,
+                style = TextStyle(
+                    fontSize = if (isAgreeAll) 18.sp else 16.sp,
+                    fontWeight = FontWeight(500),
+                    color = GrayScaleWhite
+                )
+            )
+        }
 
-        url?.let {
+        // "보기" 텍스트
+        if (url != null && !isAgreeAll) {
             Text(
                 text = "보기",
-                modifier = Modifier.clickable {
-                    sharedSignInViewModel?.openUrl(context, it)
-                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .clickable {
+                        sharedSignInViewModel?.openUrl(context, url)
+                    },
                 style = TextStyle(
                     fontSize = 14.sp,
                     color = Color(0xFFB3B3B3),
@@ -206,5 +213,3 @@ fun NextButton(
         )
     }
 }
-
-

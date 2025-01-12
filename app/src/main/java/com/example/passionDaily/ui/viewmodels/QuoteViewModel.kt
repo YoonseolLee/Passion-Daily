@@ -118,7 +118,7 @@ class QuoteViewModel @Inject constructor(
                     lastLoadedQuote = result.lastDocument
                     quoteStateHolder.addQuotes(
                         result.quotes,
-                        isNewCategory = lastLoadedQuote == null
+                        isNewCategory = lastLoadedQuote == null  // 첫 페이지인지 여부
                     )
                 } else {
                     _hasQuoteReachedEnd.value = true

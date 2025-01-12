@@ -327,6 +327,7 @@ class SharedSignInViewModel @Inject constructor(
                     addUserProfileToRoomDB(userProfileJsonV2)
                 }
             }
+            // TODO: 토스트 메시지
         } else {
             Log.e(tag, "User did not agree to required terms")
         }

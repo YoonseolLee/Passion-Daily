@@ -30,9 +30,9 @@ class QuoteStateHolder @Inject constructor() {
 
     fun addQuotes(additionalQuotes: List<Quote>, isNewCategory: Boolean = false) {
         _quotes.value = if (isNewCategory) {
-            additionalQuotes
+            additionalQuotes  // 새 카테고리면 기존 목록을 새것으로 교체
         } else {
-            _quotes.value + additionalQuotes
+            _quotes.value + additionalQuotes  // 기존 목록에 새 명언들 추가
         }
     }
 
