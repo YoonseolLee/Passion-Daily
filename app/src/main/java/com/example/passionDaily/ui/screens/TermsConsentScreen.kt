@@ -51,9 +51,16 @@ fun TermsConsentScreen(
     val privacyPolicyChecked by sharedSignInViewModel.privacyPolicyChecked.collectAsState()
     val userProfileJsonV2 by sharedSignInViewModel.userProfileJsonV2.collectAsState()
 
-    // 사용자 프로필 JSON 검증
+    // 초기 userProfileJson 검증
     LaunchedEffect(userProfileJson) {
         sharedSignInViewModel.verifyUserProfileJson(userProfileJson)
+    }
+
+    // userProfileJsonV2가 업데이트되면 화면 전환
+    LaunchedEffect(userProfileJsonV2) {
+        userProfileJsonV2?.let {
+            onNavigateToQuoteScreen()
+        }
     }
 
     Box(
