@@ -7,8 +7,8 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -20,19 +20,14 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
 
     override suspend fun addFavoriteToFirestore(
         currentUser: FirebaseUser,
-        quoteId: String,
-        favoriteData: HashMap<String, String?>,
+        documentId: String,
+        favoriteData: HashMap<String, String>,
     ): Unit = withContext(Dispatchers.IO) {
-
         try {
             firestore.collection("favorites")
                 .document(currentUser.uid)
-                .set(hashMapOf<String, Any>(), SetOptions.merge())
-
-            firestore.collection("favorites")
-                .document(currentUser.uid)
                 .collection("saved_quotes")
-                .document(quoteId)
+                .document(documentId)
                 .set(favoriteData)
         } catch (e: Exception) {
             Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
@@ -57,19 +52,21 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
         }
     }
 
-    suspend fun getFavoriteQuotes(): List<Quote> = withContext(Dispatchers.IO) {
-        val currentUser = Firebase.auth.currentUser ?: return@withContext emptyList()
-
+    override suspend fun getLastQuoteNumber(
+        currentUser: FirebaseUser,
+        category: String
+    ): Long = withContext(Dispatchers.IO) {
         try {
-            // 1. 즐겨찾기 목록 가져오기
-            val favoriteQuotesInfo = fetchFavoriteQuotesInfo(currentUser.uid)
-            if (favoriteQuotesInfo.isEmpty()) return@withContext emptyList()
+            val snapshot = firestore.collection("favorites")
+                .document(currentUser.uid)
+                .collection("saved_quotes")
+                .get()
+                .await()
 
-            // 2. 즐겨찾기 명언 목록 가져오기
-            fetchQuotesFromFavorites(favoriteQuotesInfo)
+            return@withContext snapshot.size().toLong()
         } catch (e: Exception) {
-            Log.e("Repository", "Error fetching favorite quotes", e)
-            emptyList()
+            Log.e("Firestore", "마지막 quote 번호 가져오기 실패", e)
+            throw e
         }
     }
 

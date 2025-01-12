@@ -181,17 +181,30 @@ class FavoritesViewModel @Inject constructor(
     }
 
     private fun addFavoriteToFirestore(currentUser: FirebaseUser, quoteId: String) {
+        val category = selectedQuoteCategory.value?.getLowercaseCategoryId() ?: ""
 
         val favoriteData = hashMapOf(
             "addedAt" to LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
             "quoteId" to quoteId,
-            "category" to selectedQuoteCategory.value?.getLowercaseCategoryId()
+            "category" to category  // non-nullable String 사용
         )
 
         viewModelScope.launch {
             try {
-                remoteFavoriteRepository.addFavoriteToFirestore(currentUser, quoteId, favoriteData)
+                val lastQuoteNumber = remoteFavoriteRepository.getLastQuoteNumber(
+                    currentUser,
+                    category
+                )
+
+                val newQuoteNumber = String.format("%06d", lastQuoteNumber + 1)
+                val newDocumentId = "quote_$newQuoteNumber"
+
+                remoteFavoriteRepository.addFavoriteToFirestore(
+                    currentUser,
+                    newDocumentId,
+                    favoriteData
+                )
             } catch (e: Exception) {
                 Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
                 throw e
