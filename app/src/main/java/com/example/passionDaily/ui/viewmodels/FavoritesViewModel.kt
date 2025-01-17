@@ -18,6 +18,7 @@ import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,14 +26,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
@@ -126,26 +130,44 @@ class FavoritesViewModel @Inject constructor(
     fun loadFavorites() {
         val currentUserId = userId.value
         if (currentUserId.isEmpty()) {
-            Log.d("FavoritesViewModel", "Skipping loadFavorites: User not logged in")
+            Log.d(TAG, "Skipping loadFavorites: User not logged in")
             return
         }
 
+        // 이전 Job이 있다면 취소하고 완료될 때까지 대기
         favoritesJob?.cancel()
+
         favoritesJob = viewModelScope.launch {
             _isFavoriteLoading.value = true
 
             try {
-                localFavoriteRepository.getAllFavorites(currentUserId).collect { favorites ->
-                    _favoriteQuotes.value = favorites
-                    if (_currentQuoteIndex.value >= favorites.size) {
-                        savedStateHandle[KEY_FAVORITE_INDEX] = 0
-                    }
-                    Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
+                Log.d(TAG, "Starting to load favorites for user: $currentUserId")
+
+                // withContext를 사용하여 취소 가능한 새로운 코루틴 스코프 생성
+                withContext(Dispatchers.IO) {
+                    localFavoriteRepository.getAllFavorites(currentUserId)
+                        .catch { e ->
+                            Log.e(TAG, "Error in flow", e)
+                            throw e
+                        }
+                        .collect { favorites ->
+                            Log.d(TAG, "Received favorites: ${favorites.joinToString { it.quoteId }}")
+                            _favoriteQuotes.value = favorites
+                            if (_currentQuoteIndex.value >= favorites.size) {
+                                Log.d(TAG, "Resetting current index from ${_currentQuoteIndex.value} to 0")
+                                savedStateHandle[KEY_FAVORITE_INDEX] = 0
+                            }
+                            Log.d(TAG, "Successfully loaded ${favorites.size} favorites")
+                        }
                 }
-            } catch (e: SQLiteException) {
-                Log.e("loadFavorites", "Database error while loading favorites")
+            } catch (e: CancellationException) {
+                Log.d(TAG, "Favorites loading was cancelled", e)
+                // CancellationException은 정상적인 취소이므로 다시 throw하지 않음
             } catch (e: Exception) {
-                Log.e("loadFavorites", "Error loading favorites")
+                Log.e(TAG, "Error loading favorites", e)
+                Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
+                Log.e(TAG, "Error message: ${e.message}")
+                _error.value = "즐겨찾기를 불러오는 중 오류가 발생했습니다"
             } finally {
                 _isFavoriteLoading.value = false
             }

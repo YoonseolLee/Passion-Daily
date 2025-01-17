@@ -62,6 +62,7 @@ fun FavoritesScreen(
         if (currentScreen == NavigationBarScreens.FAVORITES) {
             favoritesViewModel.loadFavorites()
         }
+        Log.d("FavoritesScreen", "currentFavoriteQuote changed: $currentFavoriteQuote")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
