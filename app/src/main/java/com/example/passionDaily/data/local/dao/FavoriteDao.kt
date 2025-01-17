@@ -16,12 +16,16 @@ import kotlinx.coroutines.flow.Flow
 interface FavoriteDao {
 
     @Transaction
-    @Query("""
+    @Query(
+        """
     SELECT q.* 
     FROM quotes q 
-    INNER JOIN favorites f ON q.quote_id = f.quote_id 
+    INNER JOIN favorites f 
+    ON q.quote_id = f.quote_id 
+    AND q.category_id = f.category_id  
     WHERE f.user_id = :userId
-""")
+        """
+    )
     fun getAllFavorites(userId: String): Flow<List<QuoteEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
