@@ -1,5 +1,6 @@
 package com.example.passionDaily.ui.viewmodels
 
+import android.database.sqlite.SQLiteException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -45,6 +46,7 @@ class FavoritesViewModel @Inject constructor(
 
     companion object {
         private const val KEY_FAVORITE_INDEX = "favorite_quote_index"
+        private const val TAG = "FavoritesViewModel"
     }
 
     private val auth = FirebaseAuth.getInstance()
@@ -76,6 +78,9 @@ class FavoritesViewModel @Inject constructor(
     private val _isFavoriteLoading = MutableStateFlow(false)
     val isFavoriteLoading: StateFlow<Boolean> = _isFavoriteLoading.asStateFlow()
 
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     private var favoritesJob: Job? = null
 
     init {
@@ -88,24 +93,33 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-
     override fun previousQuote() {
-        val quotesSize = _favoriteQuotes.value.size
-        savedStateHandle[KEY_FAVORITE_INDEX] = when {
-            _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
-            _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
-            else -> _currentQuoteIndex.value - 1
+        try {
+            val quotesSize = _favoriteQuotes.value.size
+            savedStateHandle[KEY_FAVORITE_INDEX] = when {
+                _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
+                _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
+                else -> _currentQuoteIndex.value - 1
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error navigating to previous quote", e)
+            _error.value = "Unable to navigate"
         }
     }
 
     override fun nextQuote() {
-        val nextIndex = _currentQuoteIndex.value + 1
-        val quotesSize = _favoriteQuotes.value.size
+        try {
+            val nextIndex = _currentQuoteIndex.value + 1
+            val quotesSize = _favoriteQuotes.value.size
 
-        savedStateHandle[KEY_FAVORITE_INDEX] = when {
-            nextIndex >= quotesSize && quotesSize > 0 -> 0
-            nextIndex >= quotesSize -> _currentQuoteIndex.value
-            else -> nextIndex
+            savedStateHandle[KEY_FAVORITE_INDEX] = when {
+                nextIndex >= quotesSize && quotesSize > 0 -> 0
+                nextIndex >= quotesSize -> _currentQuoteIndex.value
+                else -> nextIndex
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error navigating to next quote", e)
+            _error.value = "Unable to navigate"
         }
     }
 
@@ -128,8 +142,10 @@ class FavoritesViewModel @Inject constructor(
                     }
                     Log.d("loadFavorites", "Favorites loaded: ${favorites.size} items")
                 }
+            } catch (e: SQLiteException) {
+                Log.e("loadFavorites", "Database error while loading favorites")
             } catch (e: Exception) {
-                Log.e("loadFavorites", "Error fetching favorites: ${e.message}")
+                Log.e("loadFavorites", "Error loading favorites")
             } finally {
                 _isFavoriteLoading.value = false
             }
@@ -162,7 +178,7 @@ class FavoritesViewModel @Inject constructor(
                 }
                 loadFavorites()
             } catch (e: Exception) {
-                Log.e("Favorite", "즐겨찾기 추가 실패", e)
+                Log.e("addFavorite", "Failed to add favorite", e)
             }
         }
     }
