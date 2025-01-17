@@ -84,4 +84,27 @@ class RemoteUserRepositoryImpl @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun addUserProfile(userId: String, profileMap: Map<String, Any?>) {
+        try {
+            val userDoc = firestore.collection("users")
+                .document(userId)
+                .get()
+                .await()
+
+            if (!userDoc.exists()) {
+                firestore.collection("users")
+                    .document(userId)
+                    .set(profileMap)
+                    .await()
+                Log.d("Firestore", "User profile added successfully: $userId")
+            }
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("Firestore", "Failed to add user profile: ${e.message}")
+            throw e
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error adding user profile: ${e.message}")
+            throw e
+        }
+    }
 }

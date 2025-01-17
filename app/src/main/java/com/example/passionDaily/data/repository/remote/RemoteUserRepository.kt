@@ -8,4 +8,6 @@ interface RemoteUserRepository {
     suspend fun updateLastSyncDate(userId: String)
     suspend fun fetchFirestoreUser(userId: String): User
     suspend fun syncFirestoreUserToRoom(userId: String)
+    suspend fun addUserProfile(userId: String, profileMap: Map<String, Any?>)
+
 }

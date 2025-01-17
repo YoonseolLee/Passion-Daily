@@ -18,7 +18,7 @@ class LocalUserRepositoryImpl @Inject constructor(
             userDao.insertUser(userEntity)
         } catch (e: SQLiteConstraintException) {
             Log.e("LocalUserRepository", "Constraint violation while saving user: ${e.message}", e)
-            throw e // 필요하면 예외를 상위로 전달
+            throw e
         } catch (e: Exception) {
             Log.e("LocalUserRepository", "Unexpected error while saving user: ${e.message}", e)
             throw e

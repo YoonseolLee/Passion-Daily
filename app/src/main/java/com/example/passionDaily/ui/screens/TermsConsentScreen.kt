@@ -47,8 +47,7 @@ fun TermsConsentScreen(
     onNavigateToQuoteScreen: () -> Unit
 ) {
     val isAgreeAllChecked by sharedSignInViewModel.isAgreeAllChecked.collectAsState()
-    val termsOfServiceChecked by sharedSignInViewModel.termsOfServiceChecked.collectAsState()
-    val privacyPolicyChecked by sharedSignInViewModel.privacyPolicyChecked.collectAsState()
+    val consent by sharedSignInViewModel.consent.collectAsState()
     val userProfileJsonV2 by sharedSignInViewModel.userProfileJsonV2.collectAsState()
 
     // 초기 userProfileJson 검증
@@ -96,7 +95,7 @@ fun TermsConsentScreen(
 
             CheckboxItem(
                 text = stringResource(id = R.string.terms_of_service),
-                isChecked = termsOfServiceChecked,
+                isChecked = consent.termsOfService,
                 onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("termsOfService") },
                 url = stringResource(id = R.string.terms_of_service_url),
                 sharedSignInViewModel = sharedSignInViewModel
@@ -106,7 +105,7 @@ fun TermsConsentScreen(
 
             CheckboxItem(
                 text = stringResource(id = R.string.privacy_policy_agreement),
-                isChecked = privacyPolicyChecked,
+                isChecked = consent.privacyPolicy,
                 onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("privacyPolicy") },
                 url = stringResource(id = R.string.privacy_policy_url),
                 sharedSignInViewModel = sharedSignInViewModel
@@ -120,7 +119,7 @@ fun TermsConsentScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             NextButton(
-                enabled = termsOfServiceChecked && privacyPolicyChecked,
+                enabled = consent.termsOfService && consent.privacyPolicy,
                 onNextClicked = {
                     sharedSignInViewModel.handleNextClick(userProfileJson)
                     userProfileJsonV2?.let {
