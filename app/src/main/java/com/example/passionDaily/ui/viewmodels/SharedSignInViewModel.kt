@@ -3,35 +3,35 @@ package com.example.passionDaily.ui.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.NetworkOnMainThreadException
 import android.util.Log
-import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.R
 import com.example.passionDaily.data.local.dao.UserDao
 import com.example.passionDaily.data.local.entity.UserEntity
-import com.example.passionDaily.data.remote.model.User
+import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.data.repository.local.UserRepository
+import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.manager.AuthenticationManager
+import com.example.passionDaily.manager.UserProfileManager
 import com.example.passionDaily.util.Converters
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.common.reflect.TypeToken
 import com.google.firebase.Firebase
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,11 +39,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import org.json.JSONException
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import java.util.TimeZone
 import javax.inject.Inject
 
 
@@ -52,7 +47,10 @@ class SharedSignInViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
     private val userDao: UserDao,
-    @ApplicationContext private val context: Context
+    private val authManager: AuthenticationManager,
+    private val userProfileManager: UserProfileManager,
+    private val localUserRepository: LocalUserRepository,
+    private val remoteUserRepository: RemoteUserRepository,
 ) : ViewModel() {
     private val tag = "SharedSignInViewModel: "
 
@@ -87,177 +85,61 @@ class SharedSignInViewModel @Inject constructor(
             _authState.value = AuthState.Loading
 
             try {
-                val credentialManager = CredentialManager.create(context)
-                val clientId = context.getString(R.string.client_id)
-
-                val googleIdOption =
-                    GetSignInWithGoogleOption.Builder(clientId)
-                        .build()
-                Log.i(tag, "googleIdOption: ${googleIdOption}")
-
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-                Log.i(tag, "request: ${request}")
-
-                val result = credentialManager.getCredential(context, request)
-                Log.i(tag, "getCredential(): ${result}")
-
+                val result = authManager.getGoogleCredential()
                 processSignInResult(result)
             } catch (e: GetCredentialException) {
-                _authState.value = AuthState.Error(e.message ?: "Unknown error occurred")
+                _authState.value = AuthState.Error(e.message ?: "Failed to retrieve credentials.")
+            } catch (e: NetworkOnMainThreadException) {
+                _authState.value = AuthState.Error("Network operation attempted on the main thread.")
+            } catch (e: Exception) {
+                _authState.value = AuthState.Error("An unexpected error occurred: ${e.message}")
             }
         }
     }
 
     private suspend fun processSignInResult(result: GetCredentialResponse) {
-        var credential = result.credential
-
-        if (credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        ) {
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-            val idToken = googleIdTokenCredential.idToken
-            val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-
+        val credential = result.credential
+        if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
             try {
-                val authResult = auth.signInWithCredential(firebaseCredential).await()
-                val firebaseUser = auth.currentUser
-                val userId = authResult.user?.uid
-
-                if (firebaseUser != null && userId != null) {
-                    val userProfileMap = createInitialProfile(firebaseUser, userId)
-                    val userProfileJson = convertMapToJson(userProfileMap)
-
-                    // Firestore에 회원 정보가 있는지 확인
-                    val isRegistered = isUserRegisteredInFirestore(userId)
-
-                    _userProfileJson.value = userProfileJson
-
-                    if (isRegistered) {
-                        // 회원일 경우 바로 QuoteScreen으로 이동
-                        // Firestore에 정보 업데이트
-                        updateLastSyncDateOnFirestore(userId)
-
-                        // room db에 동기화
-                        syncFirestoreUserToRoom(userId, firestore)
-
-                        _authState.value = AuthState.Authenticated(userId)
-                    } else {
-                        // 비회원일 경우 TermsConsentScreen으로 이동
-                        _authState.value = AuthState.RequiresConsent(userId, userProfileJson)
-                    }
-                } else {
-                    _authState.value = AuthState.Error("User information is not available.")
-                }
+                val idToken = authManager.extractIdToken(credential)
+                val authResult = authManager.authenticateWithFirebase(idToken)
+                handleAuthResult(authResult)
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                _authState.value = AuthState.Error("Invalid credentials provided: ${e.message}")
+            } catch (e: FirebaseAuthException) {
+                _authState.value = AuthState.Error("Firebase authentication failed: ${e.message}")
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("Authentication failed: ${e.message}")
+                _authState.value = AuthState.Error("An error occurred during sign-in: ${e.message}")
             }
+        } else {
+            _authState.value = AuthState.Error("Invalid credential type received.")
         }
     }
 
-    private suspend fun updateLastSyncDateOnFirestore(userId: String) {
+    private suspend fun handleAuthResult(authResult: AuthResult) {
         try {
-            val now = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            val firebaseUser = authResult.user
+            val userId = authResult.user?.uid
 
-            firestore.collection("users")
-                .document(userId)
-                .update(
-                    "lastSyncDate", now,
-                    "lastLoginDate", now
-                )
-                .await()
+            if (firebaseUser != null && userId != null) {
+                val userProfileMap = userProfileManager.createInitialProfile(firebaseUser, userId)
+                val userProfileJson = convertMapToJson(userProfileMap)
+                _userProfileJson.value = userProfileJson
 
-            Log.d(
-                "UserSync",
-                "lastSyncDate와 lastLoginDate 업데이트 성공: lastSyncDate = $now, lastLoginDate = $now"
-            )
+                if (remoteUserRepository.isUserRegistered(userId)) {
+                    remoteUserRepository.updateLastSyncDate(userId)
+                    remoteUserRepository.syncFirestoreUserToRoom(userId)
+                    _authState.value = AuthState.Authenticated(userId)
+                } else {
+                    _authState.value = AuthState.RequiresConsent(userId, userProfileJson)
+                }
+            } else {
+                throw IllegalStateException("Firebase user or user ID is null.")
+            }
+        } catch (e: NullPointerException) {
+            _authState.value = AuthState.Error("Unexpected null value: ${e.message}")
         } catch (e: Exception) {
-            Log.e("UserSync", "Firestore에서 lastSyncDate 또는 lastLoginDate 업데이트 실패: ${e.message}")
-        }
-    }
-
-    suspend fun syncFirestoreUserToRoom(
-        userId: String,
-        firestoreDb: FirebaseFirestore,
-    ) {
-        try {
-            // Firestore에서 사용자 데이터 가져오기
-            val userDoc = firestoreDb
-                .collection("users")
-                .document(userId)
-                .get()
-                .await()
-
-            val firestoreUser = userDoc.toObject(User::class.java)
-                ?: throw Exception("Firestore에서 사용자 데이터를 찾을 수 없습니다")
-
-            // Firestore User 객체를 Room UserEntity로 변환
-            val userEntity = UserEntity(
-                userId = firestoreUser.id,
-                email = firestoreUser.email,
-                notificationEnabled = firestoreUser.notificationEnabled,
-                notificationTime = firestoreUser.notificationTime,
-                lastSyncDate = parseTimestamp(firestoreUser.lastSyncDate),
-            )
-
-            userDao.insertUser(userEntity)
-
-        } catch (e: Exception) {
-            Log.e("UserSync", "사용자 데이터 동기화 실패: ${e.message}")
-            throw e
-        }
-    }
-
-    fun parseTimestamp(timestamp: String): Long {
-        return try {
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-
-            val date = dateFormat.parse(timestamp)
-                ?: throw IllegalArgumentException("유효하지 않은 날짜 형식: $timestamp")
-
-            Log.d("parseTimestamp", "date.time: ${date.time}")
-            date.time
-        } catch (e: Exception) {
-            Log.e("TimestampParsing", "Timestamp 파싱 실패: $timestamp", e)
-            System.currentTimeMillis()
-        }
-    }
-
-    private fun createInitialProfile(
-        firebaseUser: FirebaseUser,
-        userId: String
-    ): Map<String, Any?> {
-        val now = LocalDateTime.now()
-            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-
-        Log.d(tag, "now: ${now}")
-
-        return mapOf(
-            "id" to userId,
-            "email" to (firebaseUser.email),
-            "role" to "USER",
-            "lastLoginDate" to now,
-            "notificationEnabled" to true,
-            "notificationTime" to "08:00",
-            "privacyPolicyEnabled" to null,
-            "termsOfServiceEnabled" to null,
-            "lastSyncDate" to now,
-            "isAccountDeleted" to false,
-            "createdDate" to now,
-            "modifiedDate" to now,
-        )
-    }
-
-    private suspend fun isUserRegisteredInFirestore(userId: String): Boolean {
-        return try {
-            val documentSnapshot = firestore.collection("users").document(userId).get().await()
-            documentSnapshot.exists()
-        } catch (e: Exception) {
-            Log.e(tag, "Error checking user registration: ${e.message}")
-            false
+            _authState.value = AuthState.Error("An error occurred: ${e.message}")
         }
     }
 

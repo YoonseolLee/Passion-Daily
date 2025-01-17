@@ -3,6 +3,7 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import com.example.passionDaily.R
+import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -27,4 +28,8 @@ object AppModule {
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
+
+    @Provides
+    @Singleton
+    fun provideTimeUtil(): TimeUtil = TimeUtil
 }

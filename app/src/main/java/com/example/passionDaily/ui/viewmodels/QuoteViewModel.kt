@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
-import com.example.passionDaily.domain.usecase.QuoteUseCases
+import com.example.passionDaily.domain.usecase.QuoteUseCase
 import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
@@ -19,14 +19,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
-    private val quoteUseCases: QuoteUseCases,
+    private val quoteUseCase: QuoteUseCase,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel(), QuoteInteractionHandler {
@@ -136,7 +135,7 @@ class QuoteViewModel @Inject constructor(
     }
 
     fun shareText(context: Context, text: String) {
-        quoteUseCases.shareText(context, text)
+        quoteUseCase.shareText(context, text)
     }
 
     fun incrementShareCount(quoteId: String, category: QuoteCategory?) {

@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import javax.inject.Inject
 
-class QuoteUseCases @Inject constructor(
+class QuoteUseCase @Inject constructor(
 ) {
 
     // TODO: 이미지 공유로 변경
