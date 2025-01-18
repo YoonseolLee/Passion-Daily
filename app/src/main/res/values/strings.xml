@@ -34,4 +34,5 @@
 
     <string name="success_logout">로그아웃 되었습니다.</string>
     <string name="success_withdrawal">탈퇴되었습니다.</string>
+    <string name="re_login_forwithdrawl">보안을 위해 다시 로그인해주세요.</string>
 </resources>

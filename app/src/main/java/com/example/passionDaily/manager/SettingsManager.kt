@@ -39,10 +39,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun deleteUserData(userId: String) {
         remoteUserRepository.deleteUserDataFromFirestore(userId)
-        deleteLocalData(userId)
+        deleteUserDataFromRoom(userId)
     }
 
-    private suspend fun deleteLocalData(userId: String) {
+    private suspend fun deleteUserDataFromRoom(userId: String) {
         localUserRepository.deleteUser(userId)
         localFavoriteRepository.deleteAllFavoritesByUserId(userId)
         localQuoteRepository.deleteAllQuotes()

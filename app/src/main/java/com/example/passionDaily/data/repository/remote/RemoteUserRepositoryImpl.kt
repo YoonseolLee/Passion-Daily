@@ -146,9 +146,7 @@ class RemoteUserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteUserDataFromFirestore(userId: String) {
-        val batch = firestore.batch()
-        batch.delete(firestore.collection(USERS_COLLECTION).document(userId))
-        batch.delete(firestore.collection(FAVORITES_COLLECTION).document(userId))
-        batch.commit().await()
+        firestore.collection(USERS_COLLECTION).document(userId).delete().await()
+        firestore.collection(FAVORITES_COLLECTION).document(userId).delete().await()
     }
 }

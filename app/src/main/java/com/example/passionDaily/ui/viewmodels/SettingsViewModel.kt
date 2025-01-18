@@ -15,6 +15,7 @@ import com.example.passionDaily.manager.AuthenticationManager
 import com.example.passionDaily.manager.SettingsManager
 import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -30,9 +31,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val localUserRepository: LocalUserRepository,
     private val settingsManager: SettingsManager,
-    private val stringProvider: StringProvider
+    private val stringProvider: StringProvider,
 ) : ViewModel() {
 
     companion object {
@@ -142,10 +142,19 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 settingsManager.deleteUserData(user.uid)
-                user.delete().await()
 
-                _toastMessage.emit(stringProvider.getString(R.string.success_withdrawal))
-                _navigateToQuote.emit(true)
+                // 계정 삭제 시도
+                Firebase.auth.currentUser?.let { currentUser ->
+                    try {
+                        currentUser.delete().await()
+                        _toastMessage.emit(stringProvider.getString(R.string.success_withdrawal))
+                        _navigateToQuote.emit(true)
+                    } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                        _toastMessage.emit("보안을 위해 다시 로그인해주세요")
+                        Firebase.auth.signOut()
+                        _navigateToLogin.emit(true)
+                    }
+                }
             }
         }
     }
@@ -215,6 +224,10 @@ class SettingsViewModel @Inject constructor(
 
             is FirebaseAuthException ->
                 stringProvider.getString(R.string.error_firebase_auth)
+
+            is FirebaseAuthRecentLoginRequiredException ->
+                stringProvider.getString(R.string.error_firebase_auth)
+
 
             else ->
                 stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
