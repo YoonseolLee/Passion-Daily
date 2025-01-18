@@ -329,11 +329,12 @@ class FavoritesViewModel @Inject constructor(
         val category = selectedQuoteCategory.value?.getLowercaseCategoryId().orEmpty()
 
         return hashMapOf(
-            "addedAt" to getCurrentFormattedDateTime(),
-            "quoteId" to quoteId,
-            "category" to category
+            stringProvider.getString(R.string.added_at) to getCurrentFormattedDateTime(),
+            stringProvider.getString(R.string.quote_id) to quoteId,
+            stringProvider.getString(R.string.category) to category
         )
     }
+
 
     private fun getCurrentFormattedDateTime(): String =
         LocalDateTime.now()
