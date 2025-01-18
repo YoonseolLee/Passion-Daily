@@ -93,9 +93,13 @@ class SharedSignInViewModel @Inject constructor(
     private suspend fun handleAuthResult(authResult: AuthResult) {
         safeAuthCall {
             val firebaseUser =
-                requireNotNull(authResult.user) { "Firebase user is null" }
+                requireNotNull(authResult.user) { stringProvider.getString(R.string.error_firebase_user_null) }
             val userId =
-                requireNotNull(firebaseUser.uid.takeIf { it.isNotBlank() }) { "Firebase user ID is blank" }
+                requireNotNull(firebaseUser.uid.takeIf { it.isNotBlank() }) {
+                    stringProvider.getString(
+                        R.string.error_firebase_user_id_blank
+                    )
+                }
             val userProfileMap = createUserProfile(firebaseUser, userId)
             storeUserProfile(userProfileMap)
             handleUserRegistrationStatus(userId)
