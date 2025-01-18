@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,10 @@ import javax.inject.Inject
 class RemoteFavoriteRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : RemoteFavoriteRepository {
+
+    companion object {
+        private const val TAG = "RemoteFavoriteRepo"
+    }
 
     override suspend fun addFavoriteToFirestore(
         currentUser: FirebaseUser,
@@ -38,16 +43,48 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
     override suspend fun deleteFavoriteFromFirestore(
         currentUser: FirebaseUser,
         quoteId: String,
+        categoryId: Int,
     ): Unit = withContext(Dispatchers.IO) {
-
         try {
-            firestore.collection("favorites")
+            val categoryEnglishName = QuoteCategory.fromCategoryId(categoryId)?.name?.lowercase()
+                ?: throw IllegalArgumentException("Invalid category ID: $categoryId")
+
+            Log.d(
+                TAG,
+                "Attempting to delete favorite from Firestore - " +
+                        "userId: ${currentUser.uid}, " +
+                        "quoteId: $quoteId, " +
+                        "category: $categoryEnglishName"
+            )
+
+            val quotesRef = firestore.collection("favorites")
                 .document(currentUser.uid)
                 .collection("saved_quotes")
-                .document(quoteId)
-                .delete()
+                .whereEqualTo("quoteId", quoteId)
+                .whereEqualTo("category", categoryEnglishName)
+                .get()
+                .await()
+
+            if (quotesRef.isEmpty) {
+                Log.w(TAG, "No document found with quoteId: $quoteId and category: $categoryEnglishName for user: ${currentUser.uid}")
+                return@withContext
+            }
+
+            // 찾은 문서 삭제
+            for (document in quotesRef.documents) {
+                Log.d(TAG, "Deleting document with id: ${document.id}")
+                firestore.collection("favorites")
+                    .document(currentUser.uid)
+                    .collection("saved_quotes")
+                    .document(document.id)
+                    .delete()
+                    .await()
+            }
+
+            Log.d(TAG, "Successfully deleted favorite(s) from Firestore")
+
         } catch (e: Exception) {
-            Log.e("Firestore", "Firestore 즐겨찾기 삭제 실패", e)
+            Log.e(TAG, "Failed to delete favorite from Firestore", e)
             throw e
         }
     }
@@ -131,7 +168,8 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
     private fun mapDocumentToQuote(document: DocumentSnapshot): Quote {
         return Quote(
             id = document.id,
-            category = QuoteCategory.fromEnglishName(document.getString("category") ?: "") ?: QuoteCategory.OTHER,
+            category = QuoteCategory.fromEnglishName(document.getString("category") ?: "")
+                ?: QuoteCategory.OTHER,
             text = document.getString("text") ?: "",
             person = document.getString("person") ?: "",
             imageUrl = document.getString("imageUrl") ?: "",

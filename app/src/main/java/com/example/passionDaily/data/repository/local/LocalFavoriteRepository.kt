@@ -13,4 +13,5 @@ interface LocalFavoriteRepository {
     suspend fun getAllFavoriteIds(userId: String): Flow<List<String>>
     suspend fun getAllFavoriteIdsWithCategory(userId: String): Flow<List<FavoriteWithCategory>>
     fun checkFavoriteEntity(userId: String, quoteId: String, categoryId: Int): Flow<FavoriteEntity?>
+    suspend fun getFavoritesForQuote(quoteId: String, categoryId: Int): List<FavoriteEntity>
 }

@@ -42,4 +42,8 @@ class LocalFavoriteRepositoryImpl @Inject constructor(
     ): Flow<FavoriteEntity?> {
         return favoriteDao.checkFavoriteEntity(userId, quoteId, categoryId)
     }
+
+    override suspend fun getFavoritesForQuote(quoteId: String, categoryId: Int): List<FavoriteEntity> {
+        return favoriteDao.getFavoritesForQuote(quoteId, categoryId)
+    }
 }

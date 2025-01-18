@@ -12,6 +12,7 @@ interface RemoteFavoriteRepository {
     suspend fun deleteFavoriteFromFirestore(
         currentUser: FirebaseUser,
         quoteId: String,
+        categoryId: Int
     )
 
     suspend fun getLastQuoteNumber(

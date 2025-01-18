@@ -62,6 +62,6 @@ interface FavoriteDao {
     fun getAllFavoriteIdsWithCategory(userId: String):
             Flow<List<FavoriteWithCategory>>
 
-    @Query("SELECT * FROM quotes")
-    suspend fun getAllQuotes(): List<QuoteEntity>
+    @Query("SELECT * FROM favorites WHERE quote_id = :quoteId AND category_id = :categoryId")
+    suspend fun getFavoritesForQuote(quoteId: String, categoryId: Int): List<FavoriteEntity>
 }

@@ -218,7 +218,6 @@ fun AddToFavoritesButton(
         contentScale = ContentScale.None,
         modifier = Modifier.clickable {
             if (currentUser == null) {
-                // 로그인되지 않은 경우
                 Toast.makeText(
                     context,
                     "즐겨찾기 기능을 사용하려면 로그인이 필요합니다.",
@@ -226,12 +225,10 @@ fun AddToFavoritesButton(
                 ).show()
                 onRequireLogin()
             } else {
-                // 로그인된 경우 즐겨찾기 기능 실행
                 if (isFavorite) {
-                    Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
-                    favoritesViewModel.removeFavorite(currentQuoteId)
+                    Log.d("AddToFavoritesButton", "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId")
+                    favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
                 } else {
-                    Log.d("AddToFavoritesButton", "isFavorite: $isFavorite")
                     favoritesViewModel.addFavorite(currentQuoteId)
                 }
             }

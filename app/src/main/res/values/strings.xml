@@ -26,4 +26,9 @@
     <string name="favorites">즐겨찾기</string>
     <string name="home">홈</string>
     <string name="settings">설정</string>
+
+<!--    FavoritesViewModel  -->
+    <string name="quote_number_format">%06d</string>
+    <string name="quote_id_prefix">quote_</string>
+    <string name="datetime_format">yyyy-MM-dd HH:mm:ss</string>
 </resources>

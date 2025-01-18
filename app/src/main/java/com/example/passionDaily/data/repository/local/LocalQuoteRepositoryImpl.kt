@@ -45,6 +45,4 @@ class LocalQuoteRepositoryImpl @Inject constructor(
     override suspend fun deleteAllQuotes() {
         quoteDao.deleteAllQuotes()
     }
-
-
 }
