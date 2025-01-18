@@ -145,13 +145,16 @@ class FavoritesViewModel @Inject constructor(
                     localFavoriteRepository.getAllFavorites(currentUserId)
                         .catch { e ->
                             Log.e(TAG, "Error in flow", e)
+                            _isFavoriteLoading.emit(false)
                             throw e
                         }
                         .collect { favorites ->
                             handleFavoritesUpdate(favorites)
+                            _isFavoriteLoading.emit(false)
                         }
                 }
             }
+            _isFavoriteLoading.emit(false)
         }
     }
 
