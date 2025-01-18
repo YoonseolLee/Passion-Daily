@@ -179,46 +179,6 @@ class SharedSignInViewModel @Inject constructor(
         userProfileManager.saveUserToFirestore(json, auth.currentUser)
     }
 
-    fun openUrl(context: Context, url: String) {
-        urlManager.openUrl(context, url)
-    }
-
-    private suspend fun safeAuthCall(block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (e: Exception) {
-            val errorMessage = when (e) {
-                is GetCredentialException ->
-                    stringProvider.getString(R.string.error_credential_retrieval)
-
-                is NetworkOnMainThreadException ->
-                    stringProvider.getString(R.string.error_network_main_thread)
-
-                is FirebaseAuthInvalidCredentialsException ->
-                    stringProvider.getString(
-                        R.string.error_invalid_credential,
-                        e.message.orEmpty()
-                    )
-
-                is FirebaseAuthException ->
-                    stringProvider.getString(
-                        R.string.error_firebase_auth,
-                        e.message.orEmpty()
-                    )
-
-                is FirebaseFirestoreException ->
-                    stringProvider.getString(R.string.error_network)
-
-                else -> stringProvider.getString(
-                    R.string.error_unexpected,
-                    e.message.orEmpty()
-                )
-            }
-            Log.e(TAG, "Error in auth operation", e)
-            _authState.emit(AuthState.Error(errorMessage))
-        }
-    }
-
     private fun showSignUpSuccessMessage() {
         val signUpSuccessMessage = stringProvider.getString(R.string.signup_success)
         toastManager.showToast(signUpSuccessMessage)
@@ -227,5 +187,36 @@ class SharedSignInViewModel @Inject constructor(
     private fun showSignUpErrorMessage() {
         val signUpErrorMessage = stringProvider.getString(R.string.error_database)
         toastManager.showToast(signUpErrorMessage)
+    }
+
+    fun openUrl(context: Context, url: String) {
+        urlManager.openUrl(context, url)
+    }
+
+    private suspend fun safeAuthCall(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            val errorMessage = mapExceptionToErrorMessage(e)
+            Log.e(TAG, "Error in auth operation", e)
+            _authState.emit(AuthState.Error(errorMessage))
+        }
+    }
+
+    private fun mapExceptionToErrorMessage(e: Exception): String {
+        return when (e) {
+            is GetCredentialException ->
+                stringProvider.getString(R.string.error_credential_retrieval)
+            is NetworkOnMainThreadException ->
+                stringProvider.getString(R.string.error_network_main_thread)
+            is FirebaseAuthInvalidCredentialsException ->
+                stringProvider.getString(R.string.error_invalid_credential, e.message.orEmpty())
+            is FirebaseAuthException ->
+                stringProvider.getString(R.string.error_firebase_auth, e.message.orEmpty())
+            is FirebaseFirestoreException ->
+                stringProvider.getString(R.string.error_network)
+            else ->
+                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+        }
     }
 }
