@@ -3,11 +3,13 @@ package com.example.passionDaily.ui.viewmodels
 import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.R
 import com.example.passionDaily.data.local.entity.UserEntity
 import com.example.passionDaily.data.repository.local.UserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
@@ -17,6 +19,7 @@ import com.example.passionDaily.manager.UrlManager
 import com.example.passionDaily.manager.UserConsentManager
 import com.example.passionDaily.manager.UserProfileManager
 import com.example.passionDaily.mapper.UserProfileMapper
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.util.Converters
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.common.reflect.TypeToken
@@ -42,7 +45,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedSignInViewModel @Inject constructor(
-    private val userRepository: UserRepository,
     private val auth: FirebaseAuth,
     private val authManager: AuthenticationManager,
     private val userProfileManager: UserProfileManager,
@@ -51,41 +53,35 @@ class SharedSignInViewModel @Inject constructor(
     private val remoteUserRepository: RemoteUserRepository,
     private val toastManager: ToastManager,
     private val userProfileMapper: UserProfileMapper,
+    private val stringProvider: StringProvider
 ) : ViewModel() {
-    private val tag = "SharedSignInViewModel: "
 
-    private val firestore: FirebaseFirestore = Firebase.firestore
+    private companion object {
+        const val TAG = "SharedSignInViewModel"
+    }
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
-    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    val authState = _authState.asStateFlow()
 
     private val _userProfileJson = MutableStateFlow<String?>(null)
-    val userProfileJson: StateFlow<String?> = _userProfileJson.asStateFlow()
+    val userProfileJson = _userProfileJson.asStateFlow()
 
     private val _userProfileJsonV2 = MutableStateFlow<String?>(null)
-    val userProfileJsonV2: StateFlow<String?> = _userProfileJsonV2.asStateFlow()
+    val userProfileJsonV2 = _userProfileJsonV2.asStateFlow()
 
     val consent = userConsentManager.consent
     val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
-    val isJsonValid = userProfileManager.isJsonValid
 
     /**
      * LoginScreen
      */
+
     fun signInWithGoogle() {
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
-
-            try {
+            _authState.emit(AuthState.Loading)
+            safeAuthCall {
                 val result = authManager.getGoogleCredential()
                 processSignInResult(result)
-            } catch (e: GetCredentialException) {
-                _authState.value = AuthState.Error(e.message ?: "Failed to retrieve credentials.")
-            } catch (e: NetworkOnMainThreadException) {
-                _authState.value =
-                    AuthState.Error("Network operation attempted on the main thread.")
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("An unexpected error occurred: ${e.message}")
             }
         }
     }
@@ -159,7 +155,7 @@ class SharedSignInViewModel @Inject constructor(
 
     fun handleNextClick(userProfileJson: String?) {
         if (!consent.value.isAllAgreed) {
-            Log.e(tag, "User did not agree to required terms")
+            Log.e(TAG, "User did not agree to required terms")
             return
         }
 
@@ -178,7 +174,7 @@ class SharedSignInViewModel @Inject constructor(
                     AuthState.Error("Network error while saving profile")
                         .also { _authState.value = it }
                 } catch (e: Exception) {
-                    Log.e(tag, "Failed to save user profile", e)
+                    Log.e(TAG, "Failed to save user profile", e)
                     showSignUpErrorMessage()
                 }
             }
@@ -192,6 +188,37 @@ class SharedSignInViewModel @Inject constructor(
 
     fun openUrl(context: Context, url: String) {
         urlManager.openUrl(context, url)
+    }
+
+    private suspend fun safeAuthCall(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            val errorMessage = when (e) {
+                is GetCredentialException ->
+                    stringProvider.getString(R.string.error_credential_retrieval)
+                is NetworkOnMainThreadException ->
+                    stringProvider.getString(R.string.error_network_main_thread)
+                is FirebaseAuthInvalidCredentialsException ->
+                    stringProvider.getString(
+                        R.string.error_invalid_credentials,
+                        e.message.orEmpty()
+                    )
+                is FirebaseAuthException ->
+                    stringProvider.getString(
+                        R.string.error_firebase_auth,
+                        e.message.orEmpty()
+                    )
+                is FirebaseFirestoreException ->
+                    stringProvider.getString(R.string.error_network)
+                else -> stringProvider.getString(
+                    R.string.error_unexpected,
+                    e.message.orEmpty()
+                )
+            }
+            Log.e(TAG, "Error in auth operation", e)
+            _authState.emit(AuthState.Error(errorMessage))
+        }
     }
 
     private fun showSignUpSuccessMessage() {
