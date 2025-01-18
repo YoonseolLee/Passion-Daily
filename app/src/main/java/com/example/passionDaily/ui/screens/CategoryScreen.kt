@@ -42,6 +42,7 @@ import com.example.passionDaily.util.QuoteCategory
 fun CategoryScreen(
     quoteViewModel: QuoteViewModel,
     onNavigateToQuote: () -> Unit,
+    onBack: () -> Unit,
 ) {
     val categories = quoteViewModel.getQuoteCategories()
     val selectedCategory by quoteViewModel.selectedQuoteCategory.collectAsState()
@@ -53,7 +54,8 @@ fun CategoryScreen(
         onCategoryClicked = { category ->
             quoteViewModel.onCategorySelected(category)
             onNavigateToQuote()
-        }
+        },
+        onBack = onBack
     )
 }
 
@@ -62,8 +64,9 @@ fun CategoryScreenContent(
     categories: List<String>,
     selectedCategory: QuoteCategory?,
     onNavigateToQuote: () -> Unit,
-    onCategoryClicked: (QuoteCategory?) -> Unit
-) {
+    onCategoryClicked: (QuoteCategory?) -> Unit,
+    onBack: () -> Unit,
+    ) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -76,7 +79,7 @@ fun CategoryScreenContent(
                 .align(Alignment.TopStart)
                 .clickable { onNavigateToQuote() }
         ) {
-            BackButton()
+            BackButton(onBack = onBack)
         }
 
         // Main Content

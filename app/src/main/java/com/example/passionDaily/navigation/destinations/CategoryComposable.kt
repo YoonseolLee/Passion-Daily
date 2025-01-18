@@ -7,12 +7,14 @@ import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 
 fun NavGraphBuilder.categoryComposable(
     onNavigateToQuote: () -> Unit,
-    quoteViewModel: QuoteViewModel
+    quoteViewModel: QuoteViewModel,
+    onBack: () -> Unit
 ) {
     composable(route = "category") {
         CategoryScreen(
             quoteViewModel = quoteViewModel,
             onNavigateToQuote = onNavigateToQuote,
+            onBack = onBack
         )
     }
 }

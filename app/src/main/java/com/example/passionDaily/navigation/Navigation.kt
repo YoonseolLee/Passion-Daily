@@ -49,7 +49,8 @@ fun SetupNavigation(
         )
         categoryComposable(
             onNavigateToQuote = { screens.navigateToQuote() },
-            quoteViewModel = quoteViewModel
+            quoteViewModel = quoteViewModel,
+            onBack = { navController.popBackStack() }
         )
         favoritesComposable(
             quoteViewModel = quoteViewModel,
@@ -63,7 +64,8 @@ fun SetupNavigation(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToLogin = { screens.navigateToLogin() },
-            onNavigateToSettings = { screens.navigateToSettingsFromNavBar() }
+            onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
+            onBack = { navController.popBackStack() }
         )
     }
 }

@@ -10,6 +10,7 @@ fun NavGraphBuilder.settingsComposable(
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
+    onBack: () -> Unit
 ) {
     composable(route = "settings") {
         SettingsScreen(
@@ -18,6 +19,7 @@ fun NavGraphBuilder.settingsComposable(
             onNavigateToSettings = onNavigateToSettings,
             onNavigateToLogin = onNavigateToLogin,
             currentScreen = NavigationBarScreens.SETTINGS,
+            onBack = onBack
         )
     }
 }

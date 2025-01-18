@@ -68,7 +68,8 @@ fun SettingsScreen(
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    currentScreen: NavigationBarScreens
+    currentScreen: NavigationBarScreens,
+    onBack: () -> Unit,
 ) {
     SettingsScreenContent(
         viewModel = settingsViewModel,
@@ -76,7 +77,8 @@ fun SettingsScreen(
         onQuoteClicked = onNavigateToQuote,
         onSettingsClicked = onNavigateToSettings,
         onNavigateToLogin = onNavigateToLogin,
-        currentScreen = currentScreen
+        currentScreen = currentScreen,
+        onBack = onBack
     )
 }
 
@@ -87,7 +89,8 @@ fun SettingsScreenContent(
     onQuoteClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    currentScreen: NavigationBarScreens
+    currentScreen: NavigationBarScreens,
+    onBack: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -102,7 +105,7 @@ fun SettingsScreenContent(
                     .offset(x = 24.dp)
                     .align(Alignment.TopStart)
             ) {
-                BackButton()
+                BackButton(onBack = onBack)
             }
 
             Column(
