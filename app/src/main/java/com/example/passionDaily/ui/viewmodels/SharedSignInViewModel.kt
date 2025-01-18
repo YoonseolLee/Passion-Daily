@@ -150,23 +150,21 @@ class SharedSignInViewModel @Inject constructor(
             return
         }
 
-        val updatedJson = userProfileManager.updateUserProfileWithConsent(
-            userProfileJson,
-            consent.value
-        )
-        _userProfileJsonV2.value = updatedJson
+        viewModelScope.launch {
+            safeAuthCall {
+                val updatedJson = userProfileManager.updateUserProfileWithConsent(
+                    userProfileJson,
+                    consent.value
+                )
+                _userProfileJsonV2.emit(updatedJson)
 
-        updatedJson?.let { json ->
-            viewModelScope.launch {
-                try {
-                    saveUserProfile(json)
-                    showSignUpSuccessMessage()
-                } catch (e: FirebaseFirestoreException) {
-                    AuthState.Error("Network error while saving profile")
-                        .also { _authState.value = it }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to save user profile", e)
-                    showSignUpErrorMessage()
+                when {
+                    updatedJson != null -> {
+                        saveUserProfile(updatedJson)
+                        showSignUpSuccessMessage()
+                    }
+
+                    else -> showSignUpErrorMessage()
                 }
             }
         }
@@ -218,16 +216,12 @@ class SharedSignInViewModel @Inject constructor(
     }
 
     private fun showSignUpSuccessMessage() {
-        toastManager.showToast("환영합니다! 회원가입이 완료되었습니다.")
+        val signUpSuccessMessage = stringProvider.getString(R.string.signup_success)
+        toastManager.showToast(signUpSuccessMessage)
     }
 
     private fun showSignUpErrorMessage() {
-        toastManager.showToast("회원가입 중 오류가 발생했습니다. 다시 시도해주세요.")
+        val signUpErrorMessage = stringProvider.getString(R.string.error_database)
+        toastManager.showToast(signUpErrorMessage)
     }
-
-    private fun isValidGoogleCredential(credential: Credential?): Boolean {
-        return credential is CustomCredential &&
-                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-    }
-
 }
