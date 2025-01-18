@@ -2,16 +2,20 @@ package com.example.passionDaily.ui.viewmodels
 
 
 import android.content.Context
+import android.os.NetworkOnMainThreadException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.R
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.domain.usecase.QuoteUseCase
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,15 +31,18 @@ class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
     private val quoteUseCase: QuoteUseCase,
     private val quoteStateHolder: QuoteStateHolder,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    private val stringProvider: StringProvider,
+
 ) : ViewModel(), QuoteInteractionHandler {
 
     companion object {
-        private var lastLoadedQuote: DocumentSnapshot? = null
-        private val pageSize: Int = 20
+        private const val TAG = "QuoteViewModel"
+        private const val PAGE_SIZE = 20
         private const val KEY_QUOTE_INDEX = "quote_index"
     }
 
+    private var lastLoadedQuote: DocumentSnapshot? = null
     private val quoteCategories = QuoteCategory.values().map { it.koreanName }
 
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
@@ -51,8 +58,6 @@ class QuoteViewModel @Inject constructor(
 
     private val _hasQuoteReachedEnd = MutableStateFlow(false)
 
-    private var savedQuoteIndex: Int = 0
-
     init {
         viewModelScope.launch {
             launch {
@@ -65,14 +70,11 @@ class QuoteViewModel @Inject constructor(
 
     fun loadInitialQuotes(category: QuoteCategory?) {
         viewModelScope.launch {
-            _isQuoteLoading.value = true
-            try {
-                category?.let {
-                    loadQuotes(it)
-                }
-            } finally {
-                _isQuoteLoading.value = false
+            _isQuoteLoading.emit(true)
+            category?.let {
+                safeQuoteOperation { loadQuotes(it) }
             }
+            _isQuoteLoading.emit(false)
         }
     }
 
@@ -81,6 +83,32 @@ class QuoteViewModel @Inject constructor(
             _currentQuoteIndex.value == 0 && _hasQuoteReachedEnd.value -> quotes.value.size - 1
             _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
             else -> _currentQuoteIndex.value - 1
+        }
+    }
+
+    private fun loadQuotes(category: QuoteCategory) {
+        if (_isQuoteLoading.value) return
+
+        viewModelScope.launch {
+            _isQuoteLoading.emit(true)
+            safeQuoteOperation {
+                val result = remoteQuoteRepository.getQuotesByCategory(
+                    category = category,
+                    pageSize = PAGE_SIZE,
+                    lastLoadedQuote = lastLoadedQuote
+                )
+
+                if (result.quotes.isNotEmpty()) {
+                    lastLoadedQuote = result.lastDocument
+                    quoteStateHolder.addQuotes(
+                        result.quotes,
+                        isNewCategory = lastLoadedQuote == null
+                    )
+                } else {
+                    _hasQuoteReachedEnd.emit(true)
+                }
+            }
+            _isQuoteLoading.emit(false)
         }
     }
 
@@ -100,38 +128,30 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    fun loadQuotes(category: QuoteCategory) {
-        if (_isQuoteLoading.value) return
-
-        viewModelScope.launch {
-            _isQuoteLoading.value = true
-
-            try {
-                val result = remoteQuoteRepository.getQuotesByCategory(
-                    category = category,
-                    pageSize = pageSize,
-                    lastLoadedQuote = lastLoadedQuote
-                )
-
-                if (result.quotes.isNotEmpty()) {
-                    lastLoadedQuote = result.lastDocument
-                    quoteStateHolder.addQuotes(
-                        result.quotes,
-                        isNewCategory = lastLoadedQuote == null  // 첫 페이지인지 여부
-                    )
-                } else {
-                    _hasQuoteReachedEnd.value = true
-                }
-            } catch (e: Exception) {
-                Log.e("FirestoreError", "Error fetching quotes: ${e.message}")
-            } finally {
-                _isQuoteLoading.value = false
-            }
+    private suspend fun safeQuoteOperation(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            val errorMessage = mapExceptionToErrorMessage(e)
+            Log.e(TAG, "Error in quote operation", e)
         }
     }
 
-    fun getQuoteCategories(): List<String> {
-        return quoteCategories
+    private fun mapExceptionToErrorMessage(e: Exception): String {
+        return when (e) {
+            is FirebaseFirestoreException -> when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE ->
+                    stringProvider.getString(R.string.error_network)
+                FirebaseFirestoreException.Code.PERMISSION_DENIED ->
+                    stringProvider.getString(R.string.error_permission_denied)
+                else ->
+                    stringProvider.getString(R.string.error_firebase_firestore)
+            }
+            is NetworkOnMainThreadException ->
+                stringProvider.getString(R.string.error_network_main_thread)
+            else ->
+                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+        }
     }
 
     fun shareText(context: Context, text: String) {
@@ -141,14 +161,12 @@ class QuoteViewModel @Inject constructor(
     fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
         category?.let {
             viewModelScope.launch {
-                try {
+                safeQuoteOperation {
                     remoteQuoteRepository.incrementShareCount(quoteId, it)
-                } catch (e: Exception) {
-                    Log.e("ShareCount", "Error incrementing share count", e)
                 }
             }
         } ?: run {
-            Log.e("ShareCount", "Category is nultoQuotel")
+            Log.e(TAG, "Category is null")
         }
     }
 
@@ -159,4 +177,7 @@ class QuoteViewModel @Inject constructor(
         quoteStateHolder.clearQuotes()
         category?.let { loadQuotes(it) }
     }
+
+    fun getQuoteCategories(): List<String> = quoteCategories
+
 }
