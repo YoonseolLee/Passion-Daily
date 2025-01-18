@@ -52,7 +52,8 @@ class FavoritesViewModel @Inject constructor(
     private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
-    private val stringProvider: StringProvider
+    private val stringProvider: StringProvider,
+    private val firebaseAuth: FirebaseAuth,
 ) : ViewModel(), QuoteInteractionHandler {
 
     companion object {
@@ -60,9 +61,7 @@ class FavoritesViewModel @Inject constructor(
         private const val TAG = "FavoritesViewModel"
     }
 
-    private val auth = FirebaseAuth.getInstance()
-
-    private val _userId = MutableStateFlow(auth.currentUser?.uid ?: "")
+    private val _userId = MutableStateFlow(firebaseAuth.currentUser?.uid ?: "")
     val userId: StateFlow<String> = _userId.asStateFlow()
 
     private val _favoriteQuotes = MutableStateFlow<List<QuoteEntity>>(emptyList())
@@ -92,11 +91,12 @@ class FavoritesViewModel @Inject constructor(
     }
 
     init {
-        auth.addAuthStateListener(authStateListener)
-        if (auth.currentUser != null) {
+        firebaseAuth.addAuthStateListener(authStateListener)
+        if (firebaseAuth.currentUser != null) {
             loadFavorites()
         }
     }
+
 
     private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
         combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
@@ -194,13 +194,18 @@ class FavoritesViewModel @Inject constructor(
     }
 
     fun removeFavorite(quoteId: String, categoryId: Int) {
-        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId) ?: return
+        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId)
+            ?: return
 
         viewModelScope.launch {
             safeFavoriteOperation {
                 deleteLocalFavorite(currentUser.uid, quoteId, actualCategoryId)
 
-                remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
+                remoteFavoriteRepository.deleteFavoriteFromFirestore(
+                    currentUser,
+                    quoteId,
+                    categoryId
+                )
 
                 loadFavorites()
             }
@@ -212,7 +217,8 @@ class FavoritesViewModel @Inject constructor(
         try {
             localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId)
 
-            val remainingFavorites = localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
+            val remainingFavorites =
+                localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
             if (remainingFavorites.isEmpty()) {
                 localQuoteRepository.deleteQuote(quoteId, categoryId)
             }
@@ -223,8 +229,11 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    private fun getRequiredDataForRemove(quoteId: String, categoryId: Int): Pair<FirebaseUser, Int>? {
-        val currentUser = auth.currentUser ?: run {
+    private fun getRequiredDataForRemove(
+        quoteId: String,
+        categoryId: Int
+    ): Pair<FirebaseUser, Int>? {
+        val currentUser = firebaseAuth.currentUser ?: run {
             Log.d(TAG, "No user logged in")
             return null
         }
@@ -233,7 +242,7 @@ class FavoritesViewModel @Inject constructor(
     }
 
     private fun getRequiredDataForAdd(quoteId: String): Triple<FirebaseUser, QuoteCategory, Quote>? {
-        val currentUser = auth.currentUser ?: run {
+        val currentUser = firebaseAuth.currentUser ?: run {
             Log.d(TAG, "No user logged in")
             return null
         }
@@ -343,43 +352,42 @@ class FavoritesViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         favoritesJob?.cancel()
-        auth.removeAuthStateListener(authStateListener)
+        firebaseAuth.removeAuthStateListener {}
     }
 
     private fun safeFavoriteOperation(block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
+                _isFavoriteLoading.emit(true)
                 block()
             } catch (e: CancellationException) {
                 Log.d(TAG, "Operation was cancelled", e)
-                // CancellationException은 정상적인 취소이므로 다시 throw하지 않음
             } catch (e: Exception) {
+                val errorMessage = mapExceptionToErrorMessage(e)
                 Log.e(TAG, "Error in favorites operation", e)
-                Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
-                Log.e(TAG, "Error message: ${e.message}")
-
-                val errorMessage = when (e) {
-                    is NetworkOnMainThreadException ->
-                        stringProvider.getString(R.string.error_network_main_thread)
-
-                    is FirebaseFirestoreException ->
-                        stringProvider.getString(R.string.error_firebase_firestore)
-
-                    is FirebaseAuthInvalidUserException ->
-                        stringProvider.getString(R.string.error_invalid_user)
-
-                    is SQLiteConstraintException ->
-                        stringProvider.getString(R.string.error_duplicate_favorite)
-
-                    else -> stringProvider.getString(
-                        R.string.error_unexpected,
-                        e.message.orEmpty()
-                    )
-                }
                 _error.emit(errorMessage)
             } finally {
                 _isFavoriteLoading.emit(false)
             }
+        }
+    }
+
+    private fun mapExceptionToErrorMessage(e: Exception): String {
+        return when (e) {
+            is NetworkOnMainThreadException ->
+                stringProvider.getString(R.string.error_network_main_thread)
+
+            is FirebaseAuthInvalidUserException ->
+                stringProvider.getString(R.string.error_invalid_user)
+
+            is SQLiteConstraintException ->
+                stringProvider.getString(R.string.error_duplicate_favorite)
+
+            is FirebaseFirestoreException ->
+                stringProvider.getString(R.string.error_network)
+
+            else ->
+                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
         }
     }
 }
