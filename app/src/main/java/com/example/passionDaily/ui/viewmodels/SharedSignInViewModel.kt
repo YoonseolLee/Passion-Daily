@@ -3,15 +3,13 @@ package com.example.passionDaily.ui.viewmodels
 import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
-import androidx.annotation.StringRes
+import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
-import com.example.passionDaily.data.local.entity.UserEntity
-import com.example.passionDaily.data.repository.local.UserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import com.example.passionDaily.manager.AuthenticationManager
 import com.example.passionDaily.manager.ToastManager
@@ -20,26 +18,17 @@ import com.example.passionDaily.manager.UserConsentManager
 import com.example.passionDaily.manager.UserProfileManager
 import com.example.passionDaily.mapper.UserProfileMapper
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.util.Converters
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.common.reflect.TypeToken
-import com.google.firebase.Firebase
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestoreException
-import com.google.firebase.firestore.firestore
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 
@@ -88,51 +77,53 @@ class SharedSignInViewModel @Inject constructor(
 
     private suspend fun processSignInResult(result: GetCredentialResponse) {
         val credential = result.credential
-        if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-            try {
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            safeAuthCall {
                 val idToken = authManager.extractIdToken(credential)
                 val authResult = authManager.authenticateWithFirebase(idToken)
                 handleAuthResult(authResult)
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                _authState.value = AuthState.Error("Invalid credentials provided: ${e.message}")
-            } catch (e: FirebaseAuthException) {
-                _authState.value = AuthState.Error("Firebase authentication failed: ${e.message}")
-            } catch (e: Exception) {
-                _authState.value = AuthState.Error("An error occurred during sign-in: ${e.message}")
             }
         } else {
-            _authState.value = AuthState.Error("Invalid credential type received.")
+            _authState.emit(AuthState.Error(stringProvider.getString(R.string.error_invalid_credential)))
         }
     }
 
     private suspend fun handleAuthResult(authResult: AuthResult) {
-        try {
-            val firebaseUser = authResult.user
-                ?: throw IllegalStateException("Firebase user is null")
-            val userId = firebaseUser.uid.takeIf { it.isNotBlank() }
-                ?: throw IllegalStateException("Firebase user ID is blank")
-
-            val userProfileMap = userProfileManager.createInitialProfile(firebaseUser, userId)
-            val userProfileJson = userProfileMapper.convertMapToJson(userProfileMap)
-            _userProfileJson.value = userProfileJson
-
-            if (remoteUserRepository.isUserRegistered(userId)) {
-                remoteUserRepository.updateLastSyncDate(userId)
-                remoteUserRepository.syncFirestoreUserToRoom(userId)
-                _authState.value = AuthState.Authenticated(userId)
-            } else {
-                _authState.value = AuthState.RequiresConsent(userId, userProfileJson)
-            }
-        } catch (e: IllegalArgumentException) {
-            Log.e("handleAuthResult", "Invalid input data", e)
-            _authState.value = AuthState.Error("Invalid input: ${e.message}")
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("handleAuthResult", "Firestore operation failed", e)
-            _authState.value = AuthState.Error("Network error: ${e.message}")
-        } catch (e: Exception) {
-            Log.e("handleAuthResult", "Authentication failed", e)
-            _authState.value = AuthState.Error("Authentication failed: ${e.message}")
+        safeAuthCall {
+            val firebaseUser =
+                requireNotNull(authResult.user) { "Firebase user is null" }
+            val userId =
+                requireNotNull(firebaseUser.uid.takeIf { it.isNotBlank() }) { "Firebase user ID is blank" }
+            val userProfileMap = createUserProfile(firebaseUser, userId)
+            storeUserProfile(userProfileMap)
+            handleUserRegistrationStatus(userId)
         }
+    }
+
+    private fun createUserProfile(firebaseUser: FirebaseUser, userId: String): Map<String, Any?> {
+        val userProfileMap = userProfileManager.createInitialProfile(firebaseUser, userId)
+        return userProfileMap
+    }
+
+    private suspend fun storeUserProfile(userProfileMap: Map<String, Any?>) {
+        val userProfileJson = userProfileMapper.convertMapToJson(userProfileMap)
+        _userProfileJson.emit(userProfileJson)
+    }
+
+    private suspend fun handleUserRegistrationStatus(userId: String) {
+        if (remoteUserRepository.isUserRegistered(userId)) {
+            syncExistingUser(userId)
+        } else {
+            _authState.emit(AuthState.RequiresConsent(userId, userProfileJson.value))
+        }
+    }
+
+    private suspend fun syncExistingUser(userId: String) {
+        remoteUserRepository.updateLastSyncDate(userId)
+        remoteUserRepository.syncFirestoreUserToRoom(userId)
+        _authState.emit(AuthState.Authenticated(userId))
     }
 
     /**
@@ -197,20 +188,25 @@ class SharedSignInViewModel @Inject constructor(
             val errorMessage = when (e) {
                 is GetCredentialException ->
                     stringProvider.getString(R.string.error_credential_retrieval)
+
                 is NetworkOnMainThreadException ->
                     stringProvider.getString(R.string.error_network_main_thread)
+
                 is FirebaseAuthInvalidCredentialsException ->
                     stringProvider.getString(
-                        R.string.error_invalid_credentials,
+                        R.string.error_invalid_credential,
                         e.message.orEmpty()
                     )
+
                 is FirebaseAuthException ->
                     stringProvider.getString(
                         R.string.error_firebase_auth,
                         e.message.orEmpty()
                     )
+
                 is FirebaseFirestoreException ->
                     stringProvider.getString(R.string.error_network)
+
                 else -> stringProvider.getString(
                     R.string.error_unexpected,
                     e.message.orEmpty()
@@ -228,4 +224,10 @@ class SharedSignInViewModel @Inject constructor(
     private fun showSignUpErrorMessage() {
         toastManager.showToast("회원가입 중 오류가 발생했습니다. 다시 시도해주세요.")
     }
+
+    private fun isValidGoogleCredential(credential: Credential?): Boolean {
+        return credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    }
+
 }
