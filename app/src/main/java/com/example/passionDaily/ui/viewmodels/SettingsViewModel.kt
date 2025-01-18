@@ -5,12 +5,19 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.data.local.dao.FavoriteDao
-import com.example.passionDaily.data.local.dao.QuoteCategoryDao
-import com.example.passionDaily.data.local.dao.QuoteDao
-import com.example.passionDaily.data.local.dao.UserDao
+import com.example.passionDaily.R
+import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
+import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
+import com.example.passionDaily.data.repository.local.LocalQuoteRepository
+import com.example.passionDaily.data.repository.local.LocalUserRepository
+import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.manager.AuthenticationManager
+import com.example.passionDaily.manager.SettingsManager
+import com.example.passionDaily.resources.StringProvider
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,12 +30,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val firestore: FirebaseFirestore,
-    private val userDao: UserDao,
-    private val favoriteDao: FavoriteDao,
-    private val quoteDao: QuoteDao,
-    private val quoteCategoryDao: QuoteCategoryDao
+    private val localUserRepository: LocalUserRepository,
+    private val settingsManager: SettingsManager,
+    private val stringProvider: StringProvider
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "SettingsViewModel"
+    }
 
     private val _notificationEnabled = MutableStateFlow(false)
     val notificationEnabled: StateFlow<Boolean> = _notificationEnabled.asStateFlow()
@@ -53,143 +62,162 @@ class SettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val userId = Firebase.auth.currentUser?.uid ?: return@launch
-
-            userDao.getUserByUserId(userId)?.let { user ->
-                _notificationEnabled.value = user.notificationEnabled
-
-                user.notificationTime?.let { timeStr ->
-                    try {
-                        val time = LocalTime.parse(timeStr)
-                        _notificationTime.value = time
-                    } catch (e: Exception) {
-                        Log.e("SettingsViewModel", "Error parsing time", e)
+            getCurrentUser()?.uid?.let { userId ->
+                safeSettingsOperation {
+                    settingsManager.loadUserSettings(userId) { enabled, timeStr ->
+                        _notificationEnabled.emit(enabled)
+                        parseAndSetNotificationTime(timeStr)
                     }
                 }
             }
         }
     }
 
+    private fun getCurrentUser() = Firebase.auth.currentUser
+
+    private suspend fun parseAndSetNotificationTime(timeStr: String?) {
+        timeStr?.let {
+            safeSettingsOperation {
+                val time = LocalTime.parse(timeStr)
+                _notificationTime.emit(time)
+            }
+        }
+    }
+
     fun updateNotificationSettings(enabled: Boolean) {
         viewModelScope.launch {
-            val userId = Firebase.auth.currentUser?.uid ?: return@launch
-
-            // Firestore에 저장
-            firestore.collection("users")
-                .document(userId)
-                .update("notificationEnabled", enabled)
-
-            // Room에 저장
-            userDao.updateNotificationSetting(userId, enabled)
-            _notificationEnabled.value = enabled
+            getCurrentUser()?.uid?.let { userId ->
+                safeSettingsOperation {
+                    settingsManager.updateNotificationSettings(userId, enabled)
+                    _notificationEnabled.emit(enabled)
+                }
+            }
         }
     }
 
     fun updateNotificationTime(newTime: LocalTime) {
         viewModelScope.launch {
-            val userId = Firebase.auth.currentUser?.uid ?: return@launch
-
-            // Firestore에 저장
-            firestore.collection("users")
-                .document(userId)
-                .update("notificationTime", newTime.toString())
-
-            // Room에 저장
-            userDao.updateNotificationTime(userId, newTime.toString())
-            _notificationTime.value = newTime
+            getCurrentUser()?.uid?.let { userId ->
+                safeSettingsOperation {
+                    settingsManager.updateNotificationTime(userId,newTime)
+                    _notificationTime.emit(newTime)
+                }
+            }
         }
     }
 
     fun logIn() {
         viewModelScope.launch {
-            try {
-                if (Firebase.auth.currentUser != null) {
-                    _toastMessage.value = "이미 로그인 되어 있습니다."
-                    return@launch
+            safeSettingsOperation {
+                if (getCurrentUser() != null) {
+                    _toastMessage.emit(stringProvider.getString(R.string.error_already_logged_in))
+                    return@safeSettingsOperation
                 }
-                _navigateToLogin.value = true
-            } catch (e: Exception) {
-                Log.e("SettingsViewModel", "로그인 실패", e)
+                _navigateToLogin.emit(true)
             }
         }
     }
 
     fun logOut() {
         viewModelScope.launch {
-            try {
-                if (Firebase.auth.currentUser == null) {
-                    _toastMessage.value = "이미 로그아웃 되어 있습니다."
-                    return@launch
+            safeSettingsOperation {
+                if (getCurrentUser() == null) {
+                    _toastMessage.emit(stringProvider.getString(R.string.error_already_logged_out))
+                    return@safeSettingsOperation
                 }
 
                 Firebase.auth.signOut()
-                _toastMessage.value = "로그아웃 되었습니다."
-                _navigateToQuote.value = true
-            } catch (e: Exception) {
-                Log.e("SettingsViewModel", "로그아웃 실패", e)
+                _toastMessage.emit(stringProvider.getString(R.string.success_logout))
+                _navigateToQuote.emit(true)
             }
         }
-    }
-
-    fun clearToastMessage() {
-        _toastMessage.value = null
-    }
-
-    fun onNavigatedToQuote() {
-        _navigateToQuote.value = false
-    }
-
-    fun onNavigatedToLogin() {
-        _navigateToLogin.value = false
-    }
-
-    fun createEmailIntent(): Intent {
-        return Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:thisyoon97@gmail.com")
-        }
-    }
-
-    fun clearError() {
-        _emailError.value = null
-    }
-
-    fun setError(message: String) {
-        _emailError.value = message
     }
 
     fun withdrawUser() {
         viewModelScope.launch {
-            try {
-                val user = Firebase.auth.currentUser ?: run {
-                    _toastMessage.value = "로그인이 필요합니다."
-                    return@launch
+            safeSettingsOperation {
+                val user = getCurrentUser() ?: run {
+                    _toastMessage.emit(stringProvider.getString(R.string.error_login_required))
+                    return@safeSettingsOperation
                 }
 
-                // Firebase 데이터 삭제
-                val batch = firestore.batch()
-                batch.delete(firestore.collection("users").document(user.uid))
-                batch.delete(firestore.collection("favorites").document(user.uid))
-                batch.commit().await()
-
-                // Room의 모든 데이터 삭제
-                userDao.deleteUser(user.uid)
-                favoriteDao.deleteAllFavoritesByUserId(user.uid)
-                quoteDao.deleteAllQuotes()
-                quoteCategoryDao.deleteAllCategories()
-
-                // Firebase Auth 계정 삭제
+                settingsManager.deleteUserData(user.uid)
                 user.delete().await()
 
-                _toastMessage.value = "탈퇴되었습니다."
-                _navigateToQuote.value = true
-            } catch (e: Exception) {
-                Log.e("SettingsViewModel", "탈퇴 실패", e)
-                _toastMessage.value = "탈퇴에 실패했습니다."
+                _toastMessage.emit(stringProvider.getString(R.string.success_withdrawal))
+                _navigateToQuote.emit(true)
             }
         }
     }
 
+    fun createEmailIntent(): Intent = Intent(Intent.ACTION_SENDTO).apply {
+        data = Uri.parse("mailto:thisyoon97@gmail.com")
+    }
+
+    fun clearToastMessage() {
+        viewModelScope.launch {
+            _toastMessage.emit(null)
+        }
+    }
+
+    fun clearError() {
+        viewModelScope.launch {
+            _emailError.emit(null)
+        }
+    }
+
+    fun onNavigatedToQuote() {
+        viewModelScope.launch {
+            _navigateToQuote.emit(false)
+        }
+    }
+
+    fun onNavigatedToLogin() {
+        viewModelScope.launch {
+            _navigateToLogin.emit(false)
+        }
+    }
+
+    fun setError(message: String) {
+        viewModelScope.launch {
+            _emailError.emit(message)
+        }
+    }
+
     fun updateShowWithdrawalDialog(show: Boolean) {
-        _showWithdrawalDialog.value = show
+        viewModelScope.launch {
+            _showWithdrawalDialog.emit(show)
+        }
+    }
+
+    private suspend fun safeSettingsOperation(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            val errorMessage = mapExceptionToErrorMessage(e)
+            Log.e(TAG, "Error in settings operation", e)
+            _toastMessage.emit(errorMessage)
+        }
+    }
+
+    private fun mapExceptionToErrorMessage(e: Exception): String {
+        return when (e) {
+            is FirebaseFirestoreException -> when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE ->
+                    stringProvider.getString(R.string.error_network)
+
+                FirebaseFirestoreException.Code.PERMISSION_DENIED ->
+                    stringProvider.getString(R.string.error_permission_denied)
+
+                else ->
+                    stringProvider.getString(R.string.error_firebase_firestore)
+            }
+
+            is FirebaseAuthException ->
+                stringProvider.getString(R.string.error_firebase_auth)
+
+            else ->
+                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+        }
     }
 }

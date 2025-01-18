@@ -15,6 +15,11 @@ class RemoteUserRepositoryImpl @Inject constructor(
     private val timeUtil: TimeUtil
 ) : RemoteUserRepository {
 
+    companion object {
+        private const val USERS_COLLECTION = "users"
+        private const val FAVORITES_COLLECTION = "favorites"
+    }
+
     override suspend fun isUserRegistered(userId: String): Boolean {
         return try {
             val documentSnapshot = firestore.collection("users")
@@ -106,5 +111,44 @@ class RemoteUserRepositoryImpl @Inject constructor(
             Log.e("Firestore", "Error adding user profile: ${e.message}")
             throw e
         }
+    }
+
+    override suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean) {
+        try {
+            firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .update("notificationEnabled", enabled)
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("Firestore", "Failed to add user profile: ${e.message}")
+            throw e
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error adding user profile: ${e.message}")
+            throw e
+        }
+    }
+
+    override suspend fun updateNotificationTimeToFirestore(userId: String, newTime: String) {
+        try {
+            firestore.collection(USERS_COLLECTION)
+                .document(userId)
+                .update("notificationTime", newTime)
+        } catch (e: FirebaseFirestoreException) {
+            Log.e("Firestore", "Failed to add user profile: ${e.message}")
+            throw e
+        } catch (e: Exception) {
+            Log.e(
+                "RemoteUserRepository",
+                "Error updating notification time in Firestore: ${e.message}",
+                e
+            )
+            throw e
+        }
+    }
+
+    override suspend fun deleteUserDataFromFirestore(userId: String) {
+        val batch = firestore.batch()
+        batch.delete(firestore.collection(USERS_COLLECTION).document(userId))
+        batch.delete(firestore.collection(FAVORITES_COLLECTION).document(userId))
+        batch.commit().await()
     }
 }

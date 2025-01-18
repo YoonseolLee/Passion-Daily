@@ -24,7 +24,7 @@ class LocalFavoriteRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteAllFavoritesByUserId(userId: String) {
-        TODO("Not yet implemented")
+        favoriteDao.deleteAllFavoritesByUserId(userId)
     }
 
     override suspend fun getAllFavoriteIds(userId: String): Flow<List<String>> {

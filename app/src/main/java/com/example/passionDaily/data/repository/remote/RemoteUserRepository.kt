@@ -9,5 +9,7 @@ interface RemoteUserRepository {
     suspend fun fetchFirestoreUser(userId: String): User
     suspend fun syncFirestoreUserToRoom(userId: String)
     suspend fun addUserProfile(userId: String, profileMap: Map<String, Any?>)
-
+    suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean)
+    suspend fun updateNotificationTimeToFirestore(userId: String, newTime: String)
+    suspend fun deleteUserDataFromFirestore(userId: String)
 }

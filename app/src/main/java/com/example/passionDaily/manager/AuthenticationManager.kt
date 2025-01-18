@@ -10,7 +10,10 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -39,5 +42,16 @@ class AuthenticationManager @Inject constructor(
     fun extractIdToken(credential: CustomCredential): String {
         val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
         return googleIdTokenCredential.idToken
+    }
+
+    fun getCurrentUser() = Firebase.auth.currentUser
+
+
+    fun signOut() {
+        Firebase.auth.signOut()
+    }
+
+    suspend fun deleteAccount(user: FirebaseUser) {
+        user.delete().await()
     }
 }

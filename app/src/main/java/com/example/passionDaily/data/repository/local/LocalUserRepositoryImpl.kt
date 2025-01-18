@@ -39,4 +39,44 @@ class LocalUserRepositoryImpl @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun updateNotificationSettingsToRoom(userId: String, enabled: Boolean) {
+        try {
+            userDao.updateNotificationSetting(userId, enabled)
+        } catch (e: SQLiteConstraintException) {
+            Log.e("LocalUserRepository", "Constraint violation while saving notification settings: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e("LocalUserRepository", "Unexpected error while saving notification settings: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun getUserById(userId: String): UserEntity? {
+        return try {
+            userDao.getUserByUserId(userId)
+        } catch (e: SQLiteConstraintException) {
+            Log.e("LocalUserRepository", "Error fetching user by ID: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e("LocalUserRepository", "Error fetching user by ID: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateNotificationTimeToRoom(userId: String, newTime: String) {
+        try {
+            userDao.updateNotificationTime(userId, newTime)
+        } catch (e: SQLiteConstraintException) {
+            Log.e("LocalUserRepository", "Constraint violation while updating notification time: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e("LocalUserRepository", "Unexpected error while updating notification time: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun deleteUser(userId: String) {
+        userDao.deleteUser(userId)
+    }
 }

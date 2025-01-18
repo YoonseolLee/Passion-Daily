@@ -31,4 +31,7 @@
     <string name="quote_number_format">%06d</string>
     <string name="quote_id_prefix">quote_</string>
     <string name="datetime_format">yyyy-MM-dd HH:mm:ss</string>
+
+    <string name="success_logout">로그아웃 되었습니다.</string>
+    <string name="success_withdrawal">탈퇴되었습니다.</string>
 </resources>
