@@ -19,14 +19,19 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -38,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.passionDaily.R
+import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.manager.ImageShareManager
+import com.example.passionDaily.ui.screens.ShareableQuoteImage
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
@@ -163,19 +171,31 @@ fun Buttons(
     quoteViewModel: QuoteViewModel,
     favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
-    category: QuoteCategory?,
-    onRequireLogin: () -> Unit
+    category: QuoteCategory? = null,
+    onRequireLogin: () -> Unit,
+    quoteDisplay: QuoteDisplay
 ) {
-    ShareButton(quoteViewModel, currentQuoteId, category)
+    ShareButton(
+        quoteViewModel = quoteViewModel,
+        currentQuoteId = currentQuoteId,
+        category = category,
+        quoteDisplay = quoteDisplay
+    )
     Spacer(modifier = Modifier.width(57.dp))
-    AddToFavoritesButton(favoritesViewModel, currentQuoteId, category, onRequireLogin = onRequireLogin)
+    AddToFavoritesButton(
+        favoritesViewModel = favoritesViewModel,
+        currentQuoteId = currentQuoteId,
+        category = category,
+        onRequireLogin = onRequireLogin
+    )
 }
 
 @Composable
 fun ShareButton(
     quoteViewModel: QuoteViewModel,
     currentQuoteId: String,
-    category: QuoteCategory?
+    category: QuoteCategory? = null,
+    quoteDisplay: QuoteDisplay
 ) {
     val context = LocalContext.current
 
@@ -184,8 +204,15 @@ fun ShareButton(
         contentDescription = "share icon",
         contentScale = ContentScale.None,
         modifier = Modifier.clickable {
+            Log.d("ShareButton", "Share button clicked")
+
+            quoteViewModel.shareQuote(
+                context = context,
+                imageUrl = quoteDisplay.imageUrl,
+                quoteText = quoteDisplay.text,
+                author = quoteDisplay.person
+            )
             quoteViewModel.incrementShareCount(currentQuoteId, category)
-            quoteViewModel.shareText(context, "공유 텍스트")
         }
     )
 }
@@ -226,7 +253,10 @@ fun AddToFavoritesButton(
                 onRequireLogin()
             } else {
                 if (isFavorite) {
-                    Log.d("AddToFavoritesButton", "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId")
+                    Log.d(
+                        "AddToFavoritesButton",
+                        "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId"
+                    )
                     favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
                 } else {
                     favoritesViewModel.addFavorite(currentQuoteId)

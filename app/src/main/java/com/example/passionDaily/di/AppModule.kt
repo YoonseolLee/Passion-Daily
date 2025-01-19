@@ -3,6 +3,7 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import com.example.passionDaily.R
+import com.example.passionDaily.manager.ImageShareManager
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -32,4 +33,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideTimeUtil(): TimeUtil = TimeUtil
+
+    @Provides
+    @Singleton
+    fun provideImageShareManager(@ApplicationContext context: Context): ImageShareManager {
+        return ImageShareManager(context)
+    }
 }

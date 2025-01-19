@@ -10,13 +10,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
-import com.example.passionDaily.domain.usecase.QuoteUseCase
+import com.example.passionDaily.manager.ImageShareManager
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,16 +25,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
-    private val quoteUseCase: QuoteUseCase,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
+    private val imageShareManager: ImageShareManager,
     private val stringProvider: StringProvider,
-
 ) : ViewModel(), QuoteInteractionHandler {
 
     companion object {
@@ -154,8 +155,27 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    fun shareText(context: Context, text: String) {
-        quoteUseCase.shareText(context, text)
+    fun shareQuote(
+        context: Context,
+        imageUrl: String?,
+        quoteText: String,
+        author: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val imageShareManager = ImageShareManager(context)
+                withContext(Dispatchers.Main) {
+                    imageShareManager.shareQuoteImage(
+                        context = context,
+                        imageUrl = imageUrl,
+                        quoteText = quoteText,
+                        author = author
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("QuoteViewModel", "Error preparing and sharing quote", e)
+            }
+        }
     }
 
     fun incrementShareCount(quoteId: String, category: QuoteCategory?) {

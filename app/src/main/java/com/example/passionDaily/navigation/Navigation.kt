@@ -58,7 +58,7 @@ fun SetupNavigation(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
-            onNavigateToLogin = { screens.navigateToLogin() }
+            onNavigateToLogin = { screens.navigateToLogin() },
         )
         settingsComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },

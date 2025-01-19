@@ -1,6 +1,7 @@
 package com.example.passionDaily.ui.screens
 
 import android.util.Log
+import android.view.View
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,10 +21,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -33,15 +39,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
+import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.ui.components.BackgroundImage
 import com.example.passionDaily.ui.components.Buttons
 import com.example.passionDaily.ui.components.LeftArrow
 import com.example.passionDaily.ui.components.QuoteAndPerson
 import com.example.passionDaily.ui.components.RightArrow
+import com.example.passionDaily.ui.components.toQuoteDisplay
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.CommonNavigationBar
-import com.example.passionDaily.util.QuoteCategory.Companion.toQuoteCategory
 
 @Composable
 fun FavoritesScreen(
@@ -51,12 +58,14 @@ fun FavoritesScreen(
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    currentScreen: NavigationBarScreens
+    currentScreen: NavigationBarScreens,
 ) {
     val favoriteQuotes by favoritesViewModel.favoriteQuotes.collectAsState()
     val currentFavoriteQuote by favoritesViewModel.currentFavoriteQuote.collectAsState()
     val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
     val isFavoriteLoading by favoritesViewModel.isFavoriteLoading.collectAsState()
+
+    val context = LocalContext.current
 
     LaunchedEffect(currentScreen) {
         if (currentScreen == NavigationBarScreens.FAVORITES) {
@@ -129,8 +138,6 @@ fun FavoritesScreen(
 
         // 로딩 중이라면
         if (isFavoriteLoading) {
-            Log.d("FavoritesScreen", "isFavoriteLoading: $isFavoriteLoading")
-            Log.d("FavoritesScreen", "favoriteQuotes: $favoriteQuotes")
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -145,11 +152,11 @@ fun FavoritesScreen(
             ) {
                 currentFavoriteQuote?.let { quote ->
                     Buttons(
-                        quoteViewModel,
-                        favoritesViewModel,
+                        quoteViewModel = quoteViewModel,
+                        favoritesViewModel = favoritesViewModel,
                         currentQuoteId = quote.quoteId,
-                        category = quote.categoryId.toQuoteCategory(),
                         onRequireLogin = onNavigateToLogin,
+                        quoteDisplay = quote.toQuoteDisplay()
                     )
                 }
             }
