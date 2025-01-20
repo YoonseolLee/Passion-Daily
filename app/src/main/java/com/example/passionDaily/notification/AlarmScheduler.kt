@@ -16,14 +16,44 @@ import javax.inject.Inject
 class AlarmScheduler @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    fun scheduleNotification(hour: Int, minute: Int) {
+
+    companion object {
+        private const val TAG = "AlarmScheduler"
+        const val ALARM_REQUEST_CODE = 100
+    }
+
+    fun cancelExistingAlarm() {
         try {
-            Log.d("AlarmScheduler", "Scheduling notification for $hour:$minute")
+            Log.d(TAG, "Attempting to cancel existing alarm")
+
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val intent = Intent(context, AlarmReceiver::class.java)
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                100,
+                ALARM_REQUEST_CODE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            alarmManager.cancel(pendingIntent)
+            Log.d(TAG, "Successfully cancelled existing alarm")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error cancelling alarm", e)
+        }
+    }
+
+    fun scheduleNotification(hour: Int, minute: Int) {
+        try {
+            Log.d(TAG, "Attempting to schedule notification for $hour:$minute")
+
+            // 기존 알람 취소
+            cancelExistingAlarm()
+
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, AlarmReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                ALARM_REQUEST_CODE,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -33,12 +63,12 @@ class AlarmScheduler @Inject constructor(
                 set(Calendar.MINUTE, minute)
                 set(Calendar.SECOND, 0)
                 if (before(Calendar.getInstance())) {
-                    Log.d("AlarmScheduler", "Time already passed, scheduling for next day")
+                    Log.d(TAG, "Time already passed, scheduling for next day")
                     add(Calendar.DAY_OF_MONTH, 1)
                 }
             }
 
-            Log.d("AlarmScheduler", "Setting alarm for: ${calendar.time}")
+            Log.d(TAG, "Setting alarm for: ${calendar.time}")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
@@ -46,10 +76,10 @@ class AlarmScheduler @Inject constructor(
                     calendar.timeInMillis,
                     pendingIntent
                 )
-                Log.d("AlarmScheduler", "Alarm scheduled successfully")
+                Log.d(TAG, "Successfully scheduled alarm")
             }
         } catch (e: Exception) {
-            Log.e("AlarmScheduler", "Error scheduling notification", e)
+            Log.e(TAG, "Error scheduling notification", e)
         }
     }
 }

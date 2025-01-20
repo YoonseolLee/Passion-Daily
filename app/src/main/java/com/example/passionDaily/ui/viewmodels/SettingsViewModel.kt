@@ -13,6 +13,7 @@ import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import com.example.passionDaily.manager.AuthenticationManager
 import com.example.passionDaily.manager.SettingsManager
+import com.example.passionDaily.notification.AlarmScheduler
 import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
@@ -33,6 +34,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val stringProvider: StringProvider,
+    private val alarmScheduler: AlarmScheduler,  // 추가
+
 ) : ViewModel() {
 
     companion object {
@@ -87,22 +90,53 @@ class SettingsViewModel @Inject constructor(
     fun updateNotificationSettings(enabled: Boolean) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
+                Log.d(TAG, "Attempting to update notification settings: enabled=$enabled for user=$userId")
+
                 safeSettingsOperation {
+                    // Firestore와 Room에 설정 업데이트
                     settingsManager.updateNotificationSettings(userId, enabled)
+                    Log.d(TAG, "Successfully updated notification settings in databases")
+
                     _notificationEnabled.emit(enabled)
+                    Log.d(TAG, "Updated local notification enabled state")
+
+                    // 알람 관리
+                    if (enabled) {
+                        notificationTime.value?.let { time ->
+                            Log.d(TAG, "Notification enabled, scheduling alarm for ${time.hour}:${time.minute}")
+                            alarmScheduler.scheduleNotification(time.hour, time.minute)
+                        } ?: Log.w(TAG, "Notification enabled but no time set")
+                    } else {
+                        Log.d(TAG, "Notification disabled, canceling existing alarm")
+                        alarmScheduler.cancelExistingAlarm()
+                    }
                 }
-            }
+            } ?: Log.e(TAG, "Failed to update notification settings: User not logged in")
         }
     }
 
     fun updateNotificationTime(newTime: LocalTime) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
+                Log.d(TAG, "Attempting to update notification time to ${newTime.hour}:${newTime.minute} for user=$userId")
+
                 safeSettingsOperation {
-                    settingsManager.updateNotificationTime(userId,newTime)
+                    // Firestore와 Room에 시간 업데이트
+                    settingsManager.updateNotificationTime(userId, newTime)
+                    Log.d(TAG, "Successfully updated notification time in databases")
+
                     _notificationTime.emit(newTime)
+                    Log.d(TAG, "Updated local notification time state")
+
+                    // 알림이 활성화된 상태에서만 알람 재설정
+                    if (notificationEnabled.value) {
+                        Log.d(TAG, "Notifications are enabled, rescheduling alarm for new time ${newTime.hour}:${newTime.minute}")
+                        alarmScheduler.scheduleNotification(newTime.hour, newTime.minute)
+                    } else {
+                        Log.d(TAG, "Notifications are disabled, skipping alarm scheduling")
+                    }
                 }
-            }
+            } ?: Log.e(TAG, "Failed to update notification time: User not logged in")
         }
     }
 

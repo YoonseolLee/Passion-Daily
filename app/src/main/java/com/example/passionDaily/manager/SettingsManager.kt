@@ -1,5 +1,6 @@
 package com.example.passionDaily.manager
 
+import android.util.Log
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteRepository
@@ -7,6 +8,7 @@ import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class SettingsManager @Inject constructor(
@@ -18,6 +20,10 @@ class SettingsManager @Inject constructor(
     private val localQuoteCategoryRepository: LocalQuoteCategoryRepository
 ) {
 
+    companion object {
+        private const val TAG = "SettingsManager"
+    }
+
     suspend fun loadUserSettings(
         userId: String,
         onSettingsLoaded: suspend (notificationEnabled: Boolean, notificationTime: String?) -> Unit
@@ -28,13 +34,34 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun updateNotificationSettings(userId: String, enabled: Boolean) {
-        remoteUserRepository.updateNotificationSettingsToFirestore(userId, enabled)
-        localUserRepository.updateNotificationSettingsToRoom(userId, enabled)
+        Log.d(TAG, "Updating notification settings: enabled=$enabled for user=$userId")
+
+        try {
+            remoteUserRepository.updateNotificationSettingsToFirestore(userId, enabled)
+            Log.d(TAG, "Successfully updated notification settings in Firestore")
+
+            localUserRepository.updateNotificationSettingsToRoom(userId, enabled)
+            Log.d(TAG, "Successfully updated notification settings in Room")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update notification settings", e)
+            throw e
+        }
     }
 
     suspend fun updateNotificationTime(userId: String, time: LocalTime) {
-        remoteUserRepository.updateNotificationTimeToFirestore(userId, time.toString())
-        localUserRepository.updateNotificationTimeToRoom(userId, time.toString())
+        Log.d(TAG, "Updating notification time to ${time.hour}:${time.minute} for user=$userId")
+
+        try {
+            val timeString = time.format(DateTimeFormatter.ofPattern("HH:mm"))
+            remoteUserRepository.updateNotificationTimeToFirestore(userId, timeString)
+            Log.d(TAG, "Successfully updated notification time in Firestore")
+
+            localUserRepository.updateNotificationTimeToRoom(userId, timeString)
+            Log.d(TAG, "Successfully updated notification time in Room")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to update notification time", e)
+            throw e
+        }
     }
 
     suspend fun deleteUserData(userId: String) {

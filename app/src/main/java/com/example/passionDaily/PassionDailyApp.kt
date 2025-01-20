@@ -48,6 +48,10 @@ class PassionDailyApp : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d("PassionDailyApp", "Setting up alarms for existing users")
+
+                // 먼저 모든 기존 알람 취소
+                alarmScheduler.cancelExistingAlarm()
+
                 val users = FirebaseFirestore.getInstance()
                     .collection("users")
                     .whereEqualTo("notificationEnabled", true)
