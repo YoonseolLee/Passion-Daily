@@ -21,7 +21,7 @@ class FCMNotificationService @Inject constructor(
     suspend fun getQuoteForDay(dayOfWeek: Int): WeeklyQuote? {
         return try {
             Log.d("FCMService", "Getting quote for day: $dayOfWeek")
-            val (category, quoteId, _) = weeklyQuotes.find { it.third == dayOfWeek } ?: return null
+            val (category, quoteId, _) = WeeklyQuoteData.weeklyQuotes.find { it.third == dayOfWeek } ?: return null
             Log.d("FCMService", "Found category: $category, quoteId: $quoteId")
 
             val quoteDoc = db.collection("categories")

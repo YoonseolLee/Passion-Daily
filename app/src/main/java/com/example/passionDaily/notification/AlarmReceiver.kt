@@ -113,12 +113,21 @@ class AlarmReceiver : BroadcastReceiver() {
             }
             Log.d("FCM", "Got access token: ${accessToken.take(10)}...")
 
+            // WeeklyQuoteData에서 현재 요일에 해당하는 카테고리와 quoteId 가져오기
+            val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+            val (category, quoteId, _) = WeeklyQuoteData.weeklyQuotes.find { it.third == dayOfWeek }
+                ?: return
+
             val json = JSONObject().apply {
                 put("message", JSONObject().apply {
                     put("token", token)
                     put("notification", JSONObject().apply {
                         put("title", message.title)
                         put("body", message.body)
+                    })
+                    put("data", JSONObject().apply {
+                        put("category", category)
+                        put("quoteId", quoteId)
                     })
                     put("android", JSONObject().apply {
                         put("priority", "high")
