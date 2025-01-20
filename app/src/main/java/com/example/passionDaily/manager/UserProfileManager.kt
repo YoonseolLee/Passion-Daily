@@ -7,6 +7,8 @@ import com.example.passionDaily.mapper.UserProfileMapper
 import com.example.passionDaily.util.TimeUtil
 import com.example.passionDaily.util.UserConsent
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.json.JSONException
@@ -31,7 +33,9 @@ class UserProfileManager @Inject constructor(
             require(firebaseUser.uid.isNotBlank()) { "Firebase user ID cannot be blank" }
 
             val now = TimeUtil.getCurrentTimestamp()
-            return buildUserProfileMap(firebaseUser, userId, now)
+            val profileMap = buildUserProfileMap(firebaseUser, userId, now)
+
+            return profileMap
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Invalid input parameters", e)
             throw e
@@ -60,8 +64,9 @@ class UserProfileManager @Inject constructor(
                 "email" to firebaseUser.email,
                 "role" to "USER",
                 "lastLoginDate" to timestamp,
+                "fcmToken" to null,
                 "notificationEnabled" to true,
-                "notificationTime" to "08:00",
+                "notificationTime" to "12:00",
                 "privacyPolicyEnabled" to null,
                 "termsOfServiceEnabled" to null,
                 "lastSyncDate" to timestamp,

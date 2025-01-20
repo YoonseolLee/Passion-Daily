@@ -47,7 +47,7 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES}"
         }
     }
 }
@@ -71,6 +71,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Retrofit
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -116,4 +121,14 @@ dependencies {
 
     // FCM
     implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // Work Manager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // Hilt Worker
+    implementation("androidx.hilt:hilt-work:1.2.0")
+
+    // http
+    implementation("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
 }

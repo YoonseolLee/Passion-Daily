@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
         android:minSdkVersion="33" />
 
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
+    <!-- Android 12 이하 기기를 위한 권한 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32"/>
+
     <application
         android:name=".PassionDailyApp"
         android:allowBackup="false"
@@ -36,7 +42,19 @@
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="passiondaily" android:host="quote" />
+            </intent-filter>
         </service>
+
+        <receiver
+            android:name=".notification.AlarmReceiver"
+            android:enabled="true"
+            android:exported="false">
+        </receiver>
 
 <!--        <meta-data-->
 <!--            android:name="com.google.firebase.messaging.default_notification_icon"-->

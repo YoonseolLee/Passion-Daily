@@ -115,4 +115,14 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
             throw e
         }
     }
+
+    override suspend fun getQuoteById(quoteId: String, category: QuoteCategory): Quote? {
+        return firestore.collection("categories")
+            .document(category.name.lowercase())
+            .collection("quotes")
+            .document(quoteId)
+            .get()
+            .await()
+            .toQuote()
+    }
 }

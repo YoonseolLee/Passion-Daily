@@ -69,6 +69,38 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
+    fun navigateToQuoteWithCategory(quoteId: String, category: String) {
+        viewModelScope.launch {
+            _isQuoteLoading.emit(true)
+            try {
+                // 카테고리 설정
+                val quoteCategory = QuoteCategory.values()
+                    .find { it.name.lowercase() == category.lowercase() }
+                    ?: return@launch
+
+                // 현재 카테고리 업데이트
+                onCategorySelected(quoteCategory)
+
+                // 해당 quote 로드
+                val quote = remoteQuoteRepository.getQuoteById(quoteId, quoteCategory)
+                quote?.let {
+                    // quotes 상태 업데이트
+                    quoteStateHolder.clearQuotes()
+                    quoteStateHolder.addQuotes(listOf(it), true)
+                    // 현재 quote를 첫 번째로 설정
+                    savedStateHandle[KEY_QUOTE_INDEX] = 0
+
+                    // 추가 quotes 로드 (배경으로)
+                    loadQuotes(quoteCategory)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error navigating to quote", e)
+            } finally {
+                _isQuoteLoading.emit(false)
+            }
+        }
+    }
+
     fun loadInitialQuotes(category: QuoteCategory?) {
         viewModelScope.launch {
             _isQuoteLoading.emit(true)

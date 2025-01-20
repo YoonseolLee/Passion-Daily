@@ -6,6 +6,7 @@ import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -102,6 +103,9 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .document(userId)
                     .set(profileMap)
                     .await()
+
+                updateFCMToken(userId)
+
                 Log.d("Firestore", "User profile added successfully: $userId")
             }
         } catch (e: FirebaseFirestoreException) {
@@ -110,6 +114,25 @@ class RemoteUserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e("Firestore", "Error adding user profile: ${e.message}")
             throw e
+        }
+    }
+
+    private fun updateFCMToken(userId: String) {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                firestore.collection("users")
+                    .document(userId)
+                    .update("fcmToken", token)
+                    .addOnSuccessListener {
+                        Log.d("Firestore", "FCM Token updated successfully")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("Firestore", "Error updating FCM token", e)
+                    }
+            } else {
+                Log.e("Firestore", "Failed to get FCM token", task.exception)
+            }
         }
     }
 
