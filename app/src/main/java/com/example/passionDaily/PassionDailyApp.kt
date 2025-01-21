@@ -1,11 +1,11 @@
 package com.example.passionDaily
 
 import android.app.Application
-import android.app.NotificationChannel
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import com.example.passionDaily.notification.AlarmScheduler
+import androidx.hilt.work.HiltWorkerFactory
+import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -13,14 +13,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import androidx.work.Configuration
 
 @HiltAndroidApp
-class PassionDailyApp : Application() {
+class PassionDailyApp : Application(), Configuration.Provider {
     @Inject
-    lateinit var alarmScheduler: AlarmScheduler  // 이름 변경
+    lateinit var alarmScheduler: DailyQuoteAlarmScheduler
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()
+        // WorkManager.initialize() 호출 제거
+
         Log.d("PassionDailyApp", "Application onCreate called")
 
         // 알림 채널 생성

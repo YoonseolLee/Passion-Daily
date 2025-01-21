@@ -6,19 +6,12 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteRepository
-import com.example.passionDaily.data.repository.local.LocalUserRepository
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
-import com.example.passionDaily.manager.AuthenticationManager
 import com.example.passionDaily.manager.SettingsManager
-import com.example.passionDaily.notification.AlarmScheduler
+import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,7 +27,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val stringProvider: StringProvider,
-    private val alarmScheduler: AlarmScheduler,  // 추가
+    private val alarmScheduler: DailyQuoteAlarmScheduler,  // 추가
 
 ) : ViewModel() {
 

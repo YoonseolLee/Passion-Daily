@@ -2,12 +2,10 @@ package com.example.passionDaily.di
 
 import android.content.Context
 import androidx.credentials.CredentialManager
-import com.example.passionDaily.R
+import androidx.work.WorkManager
 import com.example.passionDaily.manager.ImageShareManager
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,5 +40,11 @@ object AppModule {
     @Singleton
     fun provideImageShareManager(@ApplicationContext context: Context): ImageShareManager {
         return ImageShareManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        return WorkManager.getInstance(context)
     }
 }

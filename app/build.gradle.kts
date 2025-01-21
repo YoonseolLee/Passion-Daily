@@ -127,6 +127,7 @@ dependencies {
 
     // Hilt Worker
     implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
 
     // http
     implementation("com.squareup.okhttp3:okhttp:4.9.1")

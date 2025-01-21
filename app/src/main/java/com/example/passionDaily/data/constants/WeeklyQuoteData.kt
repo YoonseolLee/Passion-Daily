@@ -1,4 +1,4 @@
-package com.example.passionDaily.notification
+package com.example.passionDaily.data.constants
 
 object WeeklyQuoteData {
     val weeklyQuotes = listOf(

@@ -15,17 +15,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.navigation.SetupNavigation
-import com.example.passionDaily.notification.AlarmScheduler
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
@@ -35,7 +33,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var alarmScheduler: AlarmScheduler
+    lateinit var alarmScheduler: DailyQuoteAlarmScheduler
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()

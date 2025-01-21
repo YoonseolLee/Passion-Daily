@@ -1,4 +1,4 @@
-package com.example.passionDaily.notification
+package com.example.passionDaily.manager.notification
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -14,7 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+class QuoteFirebaseMessagingService : FirebaseMessagingService() {
     private val db = FirebaseFirestore.getInstance()
 
     override fun onNewToken(token: String) {
