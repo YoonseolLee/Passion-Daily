@@ -227,7 +227,7 @@ fun AddToFavoritesButton(
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
 
-    val categoryId = category?.categoryId ?: 0
+    val categoryId = category?.categoryId ?: return  // category가 null이면 렌더링하지 않음
     val userId = currentUser?.uid ?: ""
 
     val isFavorite by favoritesViewModel.isFavorite(userId, currentQuoteId, categoryId)

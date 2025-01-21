@@ -49,6 +49,7 @@ import com.example.passionDaily.ui.components.toQuoteDisplay
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.CommonNavigationBar
+import com.example.passionDaily.util.QuoteCategory
 
 @Composable
 fun FavoritesScreen(
@@ -155,6 +156,7 @@ fun FavoritesScreen(
                         quoteViewModel = quoteViewModel,
                         favoritesViewModel = favoritesViewModel,
                         currentQuoteId = quote.quoteId,
+                        category = QuoteCategory.fromCategoryId(quote.categoryId),
                         onRequireLogin = onNavigateToLogin,
                         quoteDisplay = quote.toQuoteDisplay()
                     )
