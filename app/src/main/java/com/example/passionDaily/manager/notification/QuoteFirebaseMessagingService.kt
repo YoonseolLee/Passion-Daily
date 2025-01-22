@@ -55,7 +55,7 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
             .setContentTitle(remoteMessage.notification?.title)
             .setContentText(remoteMessage.notification?.body)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(1000, 1000, 1000, 1000))
