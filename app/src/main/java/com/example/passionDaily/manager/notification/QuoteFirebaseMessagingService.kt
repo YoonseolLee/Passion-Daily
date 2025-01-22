@@ -51,7 +51,7 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
 
         val notificationBuilder = NotificationCompat.Builder(this, PassionDailyApp.CHANNEL_ID)
-            .setSmallIcon(R.drawable.add_to_favorites_icon)
+            .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle(remoteMessage.notification?.title)
             .setContentText(remoteMessage.notification?.body)
             .setAutoCancel(true)
