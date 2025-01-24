@@ -4,6 +4,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
+    kotlin("plugin.serialization") version "1.9.25"
 }
 
 android {
@@ -132,4 +133,10 @@ dependencies {
     // http
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
+
+    implementation("com.google.firebase:firebase-config")
+    implementation("com.google.firebase:firebase-analytics")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.6.3")
+
 }
