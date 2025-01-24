@@ -13,6 +13,7 @@ import com.example.passionDaily.util.QuoteConstants
 import com.example.passionDaily.util.QuoteConstants.DEFAULT_TIMESTAMP
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -33,6 +34,54 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         val quotes: List<Quote>,
         val lastDocument: DocumentSnapshot?
     )
+
+    override suspend fun getQuotesBeforeId(
+        category: QuoteCategory,
+        targetQuoteId: String,
+        limit: Int
+    ): List<Quote> = withContext(Dispatchers.IO) {
+        try {
+            val baseQuery = firestore.collection("categories")
+                .document(category.name.lowercase())
+                .collection("quotes")
+
+            val query = baseQuery
+                .orderBy(FieldPath.documentId())
+                .endBefore(targetQuoteId)
+                .get()
+                .await()
+
+            query.documents.map { it.toQuote() }
+        } catch (e: Exception) {
+            Log.e("RemoteQuoteRepositoryImpl", "Error fetching quotes before ID", e)
+            emptyList()
+        }
+    }
+
+    override suspend fun getQuotesAfterId(
+        category: QuoteCategory,
+        afterQuoteId: String,
+        limit: Int
+    ): QuoteResult = withContext(Dispatchers.IO) {
+        try {
+            val query = firestore.collection("categories")
+                .document(category.name.lowercase())
+                .collection("quotes")
+                .whereGreaterThan(FieldPath.documentId(), afterQuoteId)
+                .orderBy(FieldPath.documentId())
+                .limit(limit.toLong())
+                .get()
+                .await()
+
+            QuoteResult(
+                quotes = query.documents.map { it.toQuote() },
+                lastDocument = query.documents.lastOrNull()
+            )
+        } catch (e: Exception) {
+            Log.e("RemoteQuoteRepositoryImpl", "Error fetching quotes after ID", e)
+            QuoteResult(emptyList(), null)
+        }
+    }
 
     override suspend fun getQuotesByCategory(
         category: QuoteCategory,

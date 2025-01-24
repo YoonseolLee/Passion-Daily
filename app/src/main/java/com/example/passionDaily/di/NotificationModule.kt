@@ -2,6 +2,7 @@ package com.example.passionDaily.di
 
 import com.example.passionDaily.manager.notification.QuoteNotificationService
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +14,16 @@ import javax.inject.Singleton
 object NotificationModule {
     @Provides
     @Singleton
-    fun provideQuoteNotificationService(db: FirebaseFirestore): QuoteNotificationService {
-        return QuoteNotificationService(db)
+    fun provideFirebaseRemoteConfig(): FirebaseRemoteConfig {
+        return FirebaseRemoteConfig.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuoteNotificationService(
+        remoteConfig: FirebaseRemoteConfig,
+        db: FirebaseFirestore
+    ): QuoteNotificationService {
+        return QuoteNotificationService(remoteConfig, db)
     }
 }

@@ -40,6 +40,7 @@ class QuoteStateHolder @Inject constructor() {
         _selectedQuoteCategory.value = category
     }
 
+
     fun clearQuotes() {
         _quotes.value = emptyList()
     }

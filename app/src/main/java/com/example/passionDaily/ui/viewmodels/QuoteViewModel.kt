@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
+import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.manager.ImageShareManager
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.ui.state.QuoteStateHolder
@@ -71,33 +72,102 @@ class QuoteViewModel @Inject constructor(
 
     fun navigateToQuoteWithCategory(quoteId: String, category: String) {
         viewModelScope.launch {
-            _isQuoteLoading.emit(true)
             try {
-                // 카테고리 설정
-                val quoteCategory = QuoteCategory.values()
-                    .find { it.name.lowercase() == category.lowercase() }
-                    ?: return@launch
+                _isQuoteLoading.emit(true)
 
-                // 현재 카테고리 업데이트
-                onCategorySelected(quoteCategory)
+                // 1. 카테고리 처리
+                val quoteCategory = findCategory(category) ?: return@launch
+                updateQuoteCategory(quoteCategory)
 
-                // 해당 quote 로드
-                val quote = remoteQuoteRepository.getQuoteById(quoteId, quoteCategory)
-                quote?.let {
-                    // quotes 상태 업데이트
-                    quoteStateHolder.clearQuotes()
-                    quoteStateHolder.addQuotes(listOf(it), true)
-                    // 현재 quote를 첫 번째로 설정
-                    savedStateHandle[KEY_QUOTE_INDEX] = 0
+                // 2. 명언 데이터 로드
+                val beforeQuotes = loadQuotesBeforeTarget(quoteId, quoteCategory)
+                val targetQuote = loadTargetQuote(quoteId, quoteCategory) ?: return@launch
 
-                    // 추가 quotes 로드 (배경으로)
-                    loadQuotes(quoteCategory)
-                }
+                // 3. 명언 데이터 설정
+                clearExistingQuotes()
+                addInitialQuotes(beforeQuotes, targetQuote)
+                updateQuoteIndex(beforeQuotes.size)
+
+                // 4. 추가 명언 로드
+                val afterQuotesResult = loadQuotesAfterTarget(quoteId, quoteCategory)
+                addAfterQuotes(afterQuotesResult)
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error navigating to quote", e)
             } finally {
                 _isQuoteLoading.emit(false)
             }
+        }
+    }
+
+    private fun findCategory(category: String): QuoteCategory? {
+        return QuoteCategory.values()
+            .find { it.name.lowercase() == category.lowercase() }
+            .also {
+                if (it == null) Log.w(TAG, "Invalid category: $category")
+            }
+    }
+
+    private suspend fun updateQuoteCategory(category: QuoteCategory) {
+        quoteStateHolder.updateSelectedCategory(category)
+    }
+
+    private suspend fun loadQuotesBeforeTarget(
+        quoteId: String,
+        category: QuoteCategory
+    ): List<Quote> {
+        return remoteQuoteRepository.getQuotesBeforeId(
+            category = category,
+            targetQuoteId = quoteId,
+            limit = PAGE_SIZE
+        ).also { quotes ->
+            Log.d(TAG, "Quotes before target: ${quotes.map { it.id }}")
+        }
+    }
+
+    private suspend fun loadTargetQuote(
+        quoteId: String,
+        category: QuoteCategory
+    ): Quote? {
+        return remoteQuoteRepository.getQuoteById(quoteId, category)
+            ?.also { quote ->
+                Log.d(TAG, "Target quote: ${quote.id}")
+            } ?: run {
+            Log.w(TAG, "Target quote not found: $quoteId")
+            null
+        }
+    }
+
+    private suspend fun clearExistingQuotes() {
+        quoteStateHolder.clearQuotes()
+    }
+
+    private suspend fun addInitialQuotes(beforeQuotes: List<Quote>, targetQuote: Quote) {
+        val allQuotes = beforeQuotes + targetQuote
+        quoteStateHolder.addQuotes(allQuotes, true)
+    }
+
+    private fun updateQuoteIndex(index: Int) {
+        savedStateHandle[KEY_QUOTE_INDEX] = index
+    }
+
+    private suspend fun loadQuotesAfterTarget(
+        quoteId: String,
+        category: QuoteCategory
+    ): RemoteQuoteRepositoryImpl.QuoteResult {
+        return remoteQuoteRepository.getQuotesAfterId(
+            category = category,
+            afterQuoteId = quoteId,
+            limit = PAGE_SIZE
+        ).also { result ->
+            Log.d(TAG, "Quotes after target: ${result.quotes.map { it.id }}")
+        }
+    }
+
+    private suspend fun addAfterQuotes(afterQuotesResult: RemoteQuoteRepositoryImpl.QuoteResult) {
+        if (afterQuotesResult.quotes.isNotEmpty()) {
+            quoteStateHolder.addQuotes(afterQuotesResult.quotes, false)
+            lastLoadedQuote = afterQuotesResult.lastDocument
         }
     }
 
@@ -147,17 +217,55 @@ class QuoteViewModel @Inject constructor(
 
     override fun nextQuote() {
         val nextIndex = _currentQuoteIndex.value + 1
-        savedStateHandle[KEY_QUOTE_INDEX] = when {
-            nextIndex >= quotes.value.size && !_hasQuoteReachedEnd.value -> {
-                selectedQuoteCategory.value?.let { category ->
-                    if (!_isQuoteLoading.value && lastLoadedQuote != null) {
-                        loadQuotes(category)
-                    }
-                }
-                _currentQuoteIndex.value
+        val currentQuotes = quotes.value
+
+        // 추가 명언을 로드해야 하는 경우 (현재 페이지의 마지막 명언에 도달했을 때)
+        if (shouldLoadMoreQuotes(nextIndex, currentQuotes)) {
+            loadMoreQuotesIfNeeded()
+            // 새로운 명언들이 로드되는 동안 현재 인덱스를 유지
+            savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
+            return
+        }
+
+        // 모든 명언의 마지막에 도달한 경우 첫 번째 명언으로 순환
+        if (isLastQuote(nextIndex, currentQuotes)) {
+            savedStateHandle[KEY_QUOTE_INDEX] = 0
+            return
+        }
+
+        // 일반적인 경우: 다음 명언으로 이동
+        savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
+    }
+
+    private fun shouldLoadMoreQuotes(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
+        return nextIndex >= currentQuotes.size && !_hasQuoteReachedEnd.value
+    }
+
+    private fun isLastQuote(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
+        return nextIndex >= currentQuotes.size
+    }
+
+    private fun loadMoreQuotesIfNeeded() {
+        selectedQuoteCategory.value?.let { category ->
+            if (!_isQuoteLoading.value && lastLoadedQuote != null) {
+                loadQuotesAfter(category, quotes.value.last().id)
             }
-            nextIndex >= quotes.value.size -> 0
-            else -> nextIndex
+        }
+    }
+
+    private fun loadQuotesAfter(category: QuoteCategory, lastQuoteId: String) {
+        viewModelScope.launch {
+            val result = remoteQuoteRepository.getQuotesAfterId(
+                category = category,
+                afterQuoteId = lastQuoteId,
+                limit = PAGE_SIZE
+            )
+            if (result.quotes.isNotEmpty()) {
+                quoteStateHolder.addQuotes(result.quotes, false)
+                lastLoadedQuote = result.lastDocument
+            } else {
+                _hasQuoteReachedEnd.emit(true)
+            }
         }
     }
 
