@@ -29,7 +29,6 @@ class PassionDailyApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        // WorkManager.initialize() 호출 제거
 
         Log.d("PassionDailyApp", "Application onCreate called")
 

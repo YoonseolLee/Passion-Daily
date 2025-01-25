@@ -7,87 +7,127 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.passionDaily.data.model.QuoteNotificationMessage
-import com.example.passionDaily.manager.notification.QuoteNotificationService
-import com.example.passionDaily.data.constants.WeeklyQuoteData
-import com.example.passionDaily.data.model.DailyQuote
 import com.example.passionDaily.manager.worker.QuoteNotificationWorker
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Date
 
 class DailyQuoteAlarmReceiver : BroadcastReceiver() {
+
+    companion object {
+        private const val TAG = "DailyQuoteAlarmReceiver"
+        private const val ALARM_REQUEST_CODE = 100
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val pendingResult = goAsync()
         try {
-            // WorkManager를 통해 알림 작업 예약
-            val workRequest = OneTimeWorkRequestBuilder<QuoteNotificationWorker>()
-                .build()
-
-            WorkManager.getInstance(context)
-                .enqueue(workRequest)
-                .also {
-                    Log.d(TAG, "Notification work request enqueued")
-                }
-
-            // 다음 날 알람 예약
+            enqueueNotificationWork(context)
             scheduleNextAlarm(context)
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "WorkManager is not initialized or invalid state: ${e.message}", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission issue while setting the alarm: ${e.message}", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in AlarmReceiver", e)
+            Log.e(TAG, "Unexpected error in AlarmReceiver: ${e.message}", e)
         } finally {
             pendingResult.finish()
         }
     }
 
+    private fun enqueueNotificationWork(context: Context) {
+        try {
+            val workRequest = createNotificationWorkRequest()
+            WorkManager.getInstance(context)
+                .enqueue(workRequest)
+                .also {
+                    Log.d(TAG, "Notification work request enqueued")
+                }
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "WorkManager not properly initialized: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error enqueuing notification work: ${e.message}", e)
+            throw e
+        }
+    }
+
+    private fun createNotificationWorkRequest(): OneTimeWorkRequest {
+        return OneTimeWorkRequestBuilder<QuoteNotificationWorker>().build()
+    }
+
     private fun scheduleNextAlarm(context: Context) {
         try {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val alarmManager = getAlarmManager(context)
+            val pendingIntent = createAlarmPendingIntent(context)
+            val nextAlarmTime = getNextAlarmTime()
+
+            setExactAlarm(alarmManager, nextAlarmTime, pendingIntent)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission issue while creating alarm: ${e.message}", e)
+            throw e
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid argument while scheduling alarm: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Unexpected error while scheduling next alarm: ${e.message}", e)
+            throw e
+        }
+    }
+
+    private fun getAlarmManager(context: Context): AlarmManager {
+        return try {
+            context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        } catch (e: ClassCastException) {
+            Log.e(TAG, "Failed to retrieve AlarmManager: ${e.message}", e)
+            throw e
+        }
+    }
+
+    private fun createAlarmPendingIntent(context: Context): PendingIntent {
+        return try {
             val intent = Intent(context, DailyQuoteAlarmReceiver::class.java)
-            val pendingIntent = PendingIntent.getBroadcast(
+            PendingIntent.getBroadcast(
                 context,
                 ALARM_REQUEST_CODE,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-
-            val calendar = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_MONTH, 1)
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-                Log.d(TAG, "Next alarm scheduled for: ${calendar.time}")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling next alarm", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission issue while creating pending intent: ${e.message}", e)
+            throw e
         }
     }
 
-    companion object {
-        private const val TAG = "DailyQuoteAlarmReceiver"
-        private const val ALARM_REQUEST_CODE = 100
+    private fun getNextAlarmTime(): Long {
+        return try {
+            Calendar.getInstance().apply {
+                add(Calendar.DAY_OF_MONTH, 1)
+            }.timeInMillis
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating next alarm time: ${e.message}", e)
+            throw e
+        }
+    }
+
+    private fun setExactAlarm(alarmManager: AlarmManager, triggerAtMillis: Long, pendingIntent: PendingIntent) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+                Log.d(TAG, "Next alarm scheduled for: ${Date(triggerAtMillis)}")
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission issue while setting exact alarm: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error setting exact alarm: ${e.message}", e)
+            throw e
+        }
     }
 }

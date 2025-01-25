@@ -19,35 +19,46 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
+        updateTokenInFirestore(token)
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+        handleIncomingMessage(remoteMessage)
+    }
+
+    private fun updateTokenInFirestore(token: String) {
         FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
             db.collection("users").document(uid)
                 .update("fcmToken", token)
         }
     }
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        super.onMessageReceived(remoteMessage)
-
+    private fun handleIncomingMessage(remoteMessage: RemoteMessage) {
         Log.d("FCMService", "Message received from: ${remoteMessage.from}")
 
-        // FCM 메시지에서 카테고리와 인용구 ID 추출
         val category = remoteMessage.data["category"] ?: return
         val quoteId = remoteMessage.data["quoteId"] ?: return
 
-        // 딥링크를 포함한 Intent 생성
+        val pendingIntent = createPendingIntent(category, quoteId)
+        displayNotification(remoteMessage, pendingIntent)
+    }
+
+    private fun createPendingIntent(category: String, quoteId: String): PendingIntent {
         val intent = Intent(this, MainActivity::class.java).apply {
             data = Uri.parse("passiondaily://quote/$category/$quoteId")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
 
-        val pendingIntent = PendingIntent.getActivity(
+        return PendingIntent.getActivity(
             this,
             System.currentTimeMillis().toInt(),
             intent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
 
-        // 알림 생성
+    private fun displayNotification(remoteMessage: RemoteMessage, pendingIntent: PendingIntent) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
 
         val notificationBuilder = NotificationCompat.Builder(this, PassionDailyApp.CHANNEL_ID)
@@ -65,7 +76,5 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
             System.currentTimeMillis().toInt(),
             notificationBuilder.build()
         )
-
-        Log.d("FCMService", "Notification displayed with deeplink: passiondaily://quote/$category/$quoteId")
     }
 }

@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class QuoteConfig(
-    val dayOfWeek: Int,
+    val day: Int,
     val category: String,
     val quoteId: String
 )

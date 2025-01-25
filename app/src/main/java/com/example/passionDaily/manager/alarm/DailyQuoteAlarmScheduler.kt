@@ -26,8 +26,12 @@ class DailyQuoteAlarmScheduler @Inject constructor(
                 getAlarmManager().cancel(pendingIntent)
                 Log.d(TAG, "Successfully cancelled existing alarm")
             }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied while cancelling alarm", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "PendingIntent is null while cancelling alarm", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Error cancelling alarm", e)
+            Log.e(TAG, "Unexpected error while cancelling alarm", e)
         }
     }
 
@@ -36,8 +40,12 @@ class DailyQuoteAlarmScheduler @Inject constructor(
             cancelExistingAlarm()
             schedulePreciseAlarm(createAlarmCalendar(hour, minute))
             Log.d(TAG, "Successfully scheduled alarm")
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid time arguments provided: hour=$hour, minute=$minute", e)
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Permission denied while scheduling notification", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling notification", e)
+            Log.e(TAG, "Unexpected error while scheduling notification", e)
         }
     }
 
