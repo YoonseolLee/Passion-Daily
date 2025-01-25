@@ -1,0 +1,162 @@
+[
+  {
+    "category": "business",
+    "quoteId": "quote_000001",
+    "day": 0
+  },
+  {
+    "category": "confidence",
+    "quoteId": "quote_000001",
+    "day": 1
+  },
+  {
+    "category": "creativity",
+    "quoteId": "quote_000003",
+    "day": 2
+  },
+  {
+    "category": "creativity",
+    "quoteId": "quote_000014",
+    "day": 3
+  },
+  {
+    "category": "exercise",
+    "quoteId": "quote_000008",
+    "day": 4
+  },
+  {
+    "category": "other",
+    "quoteId": "quote_000001",
+    "day": 5
+  },
+  {
+    "category": "love",
+    "quoteId": "quote_000009",
+    "day": 6
+  },
+  {
+    "category": "effort",
+    "quoteId": "quote_000004",
+    "day": 7
+  },
+  {
+    "category": "happiness",
+    "quoteId": "quote_000006",
+    "day": 8
+  },
+  {
+    "category": "wealth",
+    "quoteId": "quote_000001",
+    "day": 9
+  },
+  {
+    "category": "exercise",
+    "quoteId": "quote_000010",
+    "day": 10
+  },
+  {
+    "category": "confidence",
+    "quoteId": "quote_000007",
+    "day": 11
+  },
+  {
+    "category": "love",
+    "quoteId": "quote_000005",
+    "day": 12
+  },
+  {
+    "category": "creativity",
+    "quoteId": "quote_000003",
+    "day": 13
+  },
+  {
+    "category": "other",
+    "quoteId": "quote_000008",
+    "day": 14
+  },
+  {
+    "category": "effort",
+    "quoteId": "quote_000009",
+    "day": 15
+  },
+  {
+    "category": "business",
+    "quoteId": "quote_000006",
+    "day": 16
+  },
+  {
+    "category": "exercise",
+    "quoteId": "quote_000007",
+    "day": 17
+  },
+  {
+    "category": "happiness",
+    "quoteId": "quote_000003",
+    "day": 18
+  },
+  {
+    "category": "love",
+    "quoteId": "quote_000004",
+    "day": 19
+  },
+  {
+    "category": "creativity",
+    "quoteId": "quote_000001",
+    "day": 20
+  },
+  {
+    "category": "confidence",
+    "quoteId": "quote_000002",
+    "day": 21
+  },
+  {
+    "category": "exercise",
+    "quoteId": "quote_000005",
+    "day": 22
+  },
+  {
+    "category": "happiness",
+    "quoteId": "quote_000010",
+    "day": 23
+  },
+  {
+    "category": "other",
+    "quoteId": "quote_000003",
+    "day": 24
+  },
+  {
+    "category": "effort",
+    "quoteId": "quote_000008",
+    "day": 25
+  },
+  {
+    "category": "business",
+    "quoteId": "quote_000004",
+    "day": 26
+  },
+  {
+    "category": "confidence",
+    "quoteId": "quote_000006",
+    "day": 27
+  },
+  {
+    "category": "confidence",
+    "quoteId": "quote_000009",
+    "day": 28
+  },
+  {
+    "category": "exercise",
+    "quoteId": "quote_000007",
+    "day": 29
+  },
+  {
+    "category": "love",
+    "quoteId": "quote_000001",
+    "day": 30
+  },
+  {
+    "category": "other",
+    "quoteId": "quote_000001",
+    "day": 31
+  }
+]
