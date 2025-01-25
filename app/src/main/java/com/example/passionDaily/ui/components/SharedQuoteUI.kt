@@ -15,23 +15,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -39,13 +35,11 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.passionDaily.R
-import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.manager.ImageShareManager
-import com.example.passionDaily.ui.screens.ShareableQuoteImage
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
@@ -68,7 +62,7 @@ fun BackgroundImage(imageUrl: String?) {
 @Composable
 fun LeftArrow() {
     Image(
-        painter = painterResource(id = R.drawable.quote_arrow_left),
+        painter = painterResource(id = R.drawable.left_arrow),
         contentDescription = "quote_arrow_left",
         contentScale = ContentScale.None
     )
@@ -77,7 +71,7 @@ fun LeftArrow() {
 @Composable
 fun RightArrow() {
     Image(
-        painter = painterResource(id = R.drawable.quote_arrow_right),
+        painter = painterResource(id = R.drawable.right_arrow),
         contentDescription = "quote_arrow_left",
         contentScale = ContentScale.None
     )
@@ -122,47 +116,54 @@ fun QuoteAndPerson(
     quote: String,
     author: String,
 ) {
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .wrapContentHeight()
+            .wrapContentHeight(),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .width(300.dp)
-                .wrapContentHeight()
+                .padding(vertical = 16.dp)
         ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .widthIn(max = 260.dp)
+                    .wrapContentHeight()
+            ) {
+                Text(
+                    text = quote,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        lineHeight = 40.8.sp,
+                        fontFamily = FontFamily(Font(R.font.yeonsung_regular)),
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFFFFFFFF),
+                        textAlign = TextAlign.Center,
+                        letterSpacing = 1.92.sp,
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Text(
-                text = quote,
+                text = "-$author-",
                 style = TextStyle(
-                    fontSize = 20.sp,
-                    lineHeight = 36.sp,
-                    fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                    fontSize = 22.sp,
+                    lineHeight = 39.6.sp,
+                    fontFamily = FontFamily(Font(R.font.yeonsung_regular)),
                     fontWeight = FontWeight(400),
-                    color = Color(0xFFFFFFFF),
+                    color = Color(0xFF8E8E8E),
                     textAlign = TextAlign.Center,
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.width(300.dp)
             )
         }
-
-        Spacer(modifier = Modifier.height(34.dp))
-
-        Text(
-            text = "-$author-",
-            style = TextStyle(
-                fontSize = 20.sp,
-                lineHeight = 36.sp,
-                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                fontWeight = FontWeight(400),
-                color = Color(0xFF929292),
-                textAlign = TextAlign.Center,
-            ),
-            modifier = Modifier.width(300.dp)
-        )
     }
 }
 
@@ -263,5 +264,41 @@ fun AddToFavoritesButton(
                 }
             }
         }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewBackgroundImage() {
+    BackgroundImage(imageUrl = "https://example.com/image.jpg")
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLeftArrow() {
+    LeftArrow()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewRightArrow() {
+    RightArrow()
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewCategorySelectionButton() {
+    CategorySelectionButton(
+        onCategoryClicked = {},
+        selectedCategory = QuoteCategory.LOVE
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewQuoteAndPerson() {
+    QuoteAndPerson(
+        quote = "This is a sample quote.",
+        author = "Author Name"
     )
 }

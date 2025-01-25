@@ -3,4 +3,5 @@
   <font android:font="@font/inter_24pt_bold" android:fontStyle="normal"></font>
   <font android:font="@font/inter_24pt_regular" android:fontStyle="normal"></font>
   <font android:font="@font/inter_18pt_regular" android:fontStyle="normal"></font>
+  <font android:font="@font/yeonsung_regular" android:fontStyle="normal"></font>
 </font-family>
