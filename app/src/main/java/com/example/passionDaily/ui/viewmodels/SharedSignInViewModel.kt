@@ -3,6 +3,7 @@ package com.example.passionDaily.ui.viewmodels
 import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
+import android.widget.Toast
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
@@ -26,8 +27,11 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -58,6 +62,17 @@ class SharedSignInViewModel @Inject constructor(
     private val _userProfileJsonV2 = MutableStateFlow<String?>(null)
     val userProfileJsonV2 = _userProfileJsonV2.asStateFlow()
 
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn = _isLoggedIn.asStateFlow()
+
+    private val _navigationEvents = Channel<NavigationEvent>()
+    val navigationEvents = _navigationEvents.receiveAsFlow()
+
+    sealed class NavigationEvent {
+        object NavigateToQuote : NavigationEvent()
+        data class NavigateToTermsConsent(val userProfileJson: String) : NavigationEvent()
+    }
+
     val consent = userConsentManager.consent
     val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
 
@@ -67,7 +82,6 @@ class SharedSignInViewModel @Inject constructor(
 
     fun signInWithGoogle() {
         viewModelScope.launch {
-            _authState.emit(AuthState.Loading)
             safeAuthCall {
                 val result = authManager.getGoogleCredential()
                 processSignInResult(result)
@@ -191,6 +205,45 @@ class SharedSignInViewModel @Inject constructor(
 
     fun openUrl(context: Context, url: String) {
         urlManager.openUrl(context, url)
+    }
+
+    fun signalLoginSuccess() {
+        viewModelScope.launch {
+            _isLoggedIn.emit(true)
+            delay(100)
+            showLoginSuccessMessage()
+            _navigationEvents.send(NavigationEvent.NavigateToQuote)
+        }
+    }
+
+    fun signalLoginError(errorMessage: String) {
+        viewModelScope.launch {
+            _isLoggedIn.emit(false)
+            showLoginErrorMessage(errorMessage)
+        }
+    }
+
+    private fun showLoginSuccessMessage() {
+        val message = stringProvider.getString(R.string.login_success)
+        toastManager.showToast(message)
+    }
+
+    private fun showLoginErrorMessage(errorMessage: String) {
+        val message = stringProvider.getString(
+            R.string.login_error_format,
+            errorMessage
+        )
+        toastManager.showToast(message, Toast.LENGTH_LONG)
+    }
+
+    private fun showLoadingMessage() {
+        val message = stringProvider.getString(R.string.login_loading)
+        toastManager.showToast(message)
+    }
+
+    fun showUnauthenticatedMessage() {
+        val message = stringProvider.getString(R.string.login_required)
+        toastManager.showToast(message)
     }
 
     private suspend fun safeAuthCall(block: suspend () -> Unit) {

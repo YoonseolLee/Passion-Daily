@@ -1,3 +1,4 @@
+
 package com.example.passionDaily.navigation
 
 import androidx.compose.runtime.Composable
@@ -48,7 +49,6 @@ fun SetupNavigation(
         )
 
         termsConsentComposable(
-            sharedSignInViewModel = sharedSignInViewModel,
             onNavigateToQuoteScreen = { screens.navigateToQuote(popUpTo = true) }
         )
 
