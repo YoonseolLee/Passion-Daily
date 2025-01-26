@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,7 +30,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
@@ -50,7 +48,6 @@ fun CategoryScreen(
     CategoryScreenContent(
         categories = categories,
         selectedCategory = selectedCategory,
-        onNavigateToQuote = onNavigateToQuote,
         onCategoryClicked = { category ->
             quoteViewModel.onCategorySelected(category)
             onNavigateToQuote()
@@ -63,47 +60,50 @@ fun CategoryScreen(
 fun CategoryScreenContent(
     categories: List<String>,
     selectedCategory: QuoteCategory?,
-    onNavigateToQuote: () -> Unit,
     onCategoryClicked: (QuoteCategory?) -> Unit,
     onBack: () -> Unit,
-    ) {
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(BlackBackground)
     ) {
-        // Back Button
-        Column(
-            modifier = Modifier
-                .offset(x = 24.dp, y = 24.dp)
-                .align(Alignment.TopStart)
-                .clickable { onNavigateToQuote() }
-        ) {
-            BackButton(onBack = onBack)
-        }
-
-        // Main Content
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 32.dp)
-                .align(Alignment.TopCenter)
+                .padding(top = 48.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                    .width(72.dp)
+                    .padding(start = 24.dp)
+            ) {
+                BackButton(onBack = onBack)
+            }
+
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
                 Category()
             }
 
-            Spacer(modifier = Modifier.height(26.dp))
+            Box(
+                modifier = Modifier.width(72.dp)
+            )
+        }
 
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-            ) {
-                CategorySelectionGuide()
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 96.dp)
+                .align(Alignment.TopCenter),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CategorySelectionGuide()
+
             Spacer(modifier = Modifier.height(28.dp))
 
             CategoryBoxes(
