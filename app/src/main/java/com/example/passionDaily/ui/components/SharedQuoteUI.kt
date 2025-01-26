@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -115,24 +116,25 @@ fun CategorySelectionButton(
 fun QuoteAndPerson(
     quote: String,
     author: String,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .wrapContentHeight(),
+            .height(280.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .padding(vertical = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .widthIn(max = 260.dp)
-                    .wrapContentHeight()
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp)
+                    .padding(horizontal = 24.dp)
             ) {
                 Text(
                     text = quote,
@@ -145,24 +147,30 @@ fun QuoteAndPerson(
                         textAlign = TextAlign.Center,
                         letterSpacing = 1.92.sp,
                     ),
-                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "-$author-",
-                style = TextStyle(
-                    fontSize = 22.sp,
-                    lineHeight = 39.6.sp,
-                    fontFamily = FontFamily(Font(R.font.yeonsung_regular)),
-                    fontWeight = FontWeight(400),
-                    color = Color(0xFF8E8E8E),
-                    textAlign = TextAlign.Center,
-                ),
-                modifier = Modifier.width(300.dp)
-            )
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp)
+                    .padding(horizontal = 24.dp)
+            ) {
+                Text(
+                    text = "-$author-",
+                    style = TextStyle(
+                        fontSize = 22.sp,
+                        lineHeight = 39.6.sp,
+                        fontFamily = FontFamily(Font(R.font.yeonsung_regular)),
+                        fontWeight = FontWeight(400),
+                        color = Color(0xFF8E8E8E),
+                        textAlign = TextAlign.Center,
+                    ),
+                )
+            }
         }
     }
 }
