@@ -138,6 +138,7 @@ fun SettingsScreenContent(
                 LoginSettingItem(viewModel, onNavigateToLogin = onNavigateToLogin)
             }
 
+
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
             SuggestionSettingItem(viewModel)
@@ -313,10 +314,11 @@ fun LogoutSettingItem(
             },
             text = {
                 Text(
-                    text = "로그아웃 하시겠습니까?",
+                    text = "로그아웃하시면 데일리 명언 알림을 받지 못하실 거예요.\n그래도 로그아웃하시겠어요?",
                     style = TextStyle(
                         fontSize = 15.sp,
-                        color = Color(0xFFFFFFFF)
+                        color = Color(0xFFE1E1E1),
+                        lineHeight = 24.sp
                     )
                 )
             },
@@ -328,8 +330,8 @@ fun LogoutSettingItem(
                     }
                 ) {
                     Text(
-                        "네",
-                        color = Color(0xFFFFFFFF)
+                        "로그아웃",
+                        color = Color(0xFFFF6B6B)
                     )
                 }
             },
@@ -338,13 +340,17 @@ fun LogoutSettingItem(
                     onClick = { showLogoutDialog = false }
                 ) {
                     Text(
-                        "아니오",
-                        color = Color(0xFFFFFFFF)
+                        "취소",
+                        color = Color(0xFFCCCCCC)
                     )
                 }
             },
-            containerColor = Color(0xFF0E1C41),
-            shape = RoundedCornerShape(8.dp)
+            containerColor = Color(0xFF1A2847),
+            shape = RoundedCornerShape(8.dp),
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            )
         )
     }
 
@@ -353,7 +359,6 @@ fun LogoutSettingItem(
         onClick = { showLogoutDialog = true }
     )
 }
-
 
 // 고객 지원 항목들
 @Composable
