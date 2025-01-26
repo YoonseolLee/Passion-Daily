@@ -11,6 +11,7 @@ import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.ktx.Firebase
@@ -27,8 +28,7 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val stringProvider: StringProvider,
-    private val alarmScheduler: DailyQuoteAlarmScheduler,  // 추가
-
+    private val alarmScheduler: DailyQuoteAlarmScheduler,
 ) : ViewModel() {
 
     companion object {
@@ -56,7 +56,12 @@ class SettingsViewModel @Inject constructor(
     private val _showWithdrawalDialog = MutableStateFlow(false)
     val showWithdrawalDialog: StateFlow<Boolean> = _showWithdrawalDialog.asStateFlow()
 
+    private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
+    val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
+
     init {
+        _currentUser.value = getCurrentUser()
+
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 safeSettingsOperation {

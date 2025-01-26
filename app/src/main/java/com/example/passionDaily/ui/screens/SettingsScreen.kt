@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.passionDaily.R
@@ -92,6 +94,8 @@ fun SettingsScreenContent(
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit
 ) {
+    val currentUser by viewModel.currentUser.collectAsState()
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -128,15 +132,11 @@ fun SettingsScreenContent(
 
             // 프로필 설정
             SettingsCategoryHeader(text = "계정 관리")
-            LoginSettingItem(
-                viewModel,
-                onNavigateToLogin = onNavigateToLogin
-            )
-
-            LogoutSettingItem(
-                viewModel,
-                onNavigateToQuote = onQuoteClicked
-            )
+            if (currentUser != null) {
+                LogoutSettingItem(viewModel, onNavigateToQuote = onQuoteClicked)
+            } else {
+                LoginSettingItem(viewModel, onNavigateToLogin = onNavigateToLogin)
+            }
 
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
