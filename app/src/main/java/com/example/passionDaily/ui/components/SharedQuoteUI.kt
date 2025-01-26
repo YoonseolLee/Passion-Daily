@@ -127,14 +127,16 @@ fun QuoteAndPerson(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .align(Alignment.Center)
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp)
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 Text(
                     text = quote,
@@ -157,7 +159,7 @@ fun QuoteAndPerson(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 40.dp)
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 16.dp)
             ) {
                 Text(
                     text = "-$author-",
