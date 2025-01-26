@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,21 +63,67 @@ fun BackgroundImage(imageUrl: String?) {
 }
 
 @Composable
-fun LeftArrow() {
-    Image(
-        painter = painterResource(id = R.drawable.left_arrow),
-        contentDescription = "quote_arrow_left",
-        contentScale = ContentScale.None
+private fun ArrowButton(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.7f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
     )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.7f else 1f,
+        animationSpec = tween(durationMillis = 100)
+    )
+
+    Box(
+        modifier = Modifier
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                alpha = alpha
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onPress = { offset ->
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                        onClick()
+                    }
+                )
+            }
+    ) {
+        content()
+    }
 }
 
 @Composable
-fun RightArrow() {
-    Image(
-        painter = painterResource(id = R.drawable.right_arrow),
-        contentDescription = "quote_arrow_left",
-        contentScale = ContentScale.None
-    )
+fun LeftArrow(onClick: () -> Unit) {
+    ArrowButton(onClick = onClick) {
+        Image(
+            painter = painterResource(id = R.drawable.left_arrow),
+            contentDescription = "quote_arrow_left",
+            contentScale = ContentScale.None
+        )
+    }
+}
+
+@Composable
+fun RightArrow(onClick: () -> Unit) {
+    ArrowButton(onClick = onClick) {
+        Image(
+            painter = painterResource(id = R.drawable.right_arrow),
+            contentDescription = "quote_arrow_right",  // 오른쪽 화살표 설명 수정
+            contentScale = ContentScale.None
+        )
+    }
 }
 
 @Composable
@@ -312,18 +360,6 @@ fun AddToFavoritesButton(
 @Composable
 fun PreviewBackgroundImage() {
     BackgroundImage(imageUrl = "https://example.com/image.jpg")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewLeftArrow() {
-    LeftArrow()
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRightArrow() {
-    RightArrow()
 }
 
 @Preview(showBackground = true)

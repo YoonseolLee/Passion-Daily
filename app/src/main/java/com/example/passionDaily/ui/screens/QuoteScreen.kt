@@ -77,24 +77,22 @@ fun QuoteScreen(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp)
-                .clickable {
-                    slideDirection = AnimatedContentTransitionScope.SlideDirection.End
-                    quoteViewModel.previousQuote()
-                }
         ) {
-            LeftArrow()
+            LeftArrow(onClick = {
+                slideDirection = AnimatedContentTransitionScope.SlideDirection.End
+                quoteViewModel.previousQuote()
+            })
         }
 
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp)
-                .clickable {
-                    slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
-                    quoteViewModel.nextQuote()
-                }
         ) {
-            RightArrow()
+            RightArrow(onClick = {
+                slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
+                quoteViewModel.nextQuote()
+            })
         }
 
         Row(

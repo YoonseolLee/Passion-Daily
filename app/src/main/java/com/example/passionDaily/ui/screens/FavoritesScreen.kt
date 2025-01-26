@@ -2,6 +2,15 @@ package com.example.passionDaily.ui.screens
 
 import android.util.Log
 import android.view.View
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +44,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,6 +61,7 @@ import com.example.passionDaily.ui.viewmodels.QuoteViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import com.example.passionDaily.util.QuoteCategory
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun FavoritesScreen(
     favoritesViewModel: FavoritesViewModel,
@@ -66,7 +77,7 @@ fun FavoritesScreen(
     val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
     val isFavoriteLoading by favoritesViewModel.isFavoriteLoading.collectAsState()
 
-    val context = LocalContext.current
+    var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 
     LaunchedEffect(currentScreen) {
         if (currentScreen == NavigationBarScreens.FAVORITES) {
@@ -82,18 +93,22 @@ fun FavoritesScreen(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp)
-                .clickable { favoritesViewModel.previousQuote() }
         ) {
-            LeftArrow()
+            LeftArrow(onClick = {
+                slideDirection = AnimatedContentTransitionScope.SlideDirection.End
+                favoritesViewModel.previousQuote()
+            })
         }
 
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp)
-                .clickable { favoritesViewModel.nextQuote() }
         ) {
-            RightArrow()
+            RightArrow(onClick = {
+                slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
+                favoritesViewModel.nextQuote()
+            })
         }
 
         if (isFavoriteQuotesEmpty) {
@@ -124,29 +139,45 @@ fun FavoritesScreen(
                     )
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier
-                    .offset(y = 277.dp)
-                    .align(Alignment.TopCenter)
-            ) {
-                QuoteAndPerson(
-                    quote = currentFavoriteQuote?.text ?: "",
-                    author = currentFavoriteQuote?.person ?: ""
-                )
-            }
         }
-
-        // 로딩 중이라면
         if (isFavoriteLoading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)
             )
         } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                AnimatedContent(
+                    targetState = currentFavoriteQuote,
+                    transitionSpec = {
+                        val direction = slideDirection
+                        (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
+                                fadeIn(animationSpec = FadeAnimationSpec)) with
+                                (slideOutOfContainer(direction, animationSpec = ContentAnimationSpec) +
+                                        fadeOut(animationSpec = FadeAnimationSpec))
+                    }
+                ) { quote ->
+                    quote?.let {
+                        QuoteAndPerson(
+                            quote = it.text,
+                            author = it.person
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+
             Row(
                 modifier = Modifier
-                    .offset(y = -168.dp)
+                    .offset(y = -172.dp)
                     .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -162,7 +193,6 @@ fun FavoritesScreen(
                     )
                 }
             }
-        }
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -177,3 +207,13 @@ fun FavoritesScreen(
         }
     }
 }
+
+private val ContentAnimationSpec = tween<IntOffset>(
+    durationMillis = 400,
+    easing = FastOutSlowInEasing
+)
+
+private val FadeAnimationSpec = tween<Float>(
+    durationMillis = 400,
+    easing = LinearOutSlowInEasing
+)
