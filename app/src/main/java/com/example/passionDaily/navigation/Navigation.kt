@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,6 +21,7 @@ import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 @Composable
 fun SetupNavigation(
@@ -31,31 +33,36 @@ fun SetupNavigation(
 
     val quoteViewModel: QuoteViewModel = hiltViewModel()
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
+    val sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
         startDestination = "quote"
     ) {
         loginComposable(
-            onNavigateToQuote = { screens.navigateToQuote() },
+            sharedSignInViewModel = sharedSignInViewModel,
+            onNavigateToQuote = { screens.navigateToQuote(popUpTo = true) },
             onNavigateToTermsConsent = { userProfileJson ->
                 screens.navigateToTermsConsent(userProfileJson)
             }
         )
+
         termsConsentComposable(
-            onNavigateToQuoteScreen = { screens.navigateToQuote() }
+            sharedSignInViewModel = sharedSignInViewModel,
+            onNavigateToQuoteScreen = { screens.navigateToQuote(popUpTo = true) }
         )
-        // 기존 quote 라우트
+
         quoteComposable(
             quoteViewModel = quoteViewModel,
             favoritesViewModel = favoritesViewModel,
+            sharedSignInViewModel = sharedSignInViewModel,
             onNavigateToCategory = { screens.navigateToCategory() },
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
             onNavigateToLogin = { screens.navigateToLogin() }
         )
-        // 딥링크를 위한 새로운 quote 라우트
+
         composable(
             route = "quote/{category}/{quoteId}",
             arguments = listOf(
@@ -80,6 +87,7 @@ fun SetupNavigation(
             QuoteScreen(
                 quoteViewModel = quoteViewModel,
                 favoritesViewModel = favoritesViewModel,
+                sharedSignInViewModel = sharedSignInViewModel,
                 onNavigateToCategory = { screens.navigateToCategory() },
                 onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
                 onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
@@ -90,18 +98,20 @@ fun SetupNavigation(
         }
 
         categoryComposable(
-            onNavigateToQuote = { screens.navigateToQuote() },
             quoteViewModel = quoteViewModel,
+            onNavigateToQuote = { screens.navigateToQuote() },
             onBack = { navController.popBackStack() }
         )
+
         favoritesComposable(
             quoteViewModel = quoteViewModel,
             favoritesViewModel = favoritesViewModel,
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
-            onNavigateToLogin = { screens.navigateToLogin() },
+            onNavigateToLogin = { screens.navigateToLogin() }
         )
+
         settingsComposable(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },

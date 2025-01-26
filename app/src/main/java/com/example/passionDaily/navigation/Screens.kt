@@ -14,9 +14,14 @@ class Screens(private val navController: NavHostController) {
         const val SETTINGS = "settings"
     }
 
-    fun navigateToQuote() {
+    fun navigateToQuote(popUpTo: Boolean = false) {
         navController.navigate(Routes.QUOTE) {
-            popUpTo(Routes.LOGIN) { inclusive = true }
+            if (popUpTo) {
+                // 로그인 화면에서 이동할 때만 popUpTo 적용
+                popUpTo(Routes.LOGIN) { inclusive = true }
+            }
+            // 기본적인 네비게이션 옵션 유지
+            launchSingleTop = true
         }
     }
 

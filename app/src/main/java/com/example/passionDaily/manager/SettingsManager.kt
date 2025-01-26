@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class SettingsManager @Inject constructor(
-    private val firestore: FirebaseFirestore,
     private val remoteUserRepository: RemoteUserRepository,
     private val localUserRepository: LocalUserRepository,
     private val localFavoriteRepository: LocalFavoriteRepository,

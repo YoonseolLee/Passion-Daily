@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
@@ -49,11 +50,24 @@ fun LoginScreen(
     val authState by sharedSignInViewModel.authState.collectAsState()
     val userProfileJson by sharedSignInViewModel.userProfileJson.collectAsState()
 
+    LaunchedEffect(Unit) {
+        sharedSignInViewModel.navigationEvents.collect { event ->
+            when (event) {
+                is SharedSignInViewModel.NavigationEvent.NavigateToQuote -> {
+                    onNavigateToQuote()
+                }
+
+                is SharedSignInViewModel.NavigationEvent.NavigateToTermsConsent -> {
+                    onNavigateToTermsConsent(event.userProfileJson)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Authenticated -> {
-                // 인증 성공 시 콜백 호출
-                onNavigateToQuote()
+                sharedSignInViewModel.signalLoginSuccess()
             }
 
             is AuthState.RequiresConsent -> {
@@ -63,14 +77,16 @@ fun LoginScreen(
             }
 
             is AuthState.Error -> {
-                // 에러 처리 로직 (필요한 경우)
-                Log.e(
-                    "LoginScreen",
-                    "Authentication failed: ${(authState as AuthState.Error).message}"
-                )
+                val errorMessage = (authState as AuthState.Error).message
+                sharedSignInViewModel.signalLoginError(errorMessage)
+
+                Log.e("LoginScreen", "Authentication failed: $errorMessage")
             }
 
-            else -> {} // Loading 또는 Unauthenticated 상태
+            is AuthState.Unauthenticated -> {
+                // 로그인이 필요함을 사용자에게 알립니다
+                sharedSignInViewModel.showUnauthenticatedMessage()
+            }
         }
     }
 

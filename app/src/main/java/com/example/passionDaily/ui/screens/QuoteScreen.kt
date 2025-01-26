@@ -5,7 +5,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
-import androidx.compose.foundation.clickable
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import com.example.passionDaily.ui.components.BackgroundImage
 import com.example.passionDaily.ui.components.Buttons
@@ -42,6 +40,7 @@ import com.example.passionDaily.ui.components.toQuoteDisplay
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -49,6 +48,7 @@ import com.example.passionDaily.util.CommonNavigationBar
 fun QuoteScreen(
     favoritesViewModel: FavoritesViewModel,
     quoteViewModel: QuoteViewModel,
+    sharedSignInViewModel: SharedSignInViewModel,
     onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
@@ -61,8 +61,8 @@ fun QuoteScreen(
     val quotes by quoteViewModel.quotes.collectAsState()
     val isQuoteLoading by quoteViewModel.isQuoteLoading.collectAsState()
 
-    // 슬라이드 방향을 추적하기 위한 상태
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
+
 
     LaunchedEffect(selectedCategory) {
         if (quotes.isEmpty()) {
@@ -127,7 +127,10 @@ fun QuoteScreen(
                         val direction = slideDirection
                         (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
                                 fadeIn(animationSpec = FadeAnimationSpec)) with
-                                (slideOutOfContainer(direction, animationSpec = ContentAnimationSpec) +
+                                (slideOutOfContainer(
+                                    direction,
+                                    animationSpec = ContentAnimationSpec
+                                ) +
                                         fadeOut(animationSpec = FadeAnimationSpec))
                     }
                 ) { quote ->
