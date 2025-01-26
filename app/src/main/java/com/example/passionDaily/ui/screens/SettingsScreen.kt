@@ -12,29 +12,23 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,14 +45,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.example.passionDaily.ui.viewmodels.SettingsViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import java.time.LocalTime
@@ -99,25 +90,31 @@ fun SettingsScreenContent(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 45.dp),
+                .padding(top = 48.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Box(
                 modifier = Modifier
-                    .offset(x = 24.dp)
-                    .align(Alignment.TopStart)
+                    .width(72.dp)
+                    .padding(start = 24.dp)
             ) {
                 BackButton(onBack = onBack)
             }
 
-            Column(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
                 SettingsHeaderText()
             }
+
+            Box(
+                modifier = Modifier.width(72.dp)
+            )
         }
 
         Column(
@@ -138,7 +135,6 @@ fun SettingsScreenContent(
                 LoginSettingItem(viewModel, onNavigateToLogin = onNavigateToLogin)
             }
 
-
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
             SuggestionSettingItem(viewModel)
@@ -151,6 +147,7 @@ fun SettingsScreenContent(
             PrivacySettingItem()
         }
 
+        // 하단 네비게이션 바
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -495,7 +492,10 @@ fun TermsSettingItem() {
     CommonNavigationItem(
         title = "이용약관",
         onClick = {
-            openUrl(context, "https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0")
+            openUrl(
+                context,
+                "https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0"
+            )
         }
     )
 }
@@ -507,7 +507,10 @@ fun PrivacySettingItem() {
     CommonNavigationItem(
         title = "개인정보 처리방침",
         onClick = {
-            openUrl(context, "https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0")
+            openUrl(
+                context,
+                "https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0"
+            )
         }
     )
 }
