@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.animation.core.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,9 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -238,11 +238,33 @@ fun AddToFavoritesButton(
     val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
 
-    val categoryId = category?.categoryId ?: return  // category가 null이면 렌더링하지 않음
+    val categoryId = category?.categoryId ?: return
     val userId = currentUser?.uid ?: ""
 
     val isFavorite by favoritesViewModel.isFavorite(userId, currentQuoteId, categoryId)
         .collectAsState(initial = false)
+
+    // 애니메이션의 상태를 관리하는 변수입니다
+    var isAnimating by remember { mutableStateOf(false) }
+
+    // 크기 애니메이션: 버튼이 눌리면 1.2배로 커졌다가 다시 원래 크기로 돌아옵니다
+    val scale by animateFloatAsState(
+        targetValue = if (isAnimating) 1.2f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        finishedListener = { isAnimating = false }
+    )
+
+    // 회전 애니메이션: 버튼이 눌리면 20도 회전했다가 다시 원래 위치로 돌아옵니다
+    val rotation by animateFloatAsState(
+        targetValue = if (isAnimating) 20f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
 
     val iconResource = if (isFavorite) {
         R.drawable.remove_from_favorites_icon
@@ -254,26 +276,35 @@ fun AddToFavoritesButton(
         painter = painterResource(id = iconResource),
         contentDescription = if (isFavorite) "remove from favorites icon" else "add to favorites icon",
         contentScale = ContentScale.None,
-        modifier = Modifier.clickable {
-            if (currentUser == null) {
-                Toast.makeText(
-                    context,
-                    "즐겨찾기 기능을 사용하려면 로그인이 필요합니다.",
-                    Toast.LENGTH_SHORT
-                ).show()
-                onRequireLogin()
-            } else {
-                if (isFavorite) {
-                    Log.d(
-                        "AddToFavoritesButton",
-                        "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId"
-                    )
-                    favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+        modifier = Modifier
+            .graphicsLayer(
+                scaleX = scale,
+                scaleY = scale,
+                rotationZ = rotation
+            )
+            .clickable {
+                if (currentUser == null) {
+                    Toast.makeText(
+                        context,
+                        "즐겨찾기 기능을 사용하려면 로그인이 필요합니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    onRequireLogin()
                 } else {
-                    favoritesViewModel.addFavorite(currentQuoteId)
+                    // 애니메이션 시작
+                    isAnimating = true
+
+                    if (isFavorite) {
+                        Log.d(
+                            "AddToFavoritesButton",
+                            "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId"
+                        )
+                        favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                    } else {
+                        favoritesViewModel.addFavorite(currentQuoteId)
+                    }
                 }
             }
-        }
     )
 }
 
