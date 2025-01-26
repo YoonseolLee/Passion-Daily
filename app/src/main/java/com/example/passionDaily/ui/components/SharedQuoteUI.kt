@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -141,7 +142,10 @@ fun CategorySelectionButton(
                 shape = RoundedCornerShape(size = 999.dp)
             )
             .padding(start = 18.dp, top = 8.dp, bottom = 8.dp, end = 16.dp)
-            .clickable { onCategoryClicked() }
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onCategoryClicked() }
     ) {
         Text(
             text = selectedCategory?.koreanName ?: stringResource(id = R.string.select_category),
@@ -262,7 +266,10 @@ fun ShareButton(
         painter = painterResource(id = R.drawable.share_icon),
         contentDescription = "share icon",
         contentScale = ContentScale.None,
-        modifier = Modifier.clickable {
+        modifier = Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
             Log.d("ShareButton", "Share button clicked")
 
             quoteViewModel.shareQuote(
@@ -330,16 +337,13 @@ fun AddToFavoritesButton(
                 scaleY = scale,
                 rotationZ = rotation
             )
-            .clickable {
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
                 if (currentUser == null) {
-                    Toast.makeText(
-                        context,
-                        "즐겨찾기 기능을 사용하려면 로그인이 필요합니다.",
-                        Toast.LENGTH_SHORT
-                    ).show()
                     onRequireLogin()
                 } else {
-                    // 애니메이션 시작
                     isAnimating = true
 
                     if (isFavorite) {

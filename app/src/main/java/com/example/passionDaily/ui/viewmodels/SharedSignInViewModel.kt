@@ -207,6 +207,10 @@ class SharedSignInViewModel @Inject constructor(
         urlManager.openUrl(context, url)
     }
 
+    /**
+     * QuoteScreen
+     */
+
     fun signalLoginSuccess() {
         viewModelScope.launch {
             _isLoggedIn.emit(true)
@@ -234,16 +238,6 @@ class SharedSignInViewModel @Inject constructor(
             errorMessage
         )
         toastManager.showToast(message, Toast.LENGTH_LONG)
-    }
-
-    private fun showLoadingMessage() {
-        val message = stringProvider.getString(R.string.login_loading)
-        toastManager.showToast(message)
-    }
-
-    fun showUnauthenticatedMessage() {
-        val message = stringProvider.getString(R.string.login_required)
-        toastManager.showToast(message)
     }
 
     private suspend fun safeAuthCall(block: suspend () -> Unit) {

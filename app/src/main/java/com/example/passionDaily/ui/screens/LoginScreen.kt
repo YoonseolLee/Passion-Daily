@@ -85,8 +85,7 @@ fun LoginScreen(
             }
 
             is AuthState.Unauthenticated -> {
-                // 로그인이 필요함을 사용자에게 알립니다
-                sharedSignInViewModel.showUnauthenticatedMessage()
+                Log.d("LoginScreen", "User is not authenticated")
             }
         }
     }
