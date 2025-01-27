@@ -33,7 +33,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
@@ -44,7 +43,7 @@ import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 @Composable
 fun LoginScreen(
-    sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
+    sharedSignInViewModel: SharedSignInViewModel,
     onNavigateToQuote: () -> Unit,
     onNavigateToTermsConsent: (String) -> Unit
 ) {
