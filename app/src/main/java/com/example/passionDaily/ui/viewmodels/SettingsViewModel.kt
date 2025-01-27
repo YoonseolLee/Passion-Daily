@@ -183,24 +183,29 @@ class SettingsViewModel @Inject constructor(
     fun withdrawUser() {
         viewModelScope.launch {
             safeSettingsOperation {
-                val user = getCurrentUser() ?: run {
-                    _toastMessage.emit(stringProvider.getString(R.string.error_login_required))
-                    return@safeSettingsOperation
-                }
-
-                settingsManager.deleteUserData(user.uid)
-
-                // 계정 삭제 시도
-                Firebase.auth.currentUser?.let { currentUser ->
-                    try {
-                        currentUser.delete().await()
-                        _toastMessage.emit(stringProvider.getString(R.string.success_withdrawal))
-                        _navigateToQuote.emit(true)
-                    } catch (e: FirebaseAuthRecentLoginRequiredException) {
-                        _toastMessage.emit("보안을 위해 다시 로그인해주세요")
-                        Firebase.auth.signOut()
-                        _navigateToLogin.emit(true)
+                _isLoading.emit(true)
+                try {
+                    val user = getCurrentUser() ?: run {
+                        _toastMessage.emit(stringProvider.getString(R.string.error_login_required))
+                        return@safeSettingsOperation
                     }
+
+                    settingsManager.deleteUserData(user.uid)
+
+                    // 계정 삭제 시도
+                    Firebase.auth.currentUser?.let { currentUser ->
+                        try {
+                            currentUser.delete().await()
+                            _toastMessage.emit(stringProvider.getString(R.string.success_withdrawal))
+                            _navigateToQuote.emit(true)
+                        } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                            _toastMessage.emit("보안을 위해 다시 로그인해주세요")
+                            Firebase.auth.signOut()
+                            _navigateToLogin.emit(true)
+                        }
+                    }
+                } finally {
+                    _isLoading.emit(false)
                 }
             }
         }
