@@ -72,14 +72,9 @@ class MainActivity : ComponentActivity() {
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED) {
-                // 시스템 권한 요청 다이얼로그 표시
+                // 앱 최초 실행 시 시스템 권한 요청 다이얼로그 표시
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                getFCMToken()
             }
-        } else {
-            // Android 13 미만 버전에서는 권한 요청 없이 진행
-            getFCMToken()
         }
     }
 

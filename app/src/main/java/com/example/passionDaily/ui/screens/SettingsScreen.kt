@@ -208,7 +208,28 @@ fun NotificationSettingItem(
         title = "데일리 명언 알림 설정",
         isEnabled = isEnabled,
         onToggleChange = { enabled ->
-            viewModel.updateNotificationSettings(enabled)
+            if (currentUser == null) {
+                viewModel.updateNotificationSettings(false)
+                return@CommonToggleItem
+            }
+
+            if (enabled) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) == PackageManager.PERMISSION_GRANTED) {
+                        viewModel.updateNotificationSettings(true)
+                    } else {
+                        // 권한이 없으면 설정으로 이동하는 다이얼로그 표시
+                        showSettingsDialog = true
+                    }
+                } else {
+                    viewModel.updateNotificationSettings(true)
+                }
+            } else {
+                viewModel.updateNotificationSettings(false)
+            }
         }
     )
 }
@@ -219,21 +240,25 @@ fun NotificationTimeSettingItem(
 ) {
     val notificationTime by viewModel.notificationTime.collectAsState()
     val context = LocalContext.current
-
     var showTimePickerDialog by remember { mutableStateOf(false) }
 
-    if (showTimePickerDialog) {
-        TimePickerDialog(
-            context,
-            { _, selectedHour, selectedMinute ->
-                val selectedTime = LocalTime.of(selectedHour, selectedMinute)
-                viewModel.updateNotificationTime(selectedTime)
-                showTimePickerDialog = false
-            },
-            notificationTime?.hour ?: 8,
-            notificationTime?.minute ?: 0,
-            true
-        ).show()
+    LaunchedEffect(showTimePickerDialog) {
+        if (showTimePickerDialog) {
+            TimePickerDialog(
+                context,
+                { _, selectedHour, selectedMinute ->
+                    val selectedTime = LocalTime.of(selectedHour, selectedMinute)
+                    viewModel.updateNotificationTime(selectedTime)
+                    showTimePickerDialog = false
+                },
+                notificationTime?.hour ?: 8,
+                notificationTime?.minute ?: 0,
+                true
+            ).apply {
+                setOnDismissListener { showTimePickerDialog = false }
+                show()
+            }
+        }
     }
 
     CommonTextItem(
