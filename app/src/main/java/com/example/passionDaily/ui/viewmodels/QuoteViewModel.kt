@@ -45,7 +45,8 @@ class QuoteViewModel @Inject constructor(
     }
 
     private var lastLoadedQuote: DocumentSnapshot? = null
-    private val quoteCategories = QuoteCategory.values().map { it.koreanName }
+    private val _categories = MutableStateFlow(QuoteCategory.values().map { it.koreanName })
+    val categories: StateFlow<List<String>> = _categories.asStateFlow()
 
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     val quotes = quoteStateHolder.quotes
@@ -337,7 +338,4 @@ class QuoteViewModel @Inject constructor(
         quoteStateHolder.clearQuotes()
         category?.let { loadQuotes(it) }
     }
-
-    fun getQuoteCategories(): List<String> = quoteCategories
-
 }

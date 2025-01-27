@@ -16,7 +16,10 @@ import androidx.compose.ui.unit.dp
 import com.example.passionDaily.R
 
 @Composable
-fun BackButton(onBack: () -> Unit) {
+fun BackButton(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = Modifier
             .size(24.dp)
@@ -28,7 +31,7 @@ fun BackButton(onBack: () -> Unit) {
         Icon(
             painter = painterResource(id = R.drawable.clarity_arrow_line),
             contentDescription = "Back",
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.size(24.dp),
             tint = Color.White
         )
     }
