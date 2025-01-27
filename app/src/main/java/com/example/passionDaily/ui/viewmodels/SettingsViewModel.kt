@@ -6,9 +6,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
+import com.example.passionDaily.manager.AuthenticationManager
 import com.example.passionDaily.manager.SettingsManager
 import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.ui.state.AuthStateHolder
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseUser
@@ -29,6 +31,8 @@ class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val stringProvider: StringProvider,
     private val alarmScheduler: DailyQuoteAlarmScheduler,
+    private val authManager: AuthenticationManager,
+    private val authStateHolder: AuthStateHolder,
 ) : ViewModel() {
 
     companion object {
@@ -158,7 +162,10 @@ class SettingsViewModel @Inject constructor(
                     return@safeSettingsOperation
                 }
 
-                Firebase.auth.signOut()
+                authManager.clearCredentials()
+                authStateHolder.setUnauthenticated()
+                alarmScheduler.cancelExistingAlarm()
+
                 _toastMessage.emit(stringProvider.getString(R.string.success_logout))
                 _navigateToQuote.emit(true)
             }

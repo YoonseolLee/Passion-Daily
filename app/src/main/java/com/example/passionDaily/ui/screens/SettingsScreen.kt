@@ -3,7 +3,9 @@ package com.example.passionDaily.ui.screens
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -53,6 +55,9 @@ import com.example.passionDaily.R
 import com.example.passionDaily.ui.viewmodels.SettingsViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import java.time.LocalTime
+import android.provider.Settings
+import android.Manifest
+import androidx.core.content.ContextCompat
 
 @Composable
 fun SettingsScreen(
@@ -197,12 +202,69 @@ fun SettingsHeaderText() {
     )
 }
 
-// 알림 설정 항목들
 @Composable
-fun NotificationSettingItem(
-    viewModel: SettingsViewModel
-) {
+fun NotificationSettingItem(viewModel: SettingsViewModel) {
+    val context = LocalContext.current
     val isEnabled by viewModel.notificationEnabled.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = {
+                Text(
+                    text = "알림 권한 필요",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = "알림을 받으려면 설정에서 알림 권한을 허용해주세요.",
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color(0xFFE1E1E1),
+                        lineHeight = 24.sp
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSettingsDialog = false
+                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        })
+                    }
+                ) {
+                    Text(
+                        "설정으로 이동",
+                        color = Color(0xFFFF6B6B)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showSettingsDialog = false }
+                ) {
+                    Text(
+                        "취소",
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            },
+            containerColor = Color(0xFF1A2847),
+            shape = RoundedCornerShape(8.dp),
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            )
+        )
+    }
 
     CommonToggleItem(
         title = "데일리 명언 알림 설정",

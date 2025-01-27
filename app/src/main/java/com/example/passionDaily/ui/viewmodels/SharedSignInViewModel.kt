@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
 import android.widget.Toast
-import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
@@ -19,6 +18,7 @@ import com.example.passionDaily.manager.UserConsentManager
 import com.example.passionDaily.manager.UserProfileManager
 import com.example.passionDaily.mapper.UserProfileMapper
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.ui.state.AuthStateHolder
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 @HiltViewModel
 class SharedSignInViewModel @Inject constructor(
     private val auth: FirebaseAuth,
@@ -46,15 +45,14 @@ class SharedSignInViewModel @Inject constructor(
     private val remoteUserRepository: RemoteUserRepository,
     private val toastManager: ToastManager,
     private val userProfileMapper: UserProfileMapper,
-    private val stringProvider: StringProvider
+    private val stringProvider: StringProvider,
+    private val authStateHolder: AuthStateHolder,
 ) : ViewModel() {
 
     private companion object {
         const val TAG = "SharedSignInViewModel"
     }
-
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
-    val authState = _authState.asStateFlow()
+    val authState = authStateHolder.authState
 
     private val _userProfileJson = MutableStateFlow<String?>(null)
     val userProfileJson = _userProfileJson.asStateFlow()
@@ -83,6 +81,10 @@ class SharedSignInViewModel @Inject constructor(
     fun signInWithGoogle() {
         viewModelScope.launch {
             safeAuthCall {
+                // 기존 크리덴셜 클리어: 로그아웃 직후 재로그인 시, 자동 로그인 방지
+                authManager.clearCredentials()
+                Log.d("sign in with google", "credential cleared")
+                // 새로운 크리덴셜 요청
                 val result = authManager.getGoogleCredential()
                 processSignInResult(result)
             }
@@ -100,7 +102,7 @@ class SharedSignInViewModel @Inject constructor(
                 handleAuthResult(authResult)
             }
         } else {
-            _authState.emit(AuthState.Error(stringProvider.getString(R.string.error_invalid_credential)))
+            authStateHolder.setError(stringProvider.getString(R.string.error_invalid_credential))
         }
     }
 
@@ -134,14 +136,14 @@ class SharedSignInViewModel @Inject constructor(
         if (remoteUserRepository.isUserRegistered(userId)) {
             syncExistingUser(userId)
         } else {
-            _authState.emit(AuthState.RequiresConsent(userId, userProfileJson.value))
+            authStateHolder.setRequiresConsent(userId, userProfileJson.value)
         }
     }
 
     private suspend fun syncExistingUser(userId: String) {
         remoteUserRepository.updateLastSyncDate(userId)
         remoteUserRepository.syncFirestoreUserToRoom(userId)
-        _authState.emit(AuthState.Authenticated(userId))
+        authStateHolder.setAuthenticated(userId)
     }
 
     /**
@@ -246,7 +248,7 @@ class SharedSignInViewModel @Inject constructor(
         } catch (e: Exception) {
             val errorMessage = mapExceptionToErrorMessage(e)
             Log.e(TAG, "Error in auth operation", e)
-            _authState.emit(AuthState.Error(errorMessage))
+            authStateHolder.setError(errorMessage)
         }
     }
 

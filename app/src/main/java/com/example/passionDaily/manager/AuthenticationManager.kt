@@ -1,6 +1,9 @@
 package com.example.passionDaily.manager
 
 import android.content.Context
+import android.util.Log
+import android.webkit.CookieManager
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -15,7 +18,9 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AuthenticationManager @Inject constructor(
@@ -44,8 +49,24 @@ class AuthenticationManager @Inject constructor(
         return googleIdTokenCredential.idToken
     }
 
-    fun getCurrentUser() = Firebase.auth.currentUser
+    suspend fun clearCredentials() = withContext(Dispatchers.IO) {
+        try {
+            val credentialManager = CredentialManager.create(context)
+            val request = ClearCredentialStateRequest()
 
+            credentialManager.clearCredentialState(request)
+            Log.d("clearCredentials", "Google credential cleared")
+
+            auth.signOut()
+
+            Log.d("clearCredentials", "Auth credentials cleared successfully")
+        } catch (e: Exception) {
+            Log.e("AuthenticationManager", "Error clearing credentials", e)
+            throw e
+        }
+    }
+
+    fun getCurrentUser() = Firebase.auth.currentUser
 
     fun signOut() {
         Firebase.auth.signOut()
