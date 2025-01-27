@@ -171,6 +171,9 @@ class SettingsViewModel @Inject constructor(
                 _isLoading.emit(true)
                 try {
                     authManager.clearCredentials()
+                    authStateHolder.setUnauthenticated()
+                    alarmScheduler.cancelExistingAlarm()
+
                     _toastMessage.emit(stringProvider.getString(R.string.success_logout))
                     _navigateToQuote.emit(true)
                 } finally {
