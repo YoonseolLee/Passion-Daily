@@ -63,6 +63,9 @@ class SettingsViewModel @Inject constructor(
     private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
     init {
         _currentUser.value = getCurrentUser()
 
@@ -144,12 +147,15 @@ class SettingsViewModel @Inject constructor(
 
     fun logIn() {
         viewModelScope.launch {
-            safeSettingsOperation {
+            _isLoading.emit(true)
+            try {
                 if (getCurrentUser() != null) {
                     _toastMessage.emit(stringProvider.getString(R.string.error_already_logged_in))
-                    return@safeSettingsOperation
+                    return@launch
                 }
                 _navigateToLogin.emit(true)
+            } finally {
+                _isLoading.emit(false)
             }
         }
     }
@@ -162,12 +168,14 @@ class SettingsViewModel @Inject constructor(
                     return@safeSettingsOperation
                 }
 
-                authManager.clearCredentials()
-                authStateHolder.setUnauthenticated()
-                alarmScheduler.cancelExistingAlarm()
-
-                _toastMessage.emit(stringProvider.getString(R.string.success_logout))
-                _navigateToQuote.emit(true)
+                _isLoading.emit(true)
+                try {
+                    authManager.clearCredentials()
+                    _toastMessage.emit(stringProvider.getString(R.string.success_logout))
+                    _navigateToQuote.emit(true)
+                } finally {
+                    _isLoading.emit(false)
+                }
             }
         }
     }
@@ -242,9 +250,9 @@ class SettingsViewModel @Inject constructor(
         try {
             block()
         } catch (e: Exception) {
-            val errorMessage = mapExceptionToErrorMessage(e)
+            _isLoading.emit(false)
             Log.e(TAG, "Error in settings operation", e)
-            _toastMessage.emit(errorMessage)
+            _toastMessage.emit(stringProvider.getString(R.string.error_unexpected))
         }
     }
 

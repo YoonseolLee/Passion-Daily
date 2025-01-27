@@ -66,6 +66,9 @@ class SharedSignInViewModel @Inject constructor(
     private val _navigationEvents = Channel<NavigationEvent>()
     val navigationEvents = _navigationEvents.receiveAsFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
     sealed class NavigationEvent {
         object NavigateToQuote : NavigationEvent()
         data class NavigateToTermsConsent(val userProfileJson: String) : NavigationEvent()
@@ -80,13 +83,16 @@ class SharedSignInViewModel @Inject constructor(
 
     fun signInWithGoogle() {
         viewModelScope.launch {
-            safeAuthCall {
+            _isLoading.emit(true)
+            try {
                 // 기존 크리덴셜 클리어: 로그아웃 직후 재로그인 시, 자동 로그인 방지
                 authManager.clearCredentials()
-                Log.d("sign in with google", "credential cleared")
+
                 // 새로운 크리덴셜 요청
                 val result = authManager.getGoogleCredential()
                 processSignInResult(result)
+            } finally {
+                _isLoading.emit(false)
             }
         }
     }

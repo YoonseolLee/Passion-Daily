@@ -57,7 +57,9 @@ import com.example.passionDaily.util.CommonNavigationBar
 import java.time.LocalTime
 import android.provider.Settings
 import android.Manifest
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.core.content.ContextCompat
+import com.example.passionDaily.ui.theme.PrimaryColor
 
 @Composable
 fun SettingsScreen(
@@ -69,15 +71,32 @@ fun SettingsScreen(
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
 ) {
-    SettingsScreenContent(
-        viewModel = settingsViewModel,
-        onFavoritesClicked = onNavigateToFavorites,
-        onQuoteClicked = onNavigateToQuote,
-        onSettingsClicked = onNavigateToSettings,
-        onNavigateToLogin = onNavigateToLogin,
-        currentScreen = currentScreen,
-        onBack = onBack
-    )
+    Box(modifier = Modifier.fillMaxSize()) {
+        SettingsScreenContent(
+            viewModel = settingsViewModel,
+            onFavoritesClicked = onNavigateToFavorites,
+            onQuoteClicked = onNavigateToQuote,
+            onSettingsClicked = onNavigateToSettings,
+            onNavigateToLogin = onNavigateToLogin,
+            currentScreen = currentScreen,
+            onBack = onBack
+        )
+
+        if (settingsViewModel.isLoading.collectAsState().value) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(enabled = false) { },
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = PrimaryColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -280,7 +299,8 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
                     if (ContextCompat.checkSelfPermission(
                             context,
                             Manifest.permission.POST_NOTIFICATIONS
-                        ) == PackageManager.PERMISSION_GRANTED) {
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
                         viewModel.updateNotificationSettings(true)
                     } else {
                         // 권한이 없으면 설정으로 이동하는 다이얼로그 표시
@@ -430,11 +450,7 @@ fun LogoutSettingItem(
                 }
             },
             containerColor = Color(0xFF1A2847),
-            shape = RoundedCornerShape(8.dp),
-            properties = DialogProperties(
-                dismissOnClickOutside = true,
-                dismissOnBackPress = true
-            )
+            shape = RoundedCornerShape(8.dp)
         )
     }
 

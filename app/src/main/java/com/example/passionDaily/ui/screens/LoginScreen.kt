@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +51,7 @@ fun LoginScreen(
 ) {
     val authState by sharedSignInViewModel.authState.collectAsState()
     val userProfileJson by sharedSignInViewModel.userProfileJson.collectAsState()
+    val isLoading by sharedSignInViewModel.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
         sharedSignInViewModel.navigationEvents.collect { event ->
@@ -92,6 +95,21 @@ fun LoginScreen(
     LoginScreenContent(
         sharedSignInViewModel = sharedSignInViewModel,
     )
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = false) {},
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                color = PrimaryColor,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    }
 }
 
 @Composable
