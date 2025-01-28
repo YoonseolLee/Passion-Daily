@@ -31,36 +31,50 @@ import javax.inject.Inject
 class ImageShareManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    // 1. Main public interface
     suspend fun shareQuoteImage(
         context: Context,
         imageUrl: String?,
         quoteText: String,
         author: String
     ) {
-        withContext(Dispatchers.Main) {
-            try {
+        try {
+            val (composeView, rootView) = withContext(Dispatchers.Main) {
                 val composeView = createComposeView(context)
                 val rootView = getRootView(context)
-
                 rootView.addView(composeView)
+                setComposeContent(composeView, imageUrl, quoteText, author)
+                Pair(composeView, rootView)
+            }
 
-                try {
-                    setComposeContent(composeView, imageUrl, quoteText, author)
+            try {
+                withContext(Dispatchers.Main) {
                     renderComposeView(composeView)
+                }
 
-                    val bitmap = createBitmapFromView(composeView)
-                    shareImage(context, bitmap)
-                } finally {
+                val bitmap = withContext(Dispatchers.Default) {
+                    createBitmapFromView(composeView)
+                }
+
+                withContext(Dispatchers.IO) {
+                    val file = saveBitmapToFile(bitmap)
+                    val uri = getShareableFileUri(file)
+
+                    withContext(Dispatchers.Main) {
+                        launchShareIntent(context, uri)
+                    }
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
                     rootView.removeView(composeView)
                 }
-            } catch (e: Exception) {
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
                 handleError(context, e)
             }
         }
     }
 
-    // 2. View creation and setup
     private fun getRootView(context: Context): ViewGroup {
         val activity = context as? Activity
             ?: throw IllegalStateException("Context is not an Activity")
@@ -75,7 +89,6 @@ class ImageShareManager @Inject constructor(
         }
     }
 
-    // 3. Content and rendering
     private fun setComposeContent(
         composeView: ComposeView,
         imageUrl: String?,
@@ -114,7 +127,6 @@ class ImageShareManager @Inject constructor(
         return bitmap
     }
 
-    // 4. Image sharing process
     private fun shareImage(context: Context, bitmap: Bitmap) {
         val file = saveBitmapToFile(bitmap)
         val uri = getShareableFileUri(file)
@@ -148,7 +160,6 @@ class ImageShareManager @Inject constructor(
         context.startActivity(Intent.createChooser(intent, "명언 공유하기"))
     }
 
-    // 5. Error handling
     private fun handleError(context: Context, e: Exception) {
         Log.e("ImageShareManager", "Error sharing image", e)
         Toast.makeText(
