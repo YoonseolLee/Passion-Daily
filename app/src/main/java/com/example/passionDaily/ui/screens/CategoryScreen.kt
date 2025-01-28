@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.passionDaily.R
+import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.Dimens.backButtonContainerWidth
 import com.example.passionDaily.ui.theme.Dimens.categoryBoxCornerRadius
@@ -55,11 +56,12 @@ import com.example.passionDaily.util.QuoteCategory
 @Composable
 fun CategoryScreen(
     quoteViewModel: QuoteViewModel,
+    quoteStateHolder: QuoteStateHolder,
     onNavigateToQuote: () -> Unit,
     onBack: () -> Unit,
 ) {
-    val categories by quoteViewModel.categories.collectAsState()
-    val selectedCategory by quoteViewModel.selectedQuoteCategory.collectAsState()
+    val categories by quoteStateHolder.categories.collectAsState()
+    val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
 
     CategoryScreenContent(
         categories = categories,

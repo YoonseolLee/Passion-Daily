@@ -6,12 +6,10 @@ import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 fun NavGraphBuilder.quoteComposable(
     quoteViewModel: QuoteViewModel,
     favoritesViewModel: FavoritesViewModel,
-    sharedSignInViewModel: SharedSignInViewModel,
     onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
@@ -22,7 +20,7 @@ fun NavGraphBuilder.quoteComposable(
         QuoteScreen(
             quoteViewModel = quoteViewModel,
             favoritesViewModel = favoritesViewModel,
-            sharedSignInViewModel = sharedSignInViewModel,
+            quoteStateHolder = quoteViewModel.getStateHolder(),
             onNavigateToCategory = onNavigateToCategory,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,

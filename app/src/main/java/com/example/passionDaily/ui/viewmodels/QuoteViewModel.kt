@@ -1,32 +1,31 @@
 package com.example.passionDaily.ui.viewmodels
 
-
 import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.R
+import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
+import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
-import com.example.passionDaily.manager.ImageShareManager
-import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.manager.QuoteCategoryManager
 import com.example.passionDaily.ui.state.QuoteStateHolder
+import com.example.passionDaily.usecase.IncrementShareCountUseCase
+import com.example.passionDaily.usecase.LoadQuoteUseCase
+import com.example.passionDaily.usecase.ShareQuoteUseCase
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,32 +33,23 @@ class QuoteViewModel @Inject constructor(
     private val remoteQuoteRepository: RemoteQuoteRepository,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
-    private val imageShareManager: ImageShareManager,
-    private val stringProvider: StringProvider,
+    private val categoryManager: QuoteCategoryManager,
+    private val loadQuoteUseCase: LoadQuoteUseCase,
+    private val sharedQuoteUseCases: ShareQuoteUseCase,
+    private val incrementShareCountUseCase: IncrementShareCountUseCase,
 ) : ViewModel(), QuoteInteractionHandler {
 
-    companion object {
-        private const val TAG = "QuoteViewModel"
-        private const val PAGE_SIZE = 20
-        private const val KEY_QUOTE_INDEX = "quote_index"
-    }
-
+    private val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
+    private val quotes = quoteStateHolder.quotes
+    private val isQuoteLoading = quoteStateHolder.isQuoteLoading
+    private val hasQuoteReachedEnd = quoteStateHolder.hasQuoteReachedEnd
     private var lastLoadedQuote: DocumentSnapshot? = null
-    private val _categories = MutableStateFlow(QuoteCategory.values().map { it.koreanName })
-    val categories: StateFlow<List<String>> = _categories.asStateFlow()
-
-    val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
-    val quotes = quoteStateHolder.quotes
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
     val currentQuote: StateFlow<Quote?> = combine(quotes, _currentQuoteIndex) { quotes, index ->
         quotes.getOrNull(index)
     }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    private val _isQuoteLoading = MutableStateFlow(false)
-    val isQuoteLoading: StateFlow<Boolean> = _isQuoteLoading.asStateFlow()
-
-    private val _hasQuoteReachedEnd = MutableStateFlow(false)
 
     init {
         viewModelScope.launch {
@@ -74,181 +64,194 @@ class QuoteViewModel @Inject constructor(
     fun navigateToQuoteWithCategory(quoteId: String, category: String) {
         viewModelScope.launch {
             try {
-                _isQuoteLoading.emit(true)
+                startQuoteLoading()
 
-                // 1. 카테고리 처리
-                val quoteCategory = findCategory(category) ?: return@launch
-                updateQuoteCategory(quoteCategory)
+                // 카테고리 설정
+                val quoteCategory = initializeCategory(category) ?: return@launch
 
-                // 2. 명언 데이터 로드
-                val beforeQuotes = loadQuotesBeforeTarget(quoteId, quoteCategory)
-                val targetQuote = loadTargetQuote(quoteId, quoteCategory) ?: return@launch
+                val beforeQuotes = fetchQuotesBeforeTarget(quoteId, quoteCategory)
+                val targetQuote =
+                    fetchTargetQuote(quoteId, quoteCategory) ?: return@launch
 
-                // 3. 명언 데이터 설정
-                clearExistingQuotes()
-                addInitialQuotes(beforeQuotes, targetQuote)
-                updateQuoteIndex(beforeQuotes.size)
+                setupInitialQuoteDisplay(beforeQuotes, targetQuote)
 
-                // 4. 추가 명언 로드
-                val afterQuotesResult = loadQuotesAfterTarget(quoteId, quoteCategory)
-                addAfterQuotes(afterQuotesResult)
-
+                val result = fetchFurtherQuotes(quoteId, quoteCategory)
+                lastLoadedQuote = updateLastLoadedDocument(result.lastDocument)
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(TAG, "Failed to load quotes", e)
             } catch (e: Exception) {
                 Log.e(TAG, "Error navigating to quote", e)
             } finally {
-                _isQuoteLoading.emit(false)
+                stopIsQuoteLoading()
             }
         }
     }
 
-    private fun findCategory(category: String): QuoteCategory? {
-        return QuoteCategory.values()
-            .find { it.name.lowercase() == category.lowercase() }
-            .also {
-                if (it == null) Log.w(TAG, "Invalid category: $category")
-            }
+    private suspend fun initializeCategory(category: String): QuoteCategory? {
+        return categoryManager.setupCategory(category)
     }
 
-    private suspend fun updateQuoteCategory(category: QuoteCategory) {
-        quoteStateHolder.updateSelectedCategory(category)
-    }
-
-    private suspend fun loadQuotesBeforeTarget(
+    private suspend fun fetchQuotesBeforeTarget(
         quoteId: String,
         category: QuoteCategory
     ): List<Quote> {
-        return remoteQuoteRepository.getQuotesBeforeId(
-            category = category,
-            targetQuoteId = quoteId,
-            limit = PAGE_SIZE
-        ).also { quotes ->
-            Log.d(TAG, "Quotes before target: ${quotes.map { it.id }}")
-        }
+        return loadQuoteUseCase.loadQuotesBeforeTarget(quoteId, category)
     }
 
-    private suspend fun loadTargetQuote(
-        quoteId: String,
-        category: QuoteCategory
-    ): Quote? {
-        return remoteQuoteRepository.getQuoteById(quoteId, category)
-            ?.also { quote ->
-                Log.d(TAG, "Target quote: ${quote.id}")
-            } ?: run {
-            Log.w(TAG, "Target quote not found: $quoteId")
-            null
-        }
+    private suspend fun fetchTargetQuote(quoteId: String, category: QuoteCategory): Quote? {
+        return loadQuoteUseCase.loadTargetQuote(quoteId, category)
     }
 
-    private suspend fun clearExistingQuotes() {
-        quoteStateHolder.clearQuotes()
-    }
-
-    private suspend fun addInitialQuotes(beforeQuotes: List<Quote>, targetQuote: Quote) {
-        val allQuotes = beforeQuotes + targetQuote
-        quoteStateHolder.addQuotes(allQuotes, true)
-    }
-
-    private fun updateQuoteIndex(index: Int) {
-        savedStateHandle[KEY_QUOTE_INDEX] = index
-    }
-
-    private suspend fun loadQuotesAfterTarget(
+    private suspend fun fetchFurtherQuotes(
         quoteId: String,
         category: QuoteCategory
     ): RemoteQuoteRepositoryImpl.QuoteResult {
-        return remoteQuoteRepository.getQuotesAfterId(
-            category = category,
-            afterQuoteId = quoteId,
-            limit = PAGE_SIZE
-        ).also { result ->
-            Log.d(TAG, "Quotes after target: ${result.quotes.map { it.id }}")
-        }
+        return loadQuoteUseCase.loadFurtherQuotes(quoteId, category)
     }
 
-    private suspend fun addAfterQuotes(afterQuotesResult: RemoteQuoteRepositoryImpl.QuoteResult) {
-        if (afterQuotesResult.quotes.isNotEmpty()) {
-            quoteStateHolder.addQuotes(afterQuotesResult.quotes, false)
-            lastLoadedQuote = afterQuotesResult.lastDocument
-        }
+    private fun updateLastLoadedDocument(document: DocumentSnapshot?): DocumentSnapshot? {
+        return loadQuoteUseCase.getUpdatedLastLoadedQuote(document)
+    }
+
+    private fun updateQuoteIndex(index: Int): Int {
+        return loadQuoteUseCase.getUpdatedQuoteIndex(index)
+    }
+
+    private suspend fun startQuoteLoading() {
+        quoteStateHolder.updateIsQuoteLoading(true)
+    }
+
+    private suspend fun stopIsQuoteLoading() {
+        quoteStateHolder.updateIsQuoteLoading(false)
+    }
+
+    private suspend fun setupInitialQuoteDisplay(beforeQuotes: List<Quote>, targetQuote: Quote) {
+        loadQuoteUseCase.replaceQuotes(beforeQuotes, targetQuote)
+        savedStateHandle[KEY_QUOTE_INDEX] = updateQuoteIndex(beforeQuotes.size)
     }
 
     fun loadInitialQuotes(category: QuoteCategory?) {
         viewModelScope.launch {
-            _isQuoteLoading.emit(true)
-            category?.let {
-                safeQuoteOperation { loadQuotes(it) }
+            try {
+                startQuoteLoading()
+                category?.let {
+                    loadQuotes(it)
+                }
+            } catch (e: NetworkOnMainThreadException) {
+                Log.e(TAG, "Network operation on main thread", e)
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(TAG, "Firestore error", e)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading initial quotes", e)
             }
-            _isQuoteLoading.emit(false)
         }
     }
 
     override fun previousQuote() {
-        savedStateHandle[KEY_QUOTE_INDEX] = when {
-            _currentQuoteIndex.value == 0 && _hasQuoteReachedEnd.value -> quotes.value.size - 1
-            _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
-            else -> _currentQuoteIndex.value - 1
+        if (_currentQuoteIndex.value == 0 && hasQuoteReachedEnd.value) {
+            savedStateHandle[KEY_QUOTE_INDEX] = quotes.value.size - 1
+            return
         }
+
+        if (_currentQuoteIndex.value == 0) {
+            savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
+            return
+        }
+
+        savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value - 1
     }
 
     private fun loadQuotes(category: QuoteCategory) {
-        if (_isQuoteLoading.value) return
+        if (isQuoteLoading.value) return
 
         viewModelScope.launch {
-            _isQuoteLoading.emit(true)
-            safeQuoteOperation {
-                val result = remoteQuoteRepository.getQuotesByCategory(
+            try {
+                startQuoteLoading()
+                val result = fetchQuotesByCategory(
                     category = category,
                     pageSize = PAGE_SIZE,
                     lastLoadedQuote = lastLoadedQuote
                 )
 
-                if (result.quotes.isNotEmpty()) {
-                    lastLoadedQuote = result.lastDocument
-                    quoteStateHolder.addQuotes(
-                        result.quotes,
-                        isNewCategory = lastLoadedQuote == null
-                    )
-                } else {
-                    _hasQuoteReachedEnd.emit(true)
+                if (result.quotes.isEmpty()) {
+                    setHasQuoteReachedEndTrue()
+                    return@launch
                 }
+
+                lastLoadedQuote = result.lastDocument
+                addQuotesToState(
+                    result.quotes,
+                    isNewCategory = lastLoadedQuote == null
+                )
+            } catch (e: NetworkOnMainThreadException) {
+                Log.e(TAG, "Network operation on main thread", e)
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(TAG, "Firestore error", e)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading quotes", e)
+            } finally {
+                quoteStateHolder.updateIsQuoteLoading(false)
             }
-            _isQuoteLoading.emit(false)
         }
+    }
+
+    private suspend fun fetchQuotesByCategory(
+        category: QuoteCategory,
+        pageSize: Int,
+        lastLoadedQuote: DocumentSnapshot?
+    ): RemoteQuoteRepositoryImpl.QuoteResult {
+        return remoteQuoteRepository.getQuotesByCategory(
+            category = category,
+            pageSize = pageSize,
+            lastLoadedQuote = lastLoadedQuote
+        )
+    }
+
+    private suspend fun setHasQuoteReachedEndTrue() {
+        quoteStateHolder.updateHasQuoteReachedEnd(true)
+    }
+
+    private suspend fun addQuotesToState(quotes: List<Quote>, isNewCategory: Boolean) {
+        quoteStateHolder.addQuotes(quotes, isNewCategory)
     }
 
     override fun nextQuote() {
         val nextIndex = _currentQuoteIndex.value + 1
         val currentQuotes = quotes.value
 
-        // 추가 명언을 로드해야 하는 경우 (현재 페이지의 마지막 명언에 도달했을 때)
-        if (shouldLoadMoreQuotes(nextIndex, currentQuotes)) {
+        if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasQuoteReachedEnd)) {
             loadMoreQuotesIfNeeded()
-            // 새로운 명언들이 로드되는 동안 현재 인덱스를 유지
             savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
             return
         }
 
-        // 모든 명언의 마지막에 도달한 경우 첫 번째 명언으로 순환
         if (isLastQuote(nextIndex, currentQuotes)) {
             savedStateHandle[KEY_QUOTE_INDEX] = 0
             return
         }
-
-        // 일반적인 경우: 다음 명언으로 이동
         savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
     }
 
-    private fun shouldLoadMoreQuotes(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
-        return nextIndex >= currentQuotes.size && !_hasQuoteReachedEnd.value
+    private fun shouldLoadMoreQuotes(
+        nextIndex: Int,
+        currentQuotes: List<Quote>,
+        hasQuoteReachedEnd: StateFlow<Boolean>
+    ): Boolean {
+        return loadQuoteUseCase.shouldLoadMoreQuotes(nextIndex, currentQuotes, hasQuoteReachedEnd)
     }
 
     private fun isLastQuote(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
-        return nextIndex >= currentQuotes.size
+        return loadQuoteUseCase.isLastQuote(nextIndex, currentQuotes)
     }
 
     private fun loadMoreQuotesIfNeeded() {
-        selectedQuoteCategory.value?.let { category ->
-            if (!_isQuoteLoading.value && lastLoadedQuote != null) {
+        if (loadQuoteUseCase.shouldLoadMoreQuotesIfNeeded(
+                selectedCategory = selectedQuoteCategory.value,
+                isQuoteLoading = isQuoteLoading.value,
+                lastLoadedQuote = lastLoadedQuote
+            )
+        ) {
+            selectedQuoteCategory.value?.let { category ->
                 loadQuotesAfter(category, quotes.value.last().id)
             }
         }
@@ -256,86 +259,68 @@ class QuoteViewModel @Inject constructor(
 
     private fun loadQuotesAfter(category: QuoteCategory, lastQuoteId: String) {
         viewModelScope.launch {
-            val result = remoteQuoteRepository.getQuotesAfterId(
-                category = category,
-                afterQuoteId = lastQuoteId,
-                limit = PAGE_SIZE
-            )
-            if (result.quotes.isNotEmpty()) {
-                quoteStateHolder.addQuotes(result.quotes, false)
-                lastLoadedQuote = result.lastDocument
-            } else {
-                _hasQuoteReachedEnd.emit(true)
-            }
-        }
-    }
-
-    private suspend fun safeQuoteOperation(block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (e: Exception) {
-            val errorMessage = mapExceptionToErrorMessage(e)
-            Log.e(TAG, "Error in quote operation", e)
-        }
-    }
-
-    private fun mapExceptionToErrorMessage(e: Exception): String {
-        return when (e) {
-            is FirebaseFirestoreException -> when (e.code) {
-                FirebaseFirestoreException.Code.UNAVAILABLE ->
-                    stringProvider.getString(R.string.error_network)
-                FirebaseFirestoreException.Code.PERMISSION_DENIED ->
-                    stringProvider.getString(R.string.error_permission_denied)
-                else ->
-                    stringProvider.getString(R.string.error_firebase_firestore)
-            }
-            is NetworkOnMainThreadException ->
-                stringProvider.getString(R.string.error_network_main_thread)
-            else ->
-                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
-        }
-    }
-
-    fun shareQuote(
-        context: Context,
-        imageUrl: String?,
-        quoteText: String,
-        author: String
-    ) {
-        viewModelScope.launch {
             try {
-                val imageShareManager = ImageShareManager(context)
-                withContext(Dispatchers.Main) {
-                    imageShareManager.shareQuoteImage(
-                        context = context,
-                        imageUrl = imageUrl,
-                        quoteText = quoteText,
-                        author = author
-                    )
+                val result = loadQuoteUseCase.loadQuotesAfter(
+                    category = category,
+                    lastQuoteId = lastQuoteId,
+                    pageSize = PAGE_SIZE
+                )
+                loadQuoteUseCase.updateQuotesAfterLoading(result) { newLastDocument ->
+                    lastLoadedQuote = newLastDocument
                 }
             } catch (e: Exception) {
-                Log.e("QuoteViewModel", "Error preparing and sharing quote", e)
+                Log.e(TAG, "Error loading quotes: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String) {
+        viewModelScope.launch {
+            try {
+                sharedQuoteUseCases.shareQuote(
+                    context = context,
+                    imageUrl = imageUrl,
+                    quoteText = quoteText,
+                    author = author
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sharing quote", e)
             }
         }
     }
 
     fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
-        category?.let {
-            viewModelScope.launch {
-                safeQuoteOperation {
-                    remoteQuoteRepository.incrementShareCount(quoteId, it)
-                }
+        viewModelScope.launch {
+            try {
+                incrementShareCountUseCase.incrementShareCount(
+                    quoteId = quoteId,
+                    category = category
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "Error incrementing share count", e)
             }
-        } ?: run {
-            Log.e(TAG, "Category is null")
         }
     }
 
     fun onCategorySelected(category: QuoteCategory?) {
+        viewModelScope.launch {
+            resetCategorySelection(category)
+            category?.let { loadQuotes(it) }
+        }
+    }
+
+    private suspend fun resetCategorySelection(category: QuoteCategory?) {
         quoteStateHolder.updateSelectedCategory(category)
         lastLoadedQuote = null
         savedStateHandle[KEY_QUOTE_INDEX] = 0
+        clearQuotes()
+    }
+
+    private suspend fun clearQuotes() {
         quoteStateHolder.clearQuotes()
-        category?.let { loadQuotes(it) }
+    }
+
+    fun getStateHolder(): QuoteStateHolder {
+        return quoteStateHolder
     }
 }

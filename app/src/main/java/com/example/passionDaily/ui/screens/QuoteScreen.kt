@@ -37,10 +37,10 @@ import com.example.passionDaily.ui.components.LeftArrow
 import com.example.passionDaily.ui.components.QuoteAndPerson
 import com.example.passionDaily.ui.components.RightArrow
 import com.example.passionDaily.ui.components.toQuoteDisplay
+import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.ui.viewmodels.QuoteViewModel
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -48,7 +48,7 @@ import com.example.passionDaily.util.CommonNavigationBar
 fun QuoteScreen(
     favoritesViewModel: FavoritesViewModel,
     quoteViewModel: QuoteViewModel,
-    sharedSignInViewModel: SharedSignInViewModel,
+    quoteStateHolder: QuoteStateHolder,
     onNavigateToCategory: () -> Unit,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
@@ -56,10 +56,10 @@ fun QuoteScreen(
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
 ) {
-    val selectedCategory by quoteViewModel.selectedQuoteCategory.collectAsState()
+    val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
     val currentQuote by quoteViewModel.currentQuote.collectAsState()
-    val quotes by quoteViewModel.quotes.collectAsState()
-    val isQuoteLoading by quoteViewModel.isQuoteLoading.collectAsState()
+    val quotes by quoteStateHolder.quotes.collectAsState()
+    val isQuoteLoading by quoteStateHolder.isQuoteLoading.collectAsState()
 
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 

@@ -5,7 +5,6 @@ import com.example.passionDaily.util.QuoteCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -20,33 +19,51 @@ class QuoteStateHolder @Inject constructor() {
     private val _hasReachedEnd = MutableStateFlow(false)
     val hasReachedEnd: StateFlow<Boolean> = _hasReachedEnd.asStateFlow()
 
-    fun setHasReachedEnd(reached: Boolean) {
-        _hasReachedEnd.value = reached
+    private val _categories = MutableStateFlow(QuoteCategory.values().map { it.koreanName })
+    val categories: StateFlow<List<String>> = _categories.asStateFlow()
+
+    private val _isQuoteLoading = MutableStateFlow(false)
+    val isQuoteLoading: StateFlow<Boolean> = _isQuoteLoading.asStateFlow()
+
+    private val _hasQuoteReachedEnd = MutableStateFlow(false)
+    val hasQuoteReachedEnd: StateFlow<Boolean> = _hasQuoteReachedEnd.asStateFlow()
+
+    private var _currentQuoteIndex: StateFlow<Int>? = null
+    private var _currentQuote: StateFlow<Quote?>? = null
+
+    suspend fun updateSelectedCategory(category: QuoteCategory?) {
+        _selectedQuoteCategory.emit(category)
     }
 
-    fun updateQuotes(newQuotes: List<Quote>) {
-        _quotes.value = newQuotes
+    suspend fun updateQuotes(newQuotes: List<Quote>) {
+        _quotes.emit(newQuotes)
     }
 
-    fun addQuotes(additionalQuotes: List<Quote>, isNewCategory: Boolean = false) {
-        _quotes.value = if (isNewCategory) {
+    suspend fun updateHasReachedEnd(hasReachedEnd: Boolean) {
+        _hasReachedEnd.emit(hasReachedEnd)
+    }
+
+    suspend fun updateCategories(newCategories: List<String>) {
+        _categories.emit(newCategories)
+    }
+
+    suspend fun updateIsQuoteLoading(isLoading: Boolean) {
+        _isQuoteLoading.emit(isLoading)
+    }
+
+    suspend fun updateHasQuoteReachedEnd(hasReachedEnd: Boolean) {
+        _hasQuoteReachedEnd.emit(hasReachedEnd)
+    }
+
+    suspend fun addQuotes(additionalQuotes: List<Quote>, isNewCategory: Boolean = false) {
+        _quotes.emit(if (isNewCategory) {
             additionalQuotes  // 새 카테고리면 기존 목록을 새것으로 교체
         } else {
             _quotes.value + additionalQuotes  // 기존 목록에 새 명언들 추가
-        }
+        })
     }
 
-    fun updateSelectedCategory(category: QuoteCategory?) {
-        _selectedQuoteCategory.value = category
-    }
-
-
-    fun clearQuotes() {
-        _quotes.value = emptyList()
-    }
-
-    fun reset() {
-        _hasReachedEnd.value = false
-        clearQuotes()
+    suspend fun clearQuotes() {
+        _quotes.emit(emptyList())
     }
 }

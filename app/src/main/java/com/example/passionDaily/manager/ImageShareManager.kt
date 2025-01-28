@@ -68,9 +68,17 @@ class ImageShareManager @Inject constructor(
                     rootView.removeView(composeView)
                 }
             }
+        } catch (e: IllegalStateException) {
+            withContext(Dispatchers.Main) {
+                handleError(context, e, "유효하지 않은 Context입니다")
+            }
+        } catch (e: SecurityException) {
+            withContext(Dispatchers.Main) {
+                handleError(context, e, "파일 접근 권한이 없습니다")
+            }
         } catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                handleError(context, e)
+                handleError(context, e, "이미지 공유를 실패하였습니다.")
             }
         }
     }
@@ -160,11 +168,11 @@ class ImageShareManager @Inject constructor(
         context.startActivity(Intent.createChooser(intent, "명언 공유하기"))
     }
 
-    private fun handleError(context: Context, e: Exception) {
+    private fun handleError(context: Context, e: Exception, message: String) {
         Log.e("ImageShareManager", "Error sharing image", e)
         Toast.makeText(
             context,
-            "이미지 공유 중 오류가 발생했습니다: ${e.message}",
+            "이미지 공유 중 오류가 발생했습니다: ${message}",
             Toast.LENGTH_LONG
         ).show()
     }

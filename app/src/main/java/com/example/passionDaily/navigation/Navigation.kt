@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -55,7 +54,6 @@ fun SetupNavigation(
         quoteComposable(
             quoteViewModel = quoteViewModel,
             favoritesViewModel = favoritesViewModel,
-            sharedSignInViewModel = sharedSignInViewModel,
             onNavigateToCategory = { screens.navigateToCategory() },
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
@@ -87,7 +85,7 @@ fun SetupNavigation(
             QuoteScreen(
                 quoteViewModel = quoteViewModel,
                 favoritesViewModel = favoritesViewModel,
-                sharedSignInViewModel = sharedSignInViewModel,
+                quoteStateHolder = quoteViewModel.getStateHolder(),
                 onNavigateToCategory = { screens.navigateToCategory() },
                 onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
                 onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
@@ -99,6 +97,7 @@ fun SetupNavigation(
 
         categoryComposable(
             quoteViewModel = quoteViewModel,
+            quoteStateHolder = quoteViewModel.getStateHolder(),
             onNavigateToQuote = { screens.navigateToQuote() },
             onBack = { navController.popBackStack() }
         )
