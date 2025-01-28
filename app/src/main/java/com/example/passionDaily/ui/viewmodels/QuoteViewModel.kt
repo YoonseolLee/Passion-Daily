@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
@@ -13,6 +14,7 @@ import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.manager.QuoteCategoryManager
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.usecase.IncrementShareCountUseCase
 import com.example.passionDaily.usecase.LoadQuoteUseCase
@@ -21,12 +23,20 @@ import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
@@ -37,8 +47,10 @@ class QuoteViewModel @Inject constructor(
     private val loadQuoteUseCase: LoadQuoteUseCase,
     private val sharedQuoteUseCases: ShareQuoteUseCase,
     private val incrementShareCountUseCase: IncrementShareCountUseCase,
+    private val exceptionHandler: CoroutineExceptionHandler,
+    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val stringProvider: StringProvider,
 ) : ViewModel(), QuoteInteractionHandler {
-
     private val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     private val quotes = quoteStateHolder.quotes
     private val isQuoteLoading = quoteStateHolder.isQuoteLoading
@@ -52,37 +64,51 @@ class QuoteViewModel @Inject constructor(
 
 
     init {
-        viewModelScope.launch {
-            launch {
-                selectedQuoteCategory.value?.let { category ->
-                    loadQuotes(category)
-                }
+        viewModelScope.launch(exceptionHandler) {
+            selectedQuoteCategory.value?.let { category ->
+                loadQuotes(category)
             }
         }
     }
 
     fun navigateToQuoteWithCategory(quoteId: String, category: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
-                startQuoteLoading()
+                coroutineScope {
+                    withContext(Dispatchers.Main) {
+                        startQuoteLoading()
+                    }
+                }
 
-                // 카테고리 설정
-                val quoteCategory = initializeCategory(category) ?: return@launch
+                /**
+                 *  return@coroutineScope는 이 coroutineScope 블록만 종료
+                 *  바깥의 launch는 계속 실행됨 (finally 블록으로 이동)
+                 */
+                run {
+                    // 1. 카테고리 설정
+                    val quoteCategory = initializeCategory(category) ?: return@run
 
-                val beforeQuotes = fetchQuotesBeforeTarget(quoteId, quoteCategory)
-                val targetQuote =
-                    fetchTargetQuote(quoteId, quoteCategory) ?: return@launch
+                    // 2. 순차적 데이터 로딩
+                    val beforeQuotes = fetchQuotesBeforeTarget(quoteId, quoteCategory)
+                    val targetQuote = fetchTargetQuote(quoteId, quoteCategory) ?: return@run
 
-                setupInitialQuoteDisplay(beforeQuotes, targetQuote)
+                    // 3. UI 상태 업데이트
+                    withContext(Dispatchers.Main) {
+                        setupInitialQuoteDisplay(beforeQuotes, targetQuote)
+                    }
 
-                val result = fetchFurtherQuotes(quoteId, quoteCategory)
-                lastLoadedQuote = updateLastLoadedDocument(result.lastDocument)
-            } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, "Failed to load quotes", e)
+                    // 4. 추가 데이터 로딩
+                    val result = fetchFurtherQuotes(quoteId, quoteCategory)
+                    lastLoadedQuote = updateLastLoadedDocument(result.lastDocument)
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e(TAG, "Error navigating to quote", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found))
             } finally {
-                stopIsQuoteLoading()
+                withContext(Dispatchers.Main) {
+                    stopIsQuoteLoading()
+                }
             }
         }
     }
@@ -133,16 +159,18 @@ class QuoteViewModel @Inject constructor(
     fun loadInitialQuotes(category: QuoteCategory?) {
         viewModelScope.launch {
             try {
-                startQuoteLoading()
+                withContext(Dispatchers.Main) {
+                    startQuoteLoading()
+                }
                 category?.let {
                     loadQuotes(it)
                 }
             } catch (e: NetworkOnMainThreadException) {
-                Log.e(TAG, "Network operation on main thread", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
             } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, "Firestore error", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading initial quotes", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
             }
         }
     }
@@ -164,33 +192,43 @@ class QuoteViewModel @Inject constructor(
     private fun loadQuotes(category: QuoteCategory) {
         if (isQuoteLoading.value) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
-                startQuoteLoading()
-                val result = fetchQuotesByCategory(
-                    category = category,
-                    pageSize = PAGE_SIZE,
-                    lastLoadedQuote = lastLoadedQuote
-                )
-
-                if (result.quotes.isEmpty()) {
-                    setHasQuoteReachedEndTrue()
-                    return@launch
+                coroutineScope {
+                    withContext(Dispatchers.Main) {
+                        startQuoteLoading()
+                    }
                 }
+                run {
+                    val result = withTimeout(10_000L) {
+                        fetchQuotesByCategory(
+                            category = category,
+                            pageSize = PAGE_SIZE,
+                            lastLoadedQuote = lastLoadedQuote
+                        )
+                    }
 
-                lastLoadedQuote = result.lastDocument
-                addQuotesToState(
-                    result.quotes,
-                    isNewCategory = lastLoadedQuote == null
-                )
+                    if (result.quotes.isEmpty()) {
+                        setHasQuoteReachedEndTrue()
+                        return@run
+                    }
+
+                    lastLoadedQuote = result.lastDocument
+                    addQuotesToState(
+                        result.quotes,
+                        isNewCategory = lastLoadedQuote == null
+                    )
+                }
             } catch (e: NetworkOnMainThreadException) {
-                Log.e(TAG, "Network operation on main thread", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
             } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, "Firestore error", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading quotes", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
             } finally {
-                quoteStateHolder.updateIsQuoteLoading(false)
+                withContext(Dispatchers.Main) {
+                    quoteStateHolder.updateIsQuoteLoading(false)
+                }
             }
         }
     }
@@ -268,14 +306,18 @@ class QuoteViewModel @Inject constructor(
                 loadQuoteUseCase.updateQuotesAfterLoading(result) { newLastDocument ->
                     lastLoadedQuote = newLastDocument
                 }
+            } catch (e: NetworkOnMainThreadException) {
+                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading quotes: ${e.localizedMessage}")
+                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
             }
         }
     }
 
     fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
                 sharedQuoteUseCases.shareQuote(
                     context = context,
@@ -283,21 +325,27 @@ class QuoteViewModel @Inject constructor(
                     quoteText = quoteText,
                     author = author
                 )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e(TAG, "Error sharing quote", e)
+                Log.e(TAG, stringProvider.getString(R.string.error_sharing_quote), e)
             }
         }
     }
 
     fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
-        viewModelScope.launch {
-            try {
-                incrementShareCountUseCase.incrementShareCount(
-                    quoteId = quoteId,
-                    category = category
-                )
-            } catch (e: Exception) {
-                Log.e(TAG, "Error incrementing share count", e)
+        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+            supervisorScope {
+                try {
+                    incrementShareCountUseCase.incrementShareCount(
+                        quoteId = quoteId,
+                        category = category
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(TAG, stringProvider.getString(R.string.error_share_count_increment_fail), e)
+                }
             }
         }
     }
