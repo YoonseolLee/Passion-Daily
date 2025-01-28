@@ -14,9 +14,9 @@ import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.manager.QuoteCategoryManager
-import com.example.passionDaily.quote.action.QuoteViewModelActions
-import com.example.passionDaily.quote.state.QuoteStateHolder
-import com.example.passionDaily.quote.state.QuoteViewModelState
+import com.example.passionDaily.quote.base.QuoteViewModelActions
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.quote.base.QuoteViewModelState
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.usecase.IncrementShareCountUseCase
 import com.example.passionDaily.usecase.LoadQuoteUseCase

@@ -1,4 +1,4 @@
-package com.example.passionDaily.quote.state
+package com.example.passionDaily.quote.stateholder
 
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.util.QuoteCategory
