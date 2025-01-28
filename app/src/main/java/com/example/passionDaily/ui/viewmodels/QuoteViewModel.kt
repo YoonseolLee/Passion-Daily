@@ -14,8 +14,10 @@ import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.manager.QuoteCategoryManager
+import com.example.passionDaily.quote.action.QuoteViewModelActions
+import com.example.passionDaily.quote.state.QuoteStateHolder
+import com.example.passionDaily.quote.state.QuoteViewModelState
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.usecase.IncrementShareCountUseCase
 import com.example.passionDaily.usecase.LoadQuoteUseCase
 import com.example.passionDaily.usecase.ShareQuoteUseCase
@@ -50,28 +52,31 @@ class QuoteViewModel @Inject constructor(
     private val exceptionHandler: CoroutineExceptionHandler,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val stringProvider: StringProvider,
-) : ViewModel(), QuoteInteractionHandler {
-    private val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
-    private val quotes = quoteStateHolder.quotes
-    private val isQuoteLoading = quoteStateHolder.isQuoteLoading
-    private val hasQuoteReachedEnd = quoteStateHolder.hasQuoteReachedEnd
+) : ViewModel(), QuoteViewModelState, QuoteViewModelActions {
     private var lastLoadedQuote: DocumentSnapshot? = null
+    override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
+    override val isLoading: StateFlow<Boolean> = quoteStateHolder.isQuoteLoading
+    override val hasReachedEnd: StateFlow<Boolean> = quoteStateHolder.hasQuoteReachedEnd
+    override val selectedCategory: StateFlow<QuoteCategory?> = quoteStateHolder.selectedQuoteCategory
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
-    val currentQuote: StateFlow<Quote?> = combine(quotes, _currentQuoteIndex) { quotes, index ->
-        quotes.getOrNull(index)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    override val currentQuoteIndex: StateFlow<Int> = _currentQuoteIndex
+
+    override val currentQuote: StateFlow<Quote?> =
+        combine(quotes, _currentQuoteIndex) { quotes, index ->
+            quotes.getOrNull(index)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
 
     init {
         viewModelScope.launch(exceptionHandler) {
-            selectedQuoteCategory.value?.let { category ->
+            selectedCategory.value?.let { category ->
                 loadQuotes(category)
             }
         }
     }
 
-    fun navigateToQuoteWithCategory(quoteId: String, category: String) {
+    override fun navigateToQuoteWithCategory(quoteId: String, category: String) {
         viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
                 coroutineScope {
@@ -156,7 +161,7 @@ class QuoteViewModel @Inject constructor(
         savedStateHandle[KEY_QUOTE_INDEX] = updateQuoteIndex(beforeQuotes.size)
     }
 
-    fun loadInitialQuotes(category: QuoteCategory?) {
+    override fun loadInitialQuotes(category: QuoteCategory?) {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.Main) {
@@ -176,7 +181,7 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun previousQuote() {
-        if (_currentQuoteIndex.value == 0 && hasQuoteReachedEnd.value) {
+        if (_currentQuoteIndex.value == 0 && hasReachedEnd.value) {
             savedStateHandle[KEY_QUOTE_INDEX] = quotes.value.size - 1
             return
         }
@@ -189,8 +194,8 @@ class QuoteViewModel @Inject constructor(
         savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value - 1
     }
 
-    private fun loadQuotes(category: QuoteCategory) {
-        if (isQuoteLoading.value) return
+    override fun loadQuotes(category: QuoteCategory) {
+        if (isLoading.value) return
 
         viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
@@ -257,7 +262,7 @@ class QuoteViewModel @Inject constructor(
         val nextIndex = _currentQuoteIndex.value + 1
         val currentQuotes = quotes.value
 
-        if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasQuoteReachedEnd)) {
+        if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasReachedEnd)) {
             loadMoreQuotesIfNeeded()
             savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
             return
@@ -284,12 +289,12 @@ class QuoteViewModel @Inject constructor(
 
     private fun loadMoreQuotesIfNeeded() {
         if (loadQuoteUseCase.shouldLoadMoreQuotesIfNeeded(
-                selectedCategory = selectedQuoteCategory.value,
-                isQuoteLoading = isQuoteLoading.value,
+                selectedCategory = selectedCategory.value,
+                isQuoteLoading = isLoading.value,
                 lastLoadedQuote = lastLoadedQuote
             )
         ) {
-            selectedQuoteCategory.value?.let { category ->
+            selectedCategory.value?.let { category ->
                 loadQuotesAfter(category, quotes.value.last().id)
             }
         }
@@ -316,7 +321,7 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String) {
+    override fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String) {
         viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
                 sharedQuoteUseCases.shareQuote(
@@ -333,7 +338,7 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
+    override fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
         viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             supervisorScope {
                 try {
@@ -344,13 +349,17 @@ class QuoteViewModel @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.e(TAG, stringProvider.getString(R.string.error_share_count_increment_fail), e)
+                    Log.e(
+                        TAG,
+                        stringProvider.getString(R.string.error_share_count_increment_fail),
+                        e
+                    )
                 }
             }
         }
     }
 
-    fun onCategorySelected(category: QuoteCategory?) {
+    override fun onCategorySelected(category: QuoteCategory?) {
         viewModelScope.launch {
             resetCategorySelection(category)
             category?.let { loadQuotes(it) }
