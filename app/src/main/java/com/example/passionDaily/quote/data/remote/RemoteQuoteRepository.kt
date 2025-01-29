@@ -1,13 +1,14 @@
-package com.example.passionDaily.data.repository.remote
+package com.example.passionDaily.quote.data.remote
 
 import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 
 interface RemoteQuoteRepository {
-    suspend fun getQuotesByCategory(category: QuoteCategory, pageSize: Int, lastLoadedQuote: DocumentSnapshot?): RemoteQuoteRepositoryImpl.QuoteResult
+    suspend fun getQuotesByCategory(category: QuoteCategory, pageSize: Int, lastLoadedQuote: DocumentSnapshot?): QuoteResult
     suspend fun incrementShareCount(quoteId: String, category: QuoteCategory)
     suspend fun getQuoteById(quoteId: String, category: QuoteCategory): Quote?
     suspend fun getQuotesBeforeId(category: QuoteCategory, targetQuoteId: String, limit: Int): List<Quote>
-    suspend fun getQuotesAfterId(category: QuoteCategory, afterQuoteId: String, limit: Int): RemoteQuoteRepositoryImpl.QuoteResult
+    suspend fun getQuotesAfterId(category: QuoteCategory, afterQuoteId: String, limit: Int): QuoteResult
 }

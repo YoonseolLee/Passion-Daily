@@ -3,7 +3,7 @@ package com.example.passionDaily.manager
 import android.util.Log
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteRepository
+import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import java.time.LocalTime

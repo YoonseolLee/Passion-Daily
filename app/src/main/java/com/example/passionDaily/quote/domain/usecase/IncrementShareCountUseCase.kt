@@ -1,6 +1,6 @@
-package com.example.passionDaily.usecase
+package com.example.passionDaily.quote.domain.usecase
 
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
+import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.util.QuoteCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

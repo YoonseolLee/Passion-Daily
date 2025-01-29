@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.repository.local
+package com.example.passionDaily.quote.data.local
 
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.local.relation.QuoteWithQuoteCategory

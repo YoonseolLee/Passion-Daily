@@ -1,7 +1,6 @@
 package com.example.passionDaily.ui.viewmodels
 
 import android.database.sqlite.SQLiteConstraintException
-import android.database.sqlite.SQLiteException
 import android.os.NetworkOnMainThreadException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
@@ -15,7 +14,7 @@ import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteRepository
+import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.ui.state.QuoteStateHolder

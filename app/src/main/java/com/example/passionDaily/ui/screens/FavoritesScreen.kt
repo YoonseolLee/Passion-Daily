@@ -1,7 +1,6 @@
 package com.example.passionDaily.ui.screens
 
 import android.util.Log
-import android.view.View
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -12,7 +11,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,8 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -47,9 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
-import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.ui.components.BackgroundImage
 import com.example.passionDaily.ui.components.Buttons
 import com.example.passionDaily.ui.components.LeftArrow
@@ -57,7 +51,7 @@ import com.example.passionDaily.ui.components.QuoteAndPerson
 import com.example.passionDaily.ui.components.RightArrow
 import com.example.passionDaily.ui.components.toQuoteDisplay
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import com.example.passionDaily.util.QuoteCategory
 

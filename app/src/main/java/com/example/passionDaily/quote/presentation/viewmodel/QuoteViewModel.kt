@@ -1,4 +1,4 @@
-package com.example.passionDaily.ui.viewmodels
+package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
 import android.os.NetworkOnMainThreadException
@@ -11,16 +11,16 @@ import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_IND
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
+import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.manager.QuoteCategoryManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.base.QuoteViewModelState
+import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.usecase.IncrementShareCountUseCase
-import com.example.passionDaily.usecase.LoadQuoteUseCase
-import com.example.passionDaily.usecase.ShareQuoteUseCase
+import com.example.passionDaily.quote.domain.usecase.IncrementShareCountUseCase
+import com.example.passionDaily.quote.domain.usecase.LoadQuoteUseCase
+import com.example.passionDaily.quote.domain.usecase.ShareQuoteUseCase
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -136,7 +136,7 @@ class QuoteViewModel @Inject constructor(
     private suspend fun fetchFurtherQuotes(
         quoteId: String,
         category: QuoteCategory
-    ): RemoteQuoteRepositoryImpl.QuoteResult {
+    ): QuoteResult {
         return loadQuoteUseCase.loadFurtherQuotes(quoteId, category)
     }
 
@@ -242,7 +242,7 @@ class QuoteViewModel @Inject constructor(
         category: QuoteCategory,
         pageSize: Int,
         lastLoadedQuote: DocumentSnapshot?
-    ): RemoteQuoteRepositoryImpl.QuoteResult {
+    ): QuoteResult {
         return remoteQuoteRepository.getQuotesByCategory(
             category = category,
             pageSize = pageSize,

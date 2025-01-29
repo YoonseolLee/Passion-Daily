@@ -37,10 +37,10 @@ import com.example.passionDaily.ui.components.LeftArrow
 import com.example.passionDaily.ui.components.QuoteAndPerson
 import com.example.passionDaily.ui.components.RightArrow
 import com.example.passionDaily.ui.components.toQuoteDisplay
-import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.util.CommonNavigationBar
 
 @OptIn(ExperimentalAnimationApi::class)

@@ -20,7 +20,7 @@ import com.example.passionDaily.navigation.destinations.termsConsentComposable
 import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
 
 @Composable

@@ -1,4 +1,4 @@
-package com.example.passionDaily.data.repository.local
+package com.example.passionDaily.quote.data.local
 
 import com.example.passionDaily.data.local.dao.QuoteDao
 import com.example.passionDaily.data.local.entity.QuoteEntity

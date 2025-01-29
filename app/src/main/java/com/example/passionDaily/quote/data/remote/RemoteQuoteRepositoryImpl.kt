@@ -1,39 +1,26 @@
-package com.example.passionDaily.data.repository.remote
+package com.example.passionDaily.quote.data.remote
 
 import android.util.Log
-import com.example.passionDaily.data.local.dao.FavoriteDao
-import com.example.passionDaily.data.local.dao.QuoteCategoryDao
-import com.example.passionDaily.data.local.dao.QuoteDao
-import com.example.passionDaily.data.remote.model.FavoriteQuote
+import com.example.passionDaily.constants.RepositoryConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepositoryImpl
+import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.util.QuoteCategory
-import com.example.passionDaily.util.QuoteConstants
 import com.example.passionDaily.util.QuoteConstants.DEFAULT_TIMESTAMP
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class RemoteQuoteRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-) : RemoteQuoteRepository{
-
-    data class QuoteResult(
-        val quotes: List<Quote>,
-        val lastDocument: DocumentSnapshot?
-    )
+) : RemoteQuoteRepository {
 
     override suspend fun getQuotesBeforeId(
         category: QuoteCategory,
@@ -52,8 +39,11 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 .await()
 
             query.documents.map { it.toQuote() }
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Firestore error in getQuotesBeforeId: ${e.message}", e)
+            emptyList()
         } catch (e: Exception) {
-            Log.e("RemoteQuoteRepositoryImpl", "Error fetching quotes before ID", e)
+            Log.e(TAG, "Error in getQuotesBeforeId: ${e.message}", e)
             emptyList()
         }
     }
@@ -77,8 +67,11 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 quotes = query.documents.map { it.toQuote() },
                 lastDocument = query.documents.lastOrNull()
             )
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Firestore error in getQuotesAfterId: ${e.message}", e)
+            QuoteResult(emptyList(), null)
         } catch (e: Exception) {
-            Log.e("RemoteQuoteRepositoryImpl", "Error fetching quotes after ID", e)
+            Log.e(TAG, "Error in getQuotesAfterId: ${e.message}", e)
             QuoteResult(emptyList(), null)
         }
     }
@@ -89,12 +82,15 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         lastLoadedQuote: DocumentSnapshot?
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
-            Log.d("getQuotesByCategory", "getQuotesByCategory 진입")
+            Log.d(TAG, "Fetching quotes for category: ${category.name}")
             val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
             val result = query.get().await()
             result.toQuoteResult()
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Firestore error in getQuotesByCategory: ${e.message}", e)
+            throw e
         } catch (e: Exception) {
-            Log.e("getQuotesByCategory", "Error fetching quotes: ${e.message}")
+            Log.e(TAG, "Error in getQuotesByCategory: ${e.message}", e)
             throw e
         }
     }
@@ -106,7 +102,7 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
     ): Query {
         val categoryStr = category.getLowercaseCategoryId()
 
-        try {
+        return try {
             val baseQuery = firestore.collection("categories")
                 .document(categoryStr)
                 .collection("quotes")
@@ -116,17 +112,56 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 orderedQuery.startAfter(it)
             } ?: orderedQuery
 
-            val finalQuery = paginatedQuery.limit(pageSize.toLong())
-
-            return finalQuery
+            paginatedQuery.limit(pageSize.toLong())
         } catch (e: Exception) {
-            Log.e("RemoteQuoteRepository", "Error in buildCategoryQuery", e)
+            Log.e(TAG, "Error in buildCategoryQuery: ${e.message}", e)
             throw e
         }
     }
 
+    override suspend fun incrementShareCount(
+        quoteId: String,
+        category: QuoteCategory
+    ): Unit = withContext(Dispatchers.IO) {
+        try {
+            firestore.collection("categories")
+                .document(category.getLowercaseCategoryId())
+                .collection("quotes")
+                .document(quoteId)
+                .update("shareCount", FieldValue.increment(1))
+                .await()
+            Log.d(TAG, "Share count incremented for quote: $quoteId")
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Firestore error in incrementShareCount: ${e.message}", e)
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in incrementShareCount: ${e.message}", e)
+            throw e
+        }
+    }
+
+    override suspend fun getQuoteById(
+        quoteId: String,
+        category: QuoteCategory
+    ): Quote? = withContext(Dispatchers.IO) {
+        try {
+            firestore.collection("categories")
+                .document(category.name.lowercase())
+                .collection("quotes")
+                .document(quoteId)
+                .get()
+                .await()
+                .toQuote()
+        } catch (e: FirebaseFirestoreException) {
+            Log.e(TAG, "Firestore error in getQuoteById: ${e.message}", e)
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in getQuoteById: ${e.message}", e)
+            null
+        }
+    }
+
     private fun QuerySnapshot.toQuoteResult(): QuoteResult {
-        Log.d("toQuoteResult", "toQuoteResult 진입")
         return if (isEmpty) {
             QuoteResult(emptyList(), null)
         } else {
@@ -140,7 +175,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
     private fun DocumentSnapshot.toQuote(): Quote {
         return Quote(
             id = id,
-            category = QuoteCategory.fromEnglishName(getString("category") ?: "") ?: QuoteCategory.OTHER,
+            category = QuoteCategory.fromEnglishName(getString("category") ?: "")
+                ?: QuoteCategory.OTHER,
             text = getString("text") ?: "",
             person = getString("person") ?: "",
             imageUrl = getString("imageUrl") ?: "",
@@ -148,30 +184,5 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
             modifiedAt = getString("modifiedAt") ?: DEFAULT_TIMESTAMP,
             shareCount = getLong("shareCount")?.toInt() ?: 0
         )
-    }
-
-    override suspend fun incrementShareCount(quoteId: String, category: QuoteCategory): Unit = withContext(Dispatchers.IO) {
-        try {
-            firestore.collection("categories")
-                .document(category.getLowercaseCategoryId())
-                .collection("quotes")
-                .document(quoteId)
-                .update("shareCount", FieldValue.increment(1))
-                .await()
-            Log.d("Repository", "Share count incremented successfully for quoteId: $quoteId")
-        } catch (e: Exception) {
-            Log.e("Repository", "Error incrementing share count for quoteId: $quoteId", e)
-            throw e
-        }
-    }
-
-    override suspend fun getQuoteById(quoteId: String, category: QuoteCategory): Quote? {
-        return firestore.collection("categories")
-            .document(category.name.lowercase())
-            .collection("quotes")
-            .document(quoteId)
-            .get()
-            .await()
-            .toQuote()
     }
 }

@@ -50,7 +50,7 @@ import com.example.passionDaily.ui.theme.Dimens.topBarTopPadding
 import com.example.passionDaily.ui.theme.GuideTextColor
 import com.example.passionDaily.ui.theme.SelectedGray
 import com.example.passionDaily.ui.theme.UnselectedGray
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
 
 @Composable

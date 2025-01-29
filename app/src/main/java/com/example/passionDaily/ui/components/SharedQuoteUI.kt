@@ -1,7 +1,6 @@
 package com.example.passionDaily.ui.components
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
-import com.example.passionDaily.ui.viewmodels.QuoteViewModel
+import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
 

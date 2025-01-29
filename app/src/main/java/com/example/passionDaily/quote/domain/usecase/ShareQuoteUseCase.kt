@@ -1,4 +1,4 @@
-package com.example.passionDaily.usecase
+package com.example.passionDaily.quote.domain.usecase
 
 import android.content.Context
 import com.example.passionDaily.manager.ImageShareManager

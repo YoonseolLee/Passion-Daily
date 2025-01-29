@@ -1,12 +1,12 @@
-package com.example.passionDaily.usecase
+package com.example.passionDaily.quote.domain.usecase
 
 import android.util.Log
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepository
-import com.example.passionDaily.data.repository.remote.RemoteQuoteRepositoryImpl
-import com.example.passionDaily.ui.state.QuoteStateHolder
+import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
+import com.example.passionDaily.quote.domain.model.QuoteResult
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -76,7 +76,7 @@ class LoadQuoteUseCase @Inject constructor(
     suspend fun loadFurtherQuotes(
         quoteId: String,
         category: QuoteCategory
-    ): RemoteQuoteRepositoryImpl.QuoteResult {
+    ): QuoteResult {
         val afterQuotesResult = loadQuotesAfterTarget(quoteId, category)
         addAfterQuotes(afterQuotesResult)
         return afterQuotesResult
@@ -85,25 +85,23 @@ class LoadQuoteUseCase @Inject constructor(
     private suspend fun loadQuotesAfterTarget(
         quoteId: String,
         category: QuoteCategory
-    ): RemoteQuoteRepositoryImpl.QuoteResult {
+    ): QuoteResult {
         return try {
             remoteQuoteRepository.getQuotesAfterId(
                 category = category,
                 afterQuoteId = quoteId,
                 limit = PAGE_SIZE
-            ).also { result ->
-                Log.d(TAG, "Quotes after target: ${result.quotes.map { it.id }}")
-            }
+            )
         } catch (e: FirebaseFirestoreException) {
             Log.e(TAG, "Failed to load quotes after target", e)
-            RemoteQuoteRepositoryImpl.QuoteResult(emptyList(), null)
+            QuoteResult(emptyList(), null)
         } catch (e: Exception) {
             Log.e(TAG, "Unexpected error while loading quotes after target", e)
-            RemoteQuoteRepositoryImpl.QuoteResult(emptyList(), null)
+            QuoteResult(emptyList(), null)
         }
     }
 
-    private suspend fun addAfterQuotes(afterQuotesResult: RemoteQuoteRepositoryImpl.QuoteResult) {
+    private suspend fun addAfterQuotes(afterQuotesResult: QuoteResult) {
         if (afterQuotesResult.quotes.isNotEmpty()) {
             quoteStateHolder.addQuotes(afterQuotesResult.quotes, false)
         }
@@ -141,7 +139,7 @@ class LoadQuoteUseCase @Inject constructor(
         category: QuoteCategory,
         lastQuoteId: String,
         pageSize: Int
-    ): RemoteQuoteRepositoryImpl.QuoteResult {
+    ): QuoteResult {
         return remoteQuoteRepository.getQuotesAfterId(
             category = category,
             afterQuoteId = lastQuoteId,
@@ -150,7 +148,7 @@ class LoadQuoteUseCase @Inject constructor(
     }
 
     suspend fun updateQuotesAfterLoading(
-        result: RemoteQuoteRepositoryImpl.QuoteResult,
+        result: QuoteResult,
         lastLoadedQuote: (DocumentSnapshot?) -> Unit
     ) {
         if (result.quotes.isEmpty()) {
