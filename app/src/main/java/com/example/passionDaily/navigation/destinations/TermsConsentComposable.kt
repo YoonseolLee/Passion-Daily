@@ -6,7 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.passionDaily.ui.screens.TermsConsentScreen
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
+import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
     onNavigateToQuoteScreen: () -> Unit
@@ -18,11 +18,11 @@ fun NavGraphBuilder.termsConsentComposable(
         )
     ) { backStackEntry ->
         val userProfileJson = backStackEntry.arguments?.getString("userProfileJson")
-        val sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
+        val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
 
         TermsConsentScreen(
             userProfileJson = userProfileJson,
-            sharedSignInViewModel = sharedSignInViewModel,
+            sharedLogInViewModel = sharedLogInViewModel,
             onNavigateToQuoteScreen = onNavigateToQuoteScreen
         )
     }

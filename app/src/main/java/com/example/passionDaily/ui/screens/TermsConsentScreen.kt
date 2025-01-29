@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,21 +37,21 @@ import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
+import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
 
 @Composable
 fun TermsConsentScreen(
     userProfileJson: String? = null,
-    sharedSignInViewModel: SharedSignInViewModel = hiltViewModel(),
+    sharedLogInViewModel: SharedLogInViewModel = hiltViewModel(),
     onNavigateToQuoteScreen: () -> Unit
 ) {
-    val isAgreeAllChecked by sharedSignInViewModel.isAgreeAllChecked.collectAsState()
-    val consent by sharedSignInViewModel.consent.collectAsState()
-    val userProfileJsonV2 by sharedSignInViewModel.userProfileJsonV2.collectAsState()
+    val isAgreeAllChecked by sharedLogInViewModel.isAgreeAllChecked.collectAsState()
+    val consent by sharedLogInViewModel.consent.collectAsState()
+    val userProfileJsonV2 by sharedLogInViewModel.userProfileJsonV2.collectAsState()
 
     // 초기 userProfileJson 검증
     LaunchedEffect(userProfileJson) {
-        sharedSignInViewModel.verifyUserProfileJson(userProfileJson)
+        sharedLogInViewModel.verifyUserProfileJson(userProfileJson)
     }
 
     // userProfileJsonV2가 업데이트되면 화면 전환
@@ -87,7 +86,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.agree_all),
                 isChecked = isAgreeAllChecked,
-                onCheckedChange = { sharedSignInViewModel.toggleAgreeAll() },
+                onCheckedChange = { sharedLogInViewModel.toggleAgreeAll() },
                 isAgreeAll = true
             )
 
@@ -96,9 +95,9 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.terms_of_service),
                 isChecked = consent.termsOfService,
-                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("termsOfService") },
+                onCheckedChange = { sharedLogInViewModel.toggleIndividualItem("termsOfService") },
                 url = stringResource(id = R.string.terms_of_service_url),
-                sharedSignInViewModel = sharedSignInViewModel
+                sharedLogInViewModel = sharedLogInViewModel
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -106,9 +105,9 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.privacy_policy_agreement),
                 isChecked = consent.privacyPolicy,
-                onCheckedChange = { sharedSignInViewModel.toggleIndividualItem("privacyPolicy") },
+                onCheckedChange = { sharedLogInViewModel.toggleIndividualItem("privacyPolicy") },
                 url = stringResource(id = R.string.privacy_policy_url),
-                sharedSignInViewModel = sharedSignInViewModel
+                sharedLogInViewModel = sharedLogInViewModel
             )
         }
 
@@ -121,7 +120,7 @@ fun TermsConsentScreen(
             NextButton(
                 enabled = consent.termsOfService && consent.privacyPolicy,
                 onNextClicked = {
-                    sharedSignInViewModel.handleNextClick(userProfileJson)
+                    sharedLogInViewModel.handleNextClick(userProfileJson)
                     userProfileJsonV2?.let {
                         onNavigateToQuoteScreen()
                     }
@@ -138,7 +137,7 @@ fun CheckboxItem(
     onCheckedChange: () -> Unit,
     isAgreeAll: Boolean = false,
     url: String? = null,
-    sharedSignInViewModel: SharedSignInViewModel? = null
+    sharedLogInViewModel: SharedLogInViewModel? = null
 ) {
     val context = LocalContext.current
 
@@ -182,7 +181,7 @@ fun CheckboxItem(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .clickable {
-                        sharedSignInViewModel?.openUrl(context, url)
+                        sharedLogInViewModel?.openUrl(context, url)
                     },
                 style = TextStyle(
                     fontSize = 14.sp,

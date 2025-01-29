@@ -21,7 +21,7 @@ import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
+import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
 
 @Composable
 fun SetupNavigation(
@@ -33,14 +33,14 @@ fun SetupNavigation(
 
     val quoteViewModel: QuoteViewModel = hiltViewModel()
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
-    val sharedSignInViewModel: SharedSignInViewModel = hiltViewModel()
+    val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
         startDestination = "quote"
     ) {
         loginComposable(
-            sharedSignInViewModel = sharedSignInViewModel,
+            sharedLogInViewModel = sharedLogInViewModel,
             onNavigateToQuote = { screens.navigateToQuote(popUpTo = true) },
             onNavigateToTermsConsent = { userProfileJson ->
                 screens.navigateToTermsConsent(userProfileJson)

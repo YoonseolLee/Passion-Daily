@@ -41,26 +41,26 @@ import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.ui.viewmodels.AuthState
-import com.example.passionDaily.ui.viewmodels.SharedSignInViewModel
+import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
 
 @Composable
 fun LoginScreen(
-    sharedSignInViewModel: SharedSignInViewModel,
+    sharedLogInViewModel: SharedLogInViewModel,
     onNavigateToQuote: () -> Unit,
     onNavigateToTermsConsent: (String) -> Unit
 ) {
-    val authState by sharedSignInViewModel.authState.collectAsState()
-    val userProfileJson by sharedSignInViewModel.userProfileJson.collectAsState()
-    val isLoading by sharedSignInViewModel.isLoading.collectAsState()
+    val authState by sharedLogInViewModel.authState.collectAsState()
+    val userProfileJson by sharedLogInViewModel.userProfileJson.collectAsState()
+    val isLoading by sharedLogInViewModel.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
-        sharedSignInViewModel.navigationEvents.collect { event ->
+        sharedLogInViewModel.navigationEvents.collect { event ->
             when (event) {
-                is SharedSignInViewModel.NavigationEvent.NavigateToQuote -> {
+                is SharedLogInViewModel.NavigationEvent.NavigateToQuote -> {
                     onNavigateToQuote()
                 }
 
-                is SharedSignInViewModel.NavigationEvent.NavigateToTermsConsent -> {
+                is SharedLogInViewModel.NavigationEvent.NavigateToTermsConsent -> {
                     onNavigateToTermsConsent(event.userProfileJson)
                 }
             }
@@ -70,7 +70,7 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Authenticated -> {
-                sharedSignInViewModel.signalLoginSuccess()
+                sharedLogInViewModel.signalLoginSuccess()
             }
 
             is AuthState.RequiresConsent -> {
@@ -81,7 +81,7 @@ fun LoginScreen(
 
             is AuthState.Error -> {
                 val errorMessage = (authState as AuthState.Error).message
-                sharedSignInViewModel.signalLoginError(errorMessage)
+                sharedLogInViewModel.signalLoginError(errorMessage)
 
                 Log.e("LoginScreen", "Authentication failed: $errorMessage")
             }
@@ -93,7 +93,7 @@ fun LoginScreen(
     }
 
     LoginScreenContent(
-        sharedSignInViewModel = sharedSignInViewModel,
+        sharedLogInViewModel = sharedLogInViewModel,
     )
 
     if (isLoading) {
@@ -114,7 +114,7 @@ fun LoginScreen(
 
 @Composable
 fun LoginScreenContent(
-    sharedSignInViewModel: SharedSignInViewModel,
+    sharedLogInViewModel: SharedLogInViewModel,
 ) {
     Box(
         modifier =
@@ -146,7 +146,7 @@ fun LoginScreenContent(
         ) {
             LoginScreenGoogleLoginButton(
                 onGoogleLoginClick = {
-                    sharedSignInViewModel.signInWithGoogle()
+                    sharedLogInViewModel.signInWithGoogle()
                 }
             )
         }

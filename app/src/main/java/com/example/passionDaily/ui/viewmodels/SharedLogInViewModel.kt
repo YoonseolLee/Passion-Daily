@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SharedSignInViewModel @Inject constructor(
+class SharedLogInViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val authManager: AuthenticationManager,
     private val userProfileManager: UserProfileManager,
@@ -49,7 +49,7 @@ class SharedSignInViewModel @Inject constructor(
 ) : ViewModel() {
 
     private companion object {
-        const val TAG = "SharedSignInViewModel"
+        const val TAG = "SharedLogInViewModel"
     }
     val authState = authStateHolder.authState
 
