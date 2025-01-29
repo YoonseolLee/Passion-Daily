@@ -2,7 +2,7 @@ package com.example.passionDaily.manager
 
 import android.util.Log
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
-import com.example.passionDaily.ui.state.QuoteStateHolder
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import javax.inject.Inject
 

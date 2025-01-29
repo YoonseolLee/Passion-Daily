@@ -16,8 +16,8 @@ import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.ui.state.QuoteStateHolder
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -375,7 +375,7 @@ class FavoritesViewModel @Inject constructor(
     private fun mapExceptionToErrorMessage(e: Exception): String {
         return when (e) {
             is NetworkOnMainThreadException ->
-                stringProvider.getString(R.string.error_network_main_thread)
+                stringProvider.getString(R.string.error_network_retry)
 
             is FirebaseAuthInvalidUserException ->
                 stringProvider.getString(R.string.error_invalid_user)
@@ -384,10 +384,10 @@ class FavoritesViewModel @Inject constructor(
                 stringProvider.getString(R.string.error_duplicate_favorite)
 
             is FirebaseFirestoreException ->
-                stringProvider.getString(R.string.error_network)
+                stringProvider.getString(R.string.error_firebase_firestore)
 
             else ->
-                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+                stringProvider.getString(R.string.error_general, e.message.orEmpty())
         }
     }
 }

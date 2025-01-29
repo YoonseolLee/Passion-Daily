@@ -3,7 +3,6 @@ package com.example.passionDaily.ui.viewmodels
 import android.content.Context
 import android.os.NetworkOnMainThreadException
 import android.util.Log
-import android.widget.Toast
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
@@ -202,13 +201,11 @@ class SharedSignInViewModel @Inject constructor(
     }
 
     private fun showSignUpSuccessMessage() {
-        val signUpSuccessMessage = stringProvider.getString(R.string.signup_success)
-        toastManager.showToast(signUpSuccessMessage)
+        toastManager.showLoginSuccessMessage()
     }
 
     private fun showSignUpErrorMessage() {
-        val signUpErrorMessage = stringProvider.getString(R.string.error_database)
-        toastManager.showToast(signUpErrorMessage)
+        toastManager.showLoginErrorMessage()
     }
 
     fun openUrl(context: Context, url: String) {
@@ -236,16 +233,11 @@ class SharedSignInViewModel @Inject constructor(
     }
 
     private fun showLoginSuccessMessage() {
-        val message = stringProvider.getString(R.string.login_success)
-        toastManager.showToast(message)
+        showSignUpSuccessMessage()
     }
 
     private fun showLoginErrorMessage(errorMessage: String) {
-        val message = stringProvider.getString(
-            R.string.login_error_format,
-            errorMessage
-        )
-        toastManager.showToast(message, Toast.LENGTH_LONG)
+        showSignUpErrorMessage()
     }
 
     private suspend fun safeAuthCall(block: suspend () -> Unit) {
@@ -263,15 +255,15 @@ class SharedSignInViewModel @Inject constructor(
             is GetCredentialException ->
                 stringProvider.getString(R.string.error_credential_retrieval)
             is NetworkOnMainThreadException ->
-                stringProvider.getString(R.string.error_network_main_thread)
+                stringProvider.getString(R.string.error_network_retry)
             is FirebaseAuthInvalidCredentialsException ->
                 stringProvider.getString(R.string.error_invalid_credential, e.message.orEmpty())
             is FirebaseAuthException ->
                 stringProvider.getString(R.string.error_firebase_auth, e.message.orEmpty())
             is FirebaseFirestoreException ->
-                stringProvider.getString(R.string.error_network)
+                stringProvider.getString(R.string.error_network_retry)
             else ->
-                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+                stringProvider.getString(R.string.error_general, e.message.orEmpty())
         }
     }
 }

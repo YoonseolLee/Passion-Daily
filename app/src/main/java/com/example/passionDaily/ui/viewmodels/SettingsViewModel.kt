@@ -260,7 +260,7 @@ class SettingsViewModel @Inject constructor(
         } catch (e: Exception) {
             _isLoading.emit(false)
             Log.e(TAG, "Error in settings operation", e)
-            _toastMessage.emit(stringProvider.getString(R.string.error_unexpected))
+            _toastMessage.emit(stringProvider.getString(R.string.error_general))
         }
     }
 
@@ -268,7 +268,7 @@ class SettingsViewModel @Inject constructor(
         return when (e) {
             is FirebaseFirestoreException -> when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE ->
-                    stringProvider.getString(R.string.error_network)
+                    stringProvider.getString(R.string.error_network_retry)
 
                 FirebaseFirestoreException.Code.PERMISSION_DENIED ->
                     stringProvider.getString(R.string.error_permission_denied)
@@ -285,7 +285,7 @@ class SettingsViewModel @Inject constructor(
 
 
             else ->
-                stringProvider.getString(R.string.error_unexpected, e.message.orEmpty())
+                stringProvider.getString(R.string.error_general, e.message.orEmpty())
         }
     }
 }

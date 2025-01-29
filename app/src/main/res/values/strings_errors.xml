@@ -4,11 +4,10 @@
     <string name="error_credential_retrieval">자격 증명 가져오기 실패</string>
 
     <!-- 네트워크 관련 에러 -->
-    <string name="error_network_main_thread">메인 스레드에서 네트워크 작업이 시도되었습니다.</string>
-    <string name="error_network">네트워크 오류가 발생했습니다.</string>
+    <string name="error_network_retry">인터넷 연결을 확인하고 다시 시도해 주세요.</string>
 
     <!-- Firebase 인증 관련 에러 -->
-    <string name="error_firebase_firestore">Firestore에서 오류가 발생했습니다.</string>
+    <string name="error_firebase_firestore">데이터를 불러오는 중 문제가 발생했습니다.</string>
     <string name="error_invalid_credential">유효하지 않은 인증 정보입니다: %1$s</string>
     <string name="error_firebase_auth">Firebase 인증 실패: %1$s</string>
     <string name="error_firebase_user_null">Firebase user is null</string>
@@ -18,7 +17,7 @@
     <string name="error_database">DB 저장 중 오류가 발생했습니다. 다시 시도해주세요.</string>
 
     <!-- 예기치 못한 에러 -->
-    <string name="error_unexpected">예기치 못한 오류가 발생했습니다: %1$s</string>
+    <string name="error_general">예기치 못한 오류가 발생했습니다: %1$s</string>
 
     <!--   FavoritesViewModel -->
     <string name="error_invalid_user">유효하지 않은 사용자입니다.</string>
@@ -26,7 +25,7 @@
 
     <!--  QuoteViewModel  -->
     <string name="error_permission_denied">권한이 없어 요청을 처리할 수 없습니다.</string>
-    <string name="error_quote_not_found">명언을 불러올 수 없습니다.</string>
+    <string name="error_quote_not_found">현재 명언을 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="error_sharing_quote">명언을 공유할 수 없습니다.</string>
     <string name="error_share_count_increment_fail">명언 공유 횟수를 증가할 수 없습니다.</string>
 

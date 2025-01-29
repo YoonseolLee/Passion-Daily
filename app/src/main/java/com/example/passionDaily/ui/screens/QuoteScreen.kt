@@ -63,7 +63,6 @@ fun QuoteScreen(
 
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 
-
     LaunchedEffect(selectedCategory) {
         if (quotes.isEmpty()) {
             quoteViewModel.loadInitialQuotes(selectedCategory)

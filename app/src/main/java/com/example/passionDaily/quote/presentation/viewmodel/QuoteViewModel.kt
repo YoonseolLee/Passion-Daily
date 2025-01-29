@@ -1,18 +1,17 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
-import android.os.NetworkOnMainThreadException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.manager.QuoteCategoryManager
+import com.example.passionDaily.manager.ToastManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.base.QuoteViewModelState
@@ -39,6 +38,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.io.IOException
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
@@ -52,12 +52,14 @@ class QuoteViewModel @Inject constructor(
     private val exceptionHandler: CoroutineExceptionHandler,
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val stringProvider: StringProvider,
+    private val toastManager: ToastManager,
 ) : ViewModel(), QuoteViewModelState, QuoteViewModelActions {
     private var lastLoadedQuote: DocumentSnapshot? = null
     override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
     override val isLoading: StateFlow<Boolean> = quoteStateHolder.isQuoteLoading
     override val hasReachedEnd: StateFlow<Boolean> = quoteStateHolder.hasQuoteReachedEnd
-    override val selectedCategory: StateFlow<QuoteCategory?> = quoteStateHolder.selectedQuoteCategory
+    override val selectedCategory: StateFlow<QuoteCategory?> =
+        quoteStateHolder.selectedQuoteCategory
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
     override val currentQuoteIndex: StateFlow<Int> = _currentQuoteIndex
@@ -74,6 +76,77 @@ class QuoteViewModel @Inject constructor(
                 loadQuotes(category)
             }
         }
+    }
+
+    override fun loadQuotes(category: QuoteCategory) {
+        if (isLoading.value) return
+
+        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+            try {
+                coroutineScope {
+                    withContext(Dispatchers.Main) {
+                        startQuoteLoading()
+                    }
+                }
+                run {
+                    val result = withTimeout(10_000L) {
+                        fetchQuotesByCategory(
+                            category = category,
+                            pageSize = PAGE_SIZE,
+                            lastLoadedQuote = lastLoadedQuote
+                        )
+                    }
+
+                    if (result.quotes.isEmpty()) {
+                        setHasQuoteReachedEndTrue()
+                        return@run
+                    }
+
+                    lastLoadedQuote = result.lastDocument
+                    addQuotesToState(
+                        result.quotes,
+                        isNewCategory = lastLoadedQuote == null
+                    )
+                }
+            } catch (e: IOException) {
+                Log.e(TAG, "Network error details: ${e.message}", e)
+                toastManager.showNetworkErrorToast()
+            } catch (e: FirebaseFirestoreException) {
+                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
+                toastManager.showFirebaseErrorToast()
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
+            } finally {
+                withContext(Dispatchers.Main) {
+                    quoteStateHolder.updateIsQuoteLoading(false)
+                }
+            }
+        }
+    }
+
+    private suspend fun startQuoteLoading() {
+        quoteStateHolder.updateIsQuoteLoading(true)
+    }
+
+    private suspend fun fetchQuotesByCategory(
+        category: QuoteCategory,
+        pageSize: Int,
+        lastLoadedQuote: DocumentSnapshot?
+    ): QuoteResult {
+        return remoteQuoteRepository.getQuotesByCategory(
+            category = category,
+            pageSize = pageSize,
+            lastLoadedQuote = lastLoadedQuote
+        )
+    }
+
+    private suspend fun setHasQuoteReachedEndTrue() {
+        quoteStateHolder.updateHasQuoteReachedEnd(true)
+    }
+
+    private suspend fun addQuotesToState(quotes: List<Quote>, isNewCategory: Boolean) {
+        quoteStateHolder.addQuotes(quotes, isNewCategory)
     }
 
     override fun navigateToQuoteWithCategory(quoteId: String, category: String) {
@@ -109,7 +182,8 @@ class QuoteViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found))
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
             } finally {
                 withContext(Dispatchers.Main) {
                     stopIsQuoteLoading()
@@ -133,6 +207,11 @@ class QuoteViewModel @Inject constructor(
         return loadQuoteUseCase.loadTargetQuote(quoteId, category)
     }
 
+    private suspend fun setupInitialQuoteDisplay(beforeQuotes: List<Quote>, targetQuote: Quote) {
+        loadQuoteUseCase.replaceQuotes(beforeQuotes, targetQuote)
+        savedStateHandle[KEY_QUOTE_INDEX] = updateQuoteIndex(beforeQuotes.size)
+    }
+
     private suspend fun fetchFurtherQuotes(
         quoteId: String,
         category: QuoteCategory
@@ -148,17 +227,8 @@ class QuoteViewModel @Inject constructor(
         return loadQuoteUseCase.getUpdatedQuoteIndex(index)
     }
 
-    private suspend fun startQuoteLoading() {
-        quoteStateHolder.updateIsQuoteLoading(true)
-    }
-
     private suspend fun stopIsQuoteLoading() {
         quoteStateHolder.updateIsQuoteLoading(false)
-    }
-
-    private suspend fun setupInitialQuoteDisplay(beforeQuotes: List<Quote>, targetQuote: Quote) {
-        loadQuoteUseCase.replaceQuotes(beforeQuotes, targetQuote)
-        savedStateHandle[KEY_QUOTE_INDEX] = updateQuoteIndex(beforeQuotes.size)
     }
 
     override fun loadInitialQuotes(category: QuoteCategory?) {
@@ -170,12 +240,19 @@ class QuoteViewModel @Inject constructor(
                 category?.let {
                     loadQuotes(it)
                 }
-            } catch (e: NetworkOnMainThreadException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Network error details: ${e.message}", e)
+                toastManager.showNetworkErrorToast()
             } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
+                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
+                toastManager.showFirebaseErrorToast()
             } catch (e: Exception) {
-                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
+            } finally {
+                withContext(Dispatchers.Main) {
+                    quoteStateHolder.updateIsQuoteLoading(false)
+                }
             }
         }
     }
@@ -192,70 +269,6 @@ class QuoteViewModel @Inject constructor(
         }
 
         savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value - 1
-    }
-
-    override fun loadQuotes(category: QuoteCategory) {
-        if (isLoading.value) return
-
-        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
-            try {
-                coroutineScope {
-                    withContext(Dispatchers.Main) {
-                        startQuoteLoading()
-                    }
-                }
-                run {
-                    val result = withTimeout(10_000L) {
-                        fetchQuotesByCategory(
-                            category = category,
-                            pageSize = PAGE_SIZE,
-                            lastLoadedQuote = lastLoadedQuote
-                        )
-                    }
-
-                    if (result.quotes.isEmpty()) {
-                        setHasQuoteReachedEndTrue()
-                        return@run
-                    }
-
-                    lastLoadedQuote = result.lastDocument
-                    addQuotesToState(
-                        result.quotes,
-                        isNewCategory = lastLoadedQuote == null
-                    )
-                }
-            } catch (e: NetworkOnMainThreadException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
-            } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
-            } catch (e: Exception) {
-                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
-            } finally {
-                withContext(Dispatchers.Main) {
-                    quoteStateHolder.updateIsQuoteLoading(false)
-                }
-            }
-        }
-    }
-
-    private suspend fun fetchQuotesByCategory(
-        category: QuoteCategory,
-        pageSize: Int,
-        lastLoadedQuote: DocumentSnapshot?
-    ): QuoteResult {
-        return remoteQuoteRepository.getQuotesByCategory(
-            category = category,
-            pageSize = pageSize,
-            lastLoadedQuote = lastLoadedQuote
-        )
-    }
-
-    private suspend fun setHasQuoteReachedEndTrue() {
-        quoteStateHolder.updateHasQuoteReachedEnd(true)
-    }
-
-    private suspend fun addQuotesToState(quotes: List<Quote>, isNewCategory: Boolean) {
-        quoteStateHolder.addQuotes(quotes, isNewCategory)
     }
 
     override fun nextQuote() {
@@ -311,17 +324,29 @@ class QuoteViewModel @Inject constructor(
                 loadQuoteUseCase.updateQuotesAfterLoading(result) { newLastDocument ->
                     lastLoadedQuote = newLastDocument
                 }
-            } catch (e: NetworkOnMainThreadException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_network_main_thread), e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Network error details: ${e.message}", e)
+                toastManager.showNetworkErrorToast()
             } catch (e: FirebaseFirestoreException) {
-                Log.e(TAG, stringProvider.getString(R.string.error_firebase_firestore), e)
+                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
+                toastManager.showFirebaseErrorToast()
             } catch (e: Exception) {
-                Log.e(TAG, stringProvider.getString(R.string.error_quote_not_found), e)
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
+            } finally {
+                withContext(Dispatchers.Main) {
+                    quoteStateHolder.updateIsQuoteLoading(false)
+                }
             }
         }
     }
 
-    override fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String) {
+    override fun shareQuote(
+        context: Context,
+        imageUrl: String?,
+        quoteText: String,
+        author: String
+    ) {
         viewModelScope.launch(exceptionHandler + defaultDispatcher) {
             try {
                 sharedQuoteUseCases.shareQuote(
@@ -333,7 +358,8 @@ class QuoteViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e(TAG, stringProvider.getString(R.string.error_sharing_quote), e)
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
             }
         }
     }
@@ -349,11 +375,7 @@ class QuoteViewModel @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Log.e(
-                        TAG,
-                        stringProvider.getString(R.string.error_share_count_increment_fail),
-                        e
-                    )
+                    Log.e(TAG, "Exception details: ${e.message}", e)
                 }
             }
         }
