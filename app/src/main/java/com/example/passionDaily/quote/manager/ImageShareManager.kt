@@ -1,4 +1,4 @@
-package com.example.passionDaily.manager
+package com.example.passionDaily.quote.manager
 
 import android.app.Activity
 import android.content.Context

@@ -9,7 +9,6 @@ import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_IND
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.manager.QuoteCategoryManager
 import com.example.passionDaily.manager.ToastManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
@@ -18,14 +17,13 @@ import com.example.passionDaily.quote.base.QuoteViewModelState
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.quote.domain.usecase.IncrementShareCountUseCase
-import com.example.passionDaily.quote.domain.usecase.LoadQuoteUseCase
-import com.example.passionDaily.quote.domain.usecase.ShareQuoteUseCase
+import com.example.passionDaily.quote.manager.QuoteLoadingManager
+import com.example.passionDaily.quote.manager.ShareQuoteManager
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,8 +31,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -42,17 +38,14 @@ import java.io.IOException
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
-    private val remoteQuoteRepository: RemoteQuoteRepository,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
     private val categoryManager: QuoteCategoryManager,
-    private val loadQuoteUseCase: LoadQuoteUseCase,
-    private val sharedQuoteUseCases: ShareQuoteUseCase,
     private val incrementShareCountUseCase: IncrementShareCountUseCase,
-    private val exceptionHandler: CoroutineExceptionHandler,
-    private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val stringProvider: StringProvider,
     private val toastManager: ToastManager,
+    private val quoteLoadingManager: QuoteLoadingManager,
+    private val shareQuoteManager: ShareQuoteManager,
 ) : ViewModel(), QuoteViewModelState, QuoteViewModelActions {
     private var lastLoadedQuote: DocumentSnapshot? = null
     override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
@@ -71,7 +64,7 @@ class QuoteViewModel @Inject constructor(
 
 
     init {
-        viewModelScope.launch(exceptionHandler) {
+        viewModelScope.launch {
             selectedCategory.value?.let { category ->
                 loadQuotes(category)
             }
@@ -81,33 +74,28 @@ class QuoteViewModel @Inject constructor(
     override fun loadQuotes(category: QuoteCategory) {
         if (isLoading.value) return
 
-        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+        viewModelScope.launch() {
             try {
-                coroutineScope {
-                    withContext(Dispatchers.Main) {
-                        startQuoteLoading()
-                    }
-                }
-                run {
-                    val result = withTimeout(10_000L) {
-                        fetchQuotesByCategory(
-                            category = category,
-                            pageSize = PAGE_SIZE,
-                            lastLoadedQuote = lastLoadedQuote
-                        )
-                    }
+                quoteLoadingManager.startQuoteLoading()
 
-                    if (result.quotes.isEmpty()) {
-                        setHasQuoteReachedEndTrue()
-                        return@run
-                    }
-
-                    lastLoadedQuote = result.lastDocument
-                    addQuotesToState(
-                        result.quotes,
-                        isNewCategory = lastLoadedQuote == null
+                val result = withTimeout(10_000L) {
+                    quoteLoadingManager.fetchQuotesByCategory(
+                        category = category,
+                        pageSize = PAGE_SIZE,
+                        lastLoadedQuote = lastLoadedQuote
                     )
                 }
+
+                if (result.quotes.isEmpty()) {
+                    quoteLoadingManager.setHasQuoteReachedEndTrue()
+                    return@launch
+                }
+
+                lastLoadedQuote = result.lastDocument
+                quoteLoadingManager.addQuotesToState(
+                    result.quotes,
+                    isNewCategory = lastLoadedQuote == null
+                )
             } catch (e: IOException) {
                 Log.e(TAG, "Network error details: ${e.message}", e)
                 toastManager.showNetworkErrorToast()
@@ -118,53 +106,18 @@ class QuoteViewModel @Inject constructor(
                 Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                withContext(Dispatchers.Main) {
-                    quoteStateHolder.updateIsQuoteLoading(false)
-                }
+                quoteStateHolder.updateIsQuoteLoading(false)
             }
         }
     }
 
-    private suspend fun startQuoteLoading() {
-        quoteStateHolder.updateIsQuoteLoading(true)
-    }
-
-    private suspend fun fetchQuotesByCategory(
-        category: QuoteCategory,
-        pageSize: Int,
-        lastLoadedQuote: DocumentSnapshot?
-    ): QuoteResult {
-        return remoteQuoteRepository.getQuotesByCategory(
-            category = category,
-            pageSize = pageSize,
-            lastLoadedQuote = lastLoadedQuote
-        )
-    }
-
-    private suspend fun setHasQuoteReachedEndTrue() {
-        quoteStateHolder.updateHasQuoteReachedEnd(true)
-    }
-
-    private suspend fun addQuotesToState(quotes: List<Quote>, isNewCategory: Boolean) {
-        quoteStateHolder.addQuotes(quotes, isNewCategory)
-    }
-
     override fun navigateToQuoteWithCategory(quoteId: String, category: String) {
-        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+        viewModelScope.launch {
             try {
-                coroutineScope {
-                    withContext(Dispatchers.Main) {
-                        startQuoteLoading()
-                    }
-                }
-
-                /**
-                 *  return@coroutineScope는 이 coroutineScope 블록만 종료
-                 *  바깥의 launch는 계속 실행됨 (finally 블록으로 이동)
-                 */
+                quoteLoadingManager.startQuoteLoading()
                 run {
                     // 1. 카테고리 설정
-                    val quoteCategory = initializeCategory(category) ?: return@run
+                    val quoteCategory = categoryManager.setupCategory(category) ?: return@run
 
                     // 2. 순차적 데이터 로딩
                     val beforeQuotes = fetchQuotesBeforeTarget(quoteId, quoteCategory)
@@ -185,46 +138,40 @@ class QuoteViewModel @Inject constructor(
                 Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                withContext(Dispatchers.Main) {
-                    stopIsQuoteLoading()
-                }
+                stopIsQuoteLoading()
             }
         }
-    }
-
-    private suspend fun initializeCategory(category: String): QuoteCategory? {
-        return categoryManager.setupCategory(category)
     }
 
     private suspend fun fetchQuotesBeforeTarget(
         quoteId: String,
         category: QuoteCategory
     ): List<Quote> {
-        return loadQuoteUseCase.loadQuotesBeforeTarget(quoteId, category)
+        return quoteLoadingManager.loadQuotesBeforeTarget(quoteId, category)
     }
 
     private suspend fun fetchTargetQuote(quoteId: String, category: QuoteCategory): Quote? {
-        return loadQuoteUseCase.loadTargetQuote(quoteId, category)
+        return quoteLoadingManager.loadTargetQuote(quoteId, category)
     }
 
     private suspend fun setupInitialQuoteDisplay(beforeQuotes: List<Quote>, targetQuote: Quote) {
-        loadQuoteUseCase.replaceQuotes(beforeQuotes, targetQuote)
+        quoteLoadingManager.replaceQuotes(beforeQuotes, targetQuote)
         savedStateHandle[KEY_QUOTE_INDEX] = updateQuoteIndex(beforeQuotes.size)
+    }
+
+    private fun updateQuoteIndex(index: Int): Int {
+        return quoteLoadingManager.getUpdatedQuoteIndex(index)
     }
 
     private suspend fun fetchFurtherQuotes(
         quoteId: String,
         category: QuoteCategory
     ): QuoteResult {
-        return loadQuoteUseCase.loadFurtherQuotes(quoteId, category)
+        return quoteLoadingManager.loadFurtherQuotes(quoteId, category)
     }
 
     private fun updateLastLoadedDocument(document: DocumentSnapshot?): DocumentSnapshot? {
-        return loadQuoteUseCase.getUpdatedLastLoadedQuote(document)
-    }
-
-    private fun updateQuoteIndex(index: Int): Int {
-        return loadQuoteUseCase.getUpdatedQuoteIndex(index)
+        return quoteLoadingManager.getUpdatedLastLoadedQuote(document)
     }
 
     private suspend fun stopIsQuoteLoading() {
@@ -235,7 +182,7 @@ class QuoteViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.Main) {
-                    startQuoteLoading()
+                    quoteLoadingManager.startQuoteLoading()
                 }
                 category?.let {
                     loadQuotes(it)
@@ -250,9 +197,7 @@ class QuoteViewModel @Inject constructor(
                 Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                withContext(Dispatchers.Main) {
-                    quoteStateHolder.updateIsQuoteLoading(false)
-                }
+                quoteStateHolder.updateIsQuoteLoading(false)
             }
         }
     }
@@ -293,15 +238,19 @@ class QuoteViewModel @Inject constructor(
         currentQuotes: List<Quote>,
         hasQuoteReachedEnd: StateFlow<Boolean>
     ): Boolean {
-        return loadQuoteUseCase.shouldLoadMoreQuotes(nextIndex, currentQuotes, hasQuoteReachedEnd)
+        return quoteLoadingManager.shouldLoadMoreQuotes(
+            nextIndex,
+            currentQuotes,
+            hasQuoteReachedEnd
+        )
     }
 
     private fun isLastQuote(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
-        return loadQuoteUseCase.isLastQuote(nextIndex, currentQuotes)
+        return quoteLoadingManager.isLastQuote(nextIndex, currentQuotes)
     }
 
     private fun loadMoreQuotesIfNeeded() {
-        if (loadQuoteUseCase.shouldLoadMoreQuotesIfNeeded(
+        if (quoteLoadingManager.shouldLoadMoreQuotesIfNeeded(
                 selectedCategory = selectedCategory.value,
                 isQuoteLoading = isLoading.value,
                 lastLoadedQuote = lastLoadedQuote
@@ -316,12 +265,12 @@ class QuoteViewModel @Inject constructor(
     private fun loadQuotesAfter(category: QuoteCategory, lastQuoteId: String) {
         viewModelScope.launch {
             try {
-                val result = loadQuoteUseCase.loadQuotesAfter(
+                val result = quoteLoadingManager.loadQuotesAfter(
                     category = category,
                     lastQuoteId = lastQuoteId,
                     pageSize = PAGE_SIZE
                 )
-                loadQuoteUseCase.updateQuotesAfterLoading(result) { newLastDocument ->
+                quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
                     lastLoadedQuote = newLastDocument
                 }
             } catch (e: IOException) {
@@ -334,9 +283,7 @@ class QuoteViewModel @Inject constructor(
                 Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                withContext(Dispatchers.Main) {
-                    quoteStateHolder.updateIsQuoteLoading(false)
-                }
+                quoteStateHolder.updateIsQuoteLoading(false)
             }
         }
     }
@@ -347,9 +294,9 @@ class QuoteViewModel @Inject constructor(
         quoteText: String,
         author: String
     ) {
-        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+        viewModelScope.launch {
             try {
-                sharedQuoteUseCases.shareQuote(
+                shareQuoteManager.shareQuote(
                     context = context,
                     imageUrl = imageUrl,
                     quoteText = quoteText,
@@ -365,10 +312,10 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
-        viewModelScope.launch(exceptionHandler + defaultDispatcher) {
+        viewModelScope.launch {
             supervisorScope {
                 try {
-                    incrementShareCountUseCase.incrementShareCount(
+                    shareQuoteManager.incrementShareCount(
                         quoteId = quoteId,
                         category = category
                     )
