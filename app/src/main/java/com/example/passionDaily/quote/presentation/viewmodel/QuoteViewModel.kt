@@ -221,8 +221,35 @@ class QuoteViewModel @Inject constructor(
         val currentQuotes = quotes.value
 
         if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasReachedEnd)) {
-            loadMoreQuotesIfNeeded()
-            savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
+            viewModelScope.launch {
+                quoteLoadingManager.startQuoteLoading()
+
+                try {
+                    // 1. 먼저 다음 페이지의 데이터를 로드
+                    val result = withTimeout(10_000L) {  // 타임아웃 설정
+                        selectedCategory.value?.let { category ->
+                            quoteLoadingManager.loadQuotesAfter(
+                                category = category,
+                                lastQuoteId = quotes.value.last().id,
+                                pageSize = PAGE_SIZE
+                            )
+                        }
+                    }
+
+                    // 2. 데이터 로드가 성공적으로 완료된 후에만 인덱스를 업데이트
+                    result?.let {
+                        quoteLoadingManager.updateQuotesAfterLoading(it) { newLastDocument ->
+                            lastLoadedQuote = newLastDocument
+                        }
+                        savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to load next page: ${e.message}", e)
+                    toastManager.showGeneralErrorToast()
+                } finally {
+                    quoteStateHolder.updateIsQuoteLoading(false)
+                }
+            }
             return
         }
 
