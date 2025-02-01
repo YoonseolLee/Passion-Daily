@@ -20,6 +20,9 @@ interface QuoteLoadingManager {
     suspend fun loadTargetQuote(quoteId: String, category: QuoteCategory): Quote?
     suspend fun replaceQuotes(beforeQuotes: List<Quote>, targetQuote: Quote)
     suspend fun loadFurtherQuotes(quoteId: String, category: QuoteCategory): QuoteResult
+    suspend fun clearQuotes()
+    suspend fun updateSelectedCategory(category: QuoteCategory?)
+
     fun getUpdatedLastLoadedQuote(document: DocumentSnapshot?): DocumentSnapshot?
     fun getUpdatedQuoteIndex(index: Int): Int
     fun shouldLoadMoreQuotes(
@@ -29,11 +32,6 @@ interface QuoteLoadingManager {
     ): Boolean
 
     fun isLastQuote(nextIndex: Int, currentQuotes: List<Quote>): Boolean
-    fun shouldLoadMoreQuotesIfNeeded(
-        selectedCategory: QuoteCategory?,
-        isQuoteLoading: Boolean,
-        lastLoadedQuote: DocumentSnapshot?
-    ): Boolean
 
     suspend fun loadQuotesAfter(
         category: QuoteCategory,

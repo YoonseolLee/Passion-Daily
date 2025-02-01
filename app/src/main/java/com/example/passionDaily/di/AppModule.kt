@@ -12,7 +12,6 @@ import com.example.passionDaily.quote.domain.usecase.QuoteLoadingUseCase
 import com.example.passionDaily.quote.domain.usecase.QuoteStateManagementUseCase
 import com.example.passionDaily.quote.manager.QuoteLoadingManager
 import com.example.passionDaily.quote.manager.QuoteLoadingManagerImpl
-import com.example.passionDaily.quote.manager.QuoteShareManager
 import com.example.passionDaily.quote.manager.ShareQuoteManager
 import com.example.passionDaily.quote.manager.ShareQuoteManagerImpl
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder

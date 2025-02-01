@@ -3,6 +3,7 @@ package com.example.passionDaily.quote.domain.usecase
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import javax.inject.Inject
 
@@ -27,5 +28,13 @@ class QuoteListManagementUseCase @Inject constructor(
 
     fun getUpdatedLastLoadedQuote(document: DocumentSnapshot?): DocumentSnapshot? {
         return document
+    }
+
+    suspend fun clearQuotes() {
+        quoteStateHolder.clearQuotes()
+    }
+
+    suspend fun updateSelectedCategory(category: QuoteCategory?) {
+        quoteStateHolder.updateSelectedCategory(category)
     }
 }
