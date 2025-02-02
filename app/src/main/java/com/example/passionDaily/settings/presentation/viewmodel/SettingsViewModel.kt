@@ -45,11 +45,8 @@ class SettingsViewModel @Inject constructor(
     private val _notificationTime = MutableStateFlow<LocalTime?>(null)
     val notificationTime: StateFlow<LocalTime?> = _notificationTime.asStateFlow()
 
-    private val _navigateToQuote = MutableStateFlow(false)
-    val navigateToQuote: StateFlow<Boolean> = _navigateToQuote.asStateFlow()
-
-    private val _navigateToLogin = MutableStateFlow(false)
-    val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
+//    private val _navigateToLogin = MutableStateFlow(false)
+//    val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
 
     private val _showWithdrawalDialog = MutableStateFlow(false)
     val showWithdrawalDialog: StateFlow<Boolean> = _showWithdrawalDialog.asStateFlow()
@@ -163,7 +160,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun logIn() {
+    fun logIn(onLogInSuccess: () -> Unit) {
         viewModelScope.launch {
             _isLoading.emit(true)
             try {
@@ -171,7 +168,7 @@ class SettingsViewModel @Inject constructor(
                     toastManager.showAlreadyLoggedInErrorToast()
                     return@launch
                 }
-                _navigateToLogin.emit(true)
+                onLogInSuccess()
             } catch (e: Exception) {
                 Log.e(TAG, "Error during login", e)
                 toastManager.showGeneralErrorToast()
@@ -181,7 +178,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun logOut() {
+    fun logOut(onLogoutSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 if (getCurrentUser() == null) {
@@ -195,7 +192,7 @@ class SettingsViewModel @Inject constructor(
                 alarmScheduler.cancelExistingAlarm()
 
                 toastManager.showLogoutSuccessToast()
-                _navigateToQuote.emit(true)
+                onLogoutSuccess()
             } catch (e: Exception) {
                 Log.e(TAG, "Error during logout", e)
                 toastManager.showGeneralErrorToast()
@@ -205,7 +202,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun withdrawUser() {
+    fun withdrawUser(onWithDrawlSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
         viewModelScope.launch {
             _isLoading.emit(true)
             try {
@@ -221,11 +218,11 @@ class SettingsViewModel @Inject constructor(
                     try {
                         currentUser.delete().await()
                         toastManager.showWithDrawlSuccessToast()
-                        _navigateToQuote.emit(true)
+                        onWithDrawlSuccess()
                     } catch (e: FirebaseAuthRecentLoginRequiredException) {
                         toastManager.showReLoginForWithDrawlToast()
                         Firebase.auth.signOut()
-                        _navigateToLogin.emit(true)
+                        onReLogInRequired()
                     }
                 }
             } catch (e: Exception) {
@@ -248,18 +245,6 @@ class SettingsViewModel @Inject constructor(
             Log.e(TAG, "Error creating email intent", e)
             toastManager.showGeneralErrorToast()
             null
-        }
-    }
-
-    fun onNavigatedToQuote() {
-        viewModelScope.launch {
-            _navigateToQuote.emit(false)
-        }
-    }
-
-    fun onNavigatedToLogin() {
-        viewModelScope.launch {
-            _navigateToLogin.emit(false)
         }
     }
 

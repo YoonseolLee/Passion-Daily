@@ -76,9 +76,9 @@ fun SettingsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsScreenContent(
             viewModel = settingsViewModel,
-            onFavoritesClicked = onNavigateToFavorites,
-            onQuoteClicked = onNavigateToQuote,
-            onSettingsClicked = onNavigateToSettings,
+            onNavigateToFavorites = onNavigateToFavorites,
+            onNavigateToQuote = onNavigateToQuote,
+            onNavigateToSettings = onNavigateToSettings,
             onNavigateToLogin = onNavigateToLogin,
             currentScreen = currentScreen,
             onBack = onBack
@@ -104,9 +104,9 @@ fun SettingsScreen(
 @Composable
 fun SettingsScreenContent(
     viewModel: SettingsViewModel,
-    onFavoritesClicked: () -> Unit,
-    onQuoteClicked: () -> Unit,
-    onSettingsClicked: () -> Unit,
+    onNavigateToFavorites: () -> Unit,
+    onNavigateToQuote: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit
@@ -156,7 +156,7 @@ fun SettingsScreenContent(
             // 프로필 설정
             SettingsCategoryHeader(text = "계정 관리")
             if (currentUser != null) {
-                LogoutSettingItem(viewModel, onNavigateToQuote = onQuoteClicked)
+                LogoutSettingItem(viewModel, onNavigateToQuote = onNavigateToQuote)
             } else {
                 LoginSettingItem(viewModel, onNavigateToLogin = onNavigateToLogin)
             }
@@ -164,7 +164,7 @@ fun SettingsScreenContent(
             // 고객 지원
             SettingsCategoryHeader(text = "고객 지원")
             SuggestionSettingItem(viewModel)
-            WithdrawalSettingItem(viewModel, onNavigateToQuote = onQuoteClicked)
+            WithdrawalSettingItem(viewModel, onNavigateToQuote = onNavigateToQuote, onNavigateToLogin = onNavigateToLogin)
             VersionInfoItem()
 
             // 약관 및 개인정보
@@ -181,9 +181,9 @@ fun SettingsScreenContent(
         ) {
             CommonNavigationBar(
                 currentScreen = currentScreen,
-                onNavigateToFavorites = onFavoritesClicked,
-                onNavigateToQuote = onQuoteClicked,
-                onNavigateToSettings = onSettingsClicked
+                onNavigateToFavorites = onNavigateToFavorites,
+                onNavigateToQuote = onNavigateToQuote,
+                onNavigateToSettings = onNavigateToSettings
             )
         }
     }
@@ -357,19 +357,9 @@ fun LoginSettingItem(
     viewModel: SettingsViewModel,
     onNavigateToLogin: () -> Unit
 ) {
-    val context = LocalContext.current
-    val shouldNavigateToLogin by viewModel.navigateToLogin.collectAsState()
-
-    LaunchedEffect(shouldNavigateToLogin) {
-        if (shouldNavigateToLogin) {
-            onNavigateToLogin()
-            viewModel.onNavigatedToLogin()
-        }
-    }
-
     CommonNavigationItem(
         title = "로그인",
-        onClick = { viewModel.logIn() }
+        onClick = { viewModel.logIn(onNavigateToLogin) }
     )
 }
 
@@ -378,16 +368,7 @@ fun LogoutSettingItem(
     viewModel: SettingsViewModel,
     onNavigateToQuote: () -> Unit
 ) {
-    val context = LocalContext.current
-    val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(shouldNavigateToQuote) {
-        if (shouldNavigateToQuote) {
-            onNavigateToQuote()
-            viewModel.onNavigatedToQuote()
-        }
-    }
 
     if (showLogoutDialog) {
         AlertDialog(
@@ -415,7 +396,7 @@ fun LogoutSettingItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.logOut()
+                        viewModel.logOut(onNavigateToQuote)
                         showLogoutDialog = false
                     }
                 ) {
@@ -466,18 +447,10 @@ fun SuggestionSettingItem(
 @Composable
 fun WithdrawalSettingItem(
     viewModel: SettingsViewModel,
-    onNavigateToQuote: () -> Unit
+    onNavigateToQuote: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
-    val context = LocalContext.current
-    val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
     val showWithdrawalDialog by viewModel.showWithdrawalDialog.collectAsState()
-
-    LaunchedEffect(shouldNavigateToQuote) {
-        if (shouldNavigateToQuote) {
-            onNavigateToQuote()
-            viewModel.onNavigatedToQuote()
-        }
-    }
 
     if (showWithdrawalDialog) {
         AlertDialog(
@@ -504,7 +477,7 @@ fun WithdrawalSettingItem(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.withdrawUser()
+                        viewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
                         viewModel.updateShowWithdrawalDialog(false)
                     }
                 ) {
