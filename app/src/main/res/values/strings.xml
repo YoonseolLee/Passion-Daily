@@ -13,7 +13,6 @@
     <string name="terms_consent">이용 약관 동의</string>
     <string name="agree_all">전체 동의하기</string>
     <string name="view">보기</string>
-    <string name="terms_of_service">서비스 이용 약관</string>
     <string name="privacy_policy_agreement">개인정보 수집 및 이용 동의</string>
     <string name="marketing_consent">(선택) 마케팅 정보 수신 동의</string>
     <string name="next">다음</string>
@@ -51,4 +50,28 @@
     <string name="choose_email_app">이메일 앱 선택</string>
     <string name="success_send_email">이메일 전송에 성공했습니다.</string>
     <string name="hour_pattern">HH:mm</string>
+
+    <string name="notification_settings">알림 설정</string>
+    <string name="account_management">계정 관리</string>
+    <string name="customer_support">고객 지원</string>
+    <string name="terms_and_privacy">약관 및 개인정보 처리 동의</string>
+    <string name="notification_permission_needed">알림 권한 필요</string>
+    <string name="notification_permission_message">알림을 받으려면 설정에서 알림 권한을 허용해주세요.</string>
+    <string name="go_to_settings">설정으로 이동</string>
+    <string name="cancel">취소</string>
+    <string name="daily_quote_notification_setting">명언 알림 설정</string>
+    <string name="notification_time_setting">알림 시간 설정</string>
+    <string name="default_notification_time">08:00</string>
+    <string name="login">로그인</string>
+    <string name="logout">로그아웃</string>
+    <string name="logout_confirmation_message">로그아웃하시면 데일리 명언 알림을 받지 못하실 거예요.\n그래도 로그아웃하시겠어요?</string>
+    <string name="send_suggestion">제안 보내기</string>
+    <string name="withdrawal">회원 탈퇴</string>
+    <string name="withdrawal_confirmation_message">정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.</string>
+    <string name="yes">네</string>
+    <string name="no">아니오</string>
+    <string name="version_info">버전 정보</string>
+    <string name="terms_of_service">이용약관</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="unknown">Unknown</string>
 </resources>

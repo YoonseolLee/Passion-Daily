@@ -60,6 +60,7 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.passionDaily.ui.theme.PrimaryColor
 
@@ -149,12 +150,12 @@ fun SettingsScreenContent(
                 .padding(top = 89.dp)
         ) {
             // 알림 설정
-            SettingsCategoryHeader(text = "알림 설정")
+            SettingsCategoryHeader(text = stringResource(id = R.string.notification_settings))
             NotificationSettingItem(viewModel)
             NotificationTimeSettingItem(viewModel)
 
             // 프로필 설정
-            SettingsCategoryHeader(text = "계정 관리")
+            SettingsCategoryHeader(text = stringResource(id = R.string.account_management))
             if (currentUser != null) {
                 LogoutSettingItem(viewModel, onNavigateToQuote = onNavigateToQuote)
             } else {
@@ -162,13 +163,17 @@ fun SettingsScreenContent(
             }
 
             // 고객 지원
-            SettingsCategoryHeader(text = "고객 지원")
+            SettingsCategoryHeader(text = stringResource(id = R.string.customer_support))
             SuggestionSettingItem(viewModel)
-            WithdrawalSettingItem(viewModel, onNavigateToQuote = onNavigateToQuote, onNavigateToLogin = onNavigateToLogin)
+            WithdrawalSettingItem(
+                viewModel,
+                onNavigateToQuote = onNavigateToQuote,
+                onNavigateToLogin = onNavigateToLogin
+            )
             VersionInfoItem()
 
             // 약관 및 개인정보
-            SettingsCategoryHeader(text = "약관 및 개인정보 처리 동의")
+            SettingsCategoryHeader(text = stringResource(id = R.string.terms_and_privacy))
             TermsSettingItem()
             PrivacySettingItem()
         }
@@ -213,7 +218,7 @@ fun SettingsCategoryHeader(text: String) {
 @Composable
 fun SettingsHeaderText() {
     Text(
-        text = "설정",
+        text = stringResource(R.string.settings),
         style = TextStyle(
             fontSize = 18.sp,
             fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
@@ -235,7 +240,7 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
             onDismissRequest = { showSettingsDialog = false },
             title = {
                 Text(
-                    text = "알림 권한 필요",
+                    text = stringResource(R.string.notification_permission_needed),
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -245,7 +250,7 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
             },
             text = {
                 Text(
-                    text = "알림을 받으려면 설정에서 알림 권한을 허용해주세요.",
+                    text = stringResource(R.string.notification_permission_message),
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = Color(0xFFE1E1E1),
@@ -263,7 +268,7 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
                     }
                 ) {
                     Text(
-                        "설정으로 이동",
+                        stringResource(R.string.go_to_settings),
                         color = Color(0xFFFF6B6B)
                     )
                 }
@@ -273,7 +278,7 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
                     onClick = { showSettingsDialog = false }
                 ) {
                     Text(
-                        "취소",
+                        stringResource(R.string.cancel),
                         color = Color(0xFFCCCCCC)
                     )
                 }
@@ -288,7 +293,7 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
     }
 
     CommonToggleItem(
-        title = "데일리 명언 알림 설정",
+        title = stringResource(R.string.daily_quote_notification_setting),
         isEnabled = isEnabled,
         onToggleChange = { enabled ->
             if (currentUser == null) {
@@ -346,8 +351,8 @@ fun NotificationTimeSettingItem(
     }
 
     CommonTextItem(
-        title = "알림 시간 설정",
-        value = notificationTime?.toString() ?: "08:00",
+        title = stringResource(R.string.notification_time_setting),
+        value = notificationTime?.toString() ?: stringResource(R.string.default_notification_time),
         onClick = { showTimePickerDialog = true }
     )
 }
@@ -358,7 +363,7 @@ fun LoginSettingItem(
     onNavigateToLogin: () -> Unit
 ) {
     CommonNavigationItem(
-        title = "로그인",
+        title = stringResource(R.string.login),
         onClick = { viewModel.logIn(onNavigateToLogin) }
     )
 }
@@ -375,7 +380,7 @@ fun LogoutSettingItem(
             onDismissRequest = { showLogoutDialog = false },
             title = {
                 Text(
-                    text = "로그아웃",
+                    text = stringResource(R.string.logout),
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -385,7 +390,7 @@ fun LogoutSettingItem(
             },
             text = {
                 Text(
-                    text = "로그아웃하시면 데일리 명언 알림을 받지 못하실 거예요.\n그래도 로그아웃하시겠어요?",
+                    text = stringResource(R.string.logout_confirmation_message),
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = Color(0xFFE1E1E1),
@@ -401,7 +406,7 @@ fun LogoutSettingItem(
                     }
                 ) {
                     Text(
-                        "로그아웃",
+                        stringResource(R.string.logout),
                         color = Color(0xFFFF6B6B)
                     )
                 }
@@ -411,7 +416,7 @@ fun LogoutSettingItem(
                     onClick = { showLogoutDialog = false }
                 ) {
                     Text(
-                        "취소",
+                        stringResource(R.string.cancel),
                         color = Color(0xFFCCCCCC)
                     )
                 }
@@ -422,7 +427,7 @@ fun LogoutSettingItem(
     }
 
     CommonNavigationItem(
-        title = "로그아웃",
+        title = stringResource(R.string.logout),
         onClick = { showLogoutDialog = true }
     )
 }
@@ -435,7 +440,7 @@ fun SuggestionSettingItem(
     val context = LocalContext.current
 
     CommonIconItem(
-        title = "제안 보내기",
+        title = stringResource(R.string.send_suggestion),
         icon = Icons.Filled.Email,
         onClick = {
             val intent = viewModel.createEmailIntent()
@@ -457,7 +462,7 @@ fun WithdrawalSettingItem(
             onDismissRequest = { viewModel.updateShowWithdrawalDialog(false) },
             title = {
                 Text(
-                    text = "회원 탈퇴",
+                    text = stringResource(R.string.withdrawal),
                     style = TextStyle(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -467,7 +472,7 @@ fun WithdrawalSettingItem(
             },
             text = {
                 Text(
-                    text = "정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.",
+                    text = stringResource(R.string.withdrawal_confirmation_message),
                     style = TextStyle(
                         fontSize = 15.sp,
                         color = Color(0xFFFFFFFF)
@@ -482,7 +487,7 @@ fun WithdrawalSettingItem(
                     }
                 ) {
                     Text(
-                        "네",
+                        stringResource(R.string.yes),
                         color = Color(0xFFFFFFFF)
                     )
                 }
@@ -492,7 +497,7 @@ fun WithdrawalSettingItem(
                     onClick = { viewModel.updateShowWithdrawalDialog(false) }
                 ) {
                     Text(
-                        "아니오",
+                        stringResource(R.string.no),
                         color = Color(0xFFFFFFFF)
                     )
                 }
@@ -503,7 +508,7 @@ fun WithdrawalSettingItem(
     }
 
     CommonNavigationItem(
-        title = "회원 탈퇴",
+        title = stringResource(R.string.withdrawal),
         onClick = { viewModel.updateShowWithdrawalDialog(true) }
     )
 }
@@ -521,7 +526,7 @@ fun VersionInfoItem() {
     }
 
     CommonTextItem(
-        title = "버전 정보",
+        title = stringResource(R.string.version_info),
         value = versionName,
         onClick = {}
     )
@@ -530,14 +535,13 @@ fun VersionInfoItem() {
 @Composable
 fun TermsSettingItem() {
     val context = LocalContext.current
+    val termsUrl = stringResource(R.string.terms_of_service_url)
+    val termsTitle = stringResource(R.string.terms_of_service)
 
     CommonNavigationItem(
-        title = "이용약관",
+        title = termsTitle,
         onClick = {
-            openUrl(
-                context,
-                "https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0"
-            )
+            openUrl(context, termsUrl)
         }
     )
 }
@@ -545,14 +549,13 @@ fun TermsSettingItem() {
 @Composable
 fun PrivacySettingItem() {
     val context = LocalContext.current
+    val privacyUrl = stringResource(R.string.privacy_policy_url)
+    val privacyTitle = stringResource(R.string.privacy_policy)
 
     CommonNavigationItem(
-        title = "개인정보 처리방침",
+        title = privacyTitle,
         onClick = {
-            openUrl(
-                context,
-                "https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0"
-            )
+            openUrl(context, privacyUrl)
         }
     )
 }
