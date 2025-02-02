@@ -1,6 +1,9 @@
 package com.example.passionDaily.data.repository.remote
 
 import android.util.Log
+import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.TAG
+import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.FAVORITES_COLLECTION
+import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.USERS_COLLECTION
 import com.example.passionDaily.data.remote.model.User
 import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.util.TimeUtil
@@ -16,11 +19,6 @@ class RemoteUserRepositoryImpl @Inject constructor(
     private val timeUtil: TimeUtil
 ) : RemoteUserRepository {
 
-    companion object {
-        private const val USERS_COLLECTION = "users"
-        private const val FAVORITES_COLLECTION = "favorites"
-    }
-
     override suspend fun isUserRegistered(userId: String): Boolean {
         return try {
             val documentSnapshot = firestore.collection("users")
@@ -28,11 +26,7 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 .get()
                 .await()
             documentSnapshot.exists()
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("Firestore", "Firestore exception occurred: ${e.message}", e)
-            false
         } catch (e: Exception) {
-            Log.e("Firestore", "Error checking user registration: ${e.message}", e)
             false
         }
     }
@@ -50,12 +44,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 ).await()
 
             Log.d("UserSync", "Successfully updated lastSyncDate and lastLoginDate: $now")
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("UserSync", "Firestore exception while updating dates: ${e.message}", e)
-            throw e
         } catch (e: Exception) {
-            Log.e("UserSync", "Failed to update dates in Firestore: ${e.message}", e)
-            throw e
+            handleError(e)
         }
     }
 
@@ -64,12 +54,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
             val firestoreUser = fetchFirestoreUser(userId)
             val userEntity = localUserRepository.convertToUserEntity(firestoreUser)
             localUserRepository.saveUser(userEntity)
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("UserSync", "Firestore exception during sync: ${e.message}", e)
-            throw e
         } catch (e: Exception) {
-            Log.e("UserSync", "Failed to sync user data: ${e.message}", e)
-            throw e
+            handleError(e)
         }
     }
 
@@ -81,13 +67,9 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 .await()
 
             userDoc.toObject(User::class.java)
-                ?: throw IllegalStateException("User data not found in Firestore for ID: $userId")
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("Firestore", "Firestore exception while fetching user: ${e.message}", e)
-            throw e
+                ?: throw IllegalStateException()
         } catch (e: Exception) {
-            Log.e("Firestore", "Error fetching user data: ${e.message}", e)
-            throw e
+            handleError(e)  // 이 함수는 항상 예외를 던지므로, User를 반환할 필요가 없음
         }
     }
 
@@ -108,12 +90,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
 
                 Log.d("Firestore", "User profile added successfully: $userId")
             }
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("Firestore", "Failed to add user profile: ${e.message}")
-            throw e
         } catch (e: Exception) {
-            Log.e("Firestore", "Error adding user profile: ${e.message}")
-            throw e
+            handleError(e)
         }
     }
 
@@ -141,12 +119,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
             firestore.collection(USERS_COLLECTION)
                 .document(userId)
                 .update("notificationEnabled", enabled)
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("Firestore", "Failed to add user profile: ${e.message}")
-            throw e
         } catch (e: Exception) {
-            Log.e("Firestore", "Error adding user profile: ${e.message}")
-            throw e
+            handleError(e)
         }
     }
 
@@ -155,21 +129,27 @@ class RemoteUserRepositoryImpl @Inject constructor(
             firestore.collection(USERS_COLLECTION)
                 .document(userId)
                 .update("notificationTime", newTime)
-        } catch (e: FirebaseFirestoreException) {
-            Log.e("Firestore", "Failed to add user profile: ${e.message}")
-            throw e
         } catch (e: Exception) {
-            Log.e(
-                "RemoteUserRepository",
-                "Error updating notification time in Firestore: ${e.message}",
-                e
-            )
-            throw e
+            handleError(e)
         }
     }
 
     override suspend fun deleteUserDataFromFirestore(userId: String) {
         firestore.collection(USERS_COLLECTION).document(userId).delete().await()
         firestore.collection(FAVORITES_COLLECTION).document(userId).delete().await()
+    }
+
+    private fun handleError(e: Exception): Nothing {
+        when (e) {
+            is FirebaseFirestoreException -> {
+                Log.e(TAG, "Firestore error", e)
+                throw e
+            }
+
+            else -> {
+                Log.e(TAG, "Unexpected error", e)
+                throw e
+            }
+        }
     }
 }
