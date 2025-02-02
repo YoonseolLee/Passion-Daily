@@ -30,6 +30,8 @@ import com.example.passionDaily.quote.manager.ShareQuoteManager
 import com.example.passionDaily.quote.manager.ShareQuoteManagerImpl
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.stateholder.QuoteStateHolderImpl
+import com.example.passionDaily.settings.stateholder.SettingsStateHolder
+import com.example.passionDaily.settings.stateholder.SettingsStateHolderImpl
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module
@@ -101,15 +103,11 @@ object AppModule {
         return ShareQuoteManagerImpl(imageShareUseCase, incrementShareCountUseCase)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideFavoritesLoadingManager(
-//        saveFavoritesToLocalUseCase: SaveFavoritesToLocalUseCase,
-//        saveFavoritesToRemoteUseCase: SaveFavoritesToRemoteUseCase,
-//        getRequiredDataUseCase: GetRequiredDataUseCase
-//    ) : FavoritesLoadingManager {
-//        return Favorite
-//    }
+    @Provides
+    @Singleton
+    fun provideSettingsStateHolder(): SettingsStateHolder {
+        return SettingsStateHolderImpl()
+    }
 
     @Provides
     @Singleton

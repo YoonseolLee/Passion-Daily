@@ -1,12 +1,9 @@
 package com.example.passionDaily.settings.presentation.viewmodel
 
-import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.SettingsManager
@@ -14,14 +11,11 @@ import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.settings.manager.EmailManager
+import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.net.URISyntaxException
@@ -36,35 +30,24 @@ class SettingsViewModel @Inject constructor(
     private val authManager: AuthenticationManager,
     private val authStateHolder: AuthStateHolder,
     private val toastManager: ToastManager,
-    private val emailManager: EmailManager
+    private val emailManager: EmailManager,
+    private val settingsStateHolder: SettingsStateHolder
 ) : ViewModel() {
 
-    private val _notificationEnabled = MutableStateFlow(false)
-    val notificationEnabled: StateFlow<Boolean> = _notificationEnabled.asStateFlow()
-
-    private val _notificationTime = MutableStateFlow<LocalTime?>(null)
-    val notificationTime: StateFlow<LocalTime?> = _notificationTime.asStateFlow()
-
-//    private val _navigateToLogin = MutableStateFlow(false)
-//    val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
-
-    private val _showWithdrawalDialog = MutableStateFlow(false)
-    val showWithdrawalDialog: StateFlow<Boolean> = _showWithdrawalDialog.asStateFlow()
-
-    private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
-    val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
+    val notificationEnabled = settingsStateHolder.notificationEnabled
+    val notificationTime = settingsStateHolder.notificationTime
+    val showWithdrawalDialog = settingsStateHolder.showWithdrawalDialog
+    val currentUser = settingsStateHolder.currentUser
+    val isLoading = settingsStateHolder.isLoading
 
     init {
-        _currentUser.value = getCurrentUser()
+        settingsStateHolder.updateCurrentUser(getCurrentUser())
 
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
                     settingsManager.loadUserSettings(userId) { enabled, timeStr ->
-                        _notificationEnabled.emit(enabled)
+                        settingsStateHolder.updateNotificationEnabled(enabled)
                         parseAndSetNotificationTime(timeStr)
                     }
                 } catch (e: Exception) {
@@ -81,7 +64,7 @@ class SettingsViewModel @Inject constructor(
         timeStr?.let {
             try {
                 val time = LocalTime.parse(timeStr)
-                _notificationTime.emit(time)
+                settingsStateHolder.updateNotificationTime(time)
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing notification time", e)
                 toastManager.showGeneralErrorToast()
@@ -102,7 +85,7 @@ class SettingsViewModel @Inject constructor(
                     settingsManager.updateNotificationSettings(userId, enabled)
                     Log.d(TAG, "Successfully updated notification settings in databases")
 
-                    _notificationEnabled.emit(enabled)
+                    settingsStateHolder.updateNotificationEnabled(enabled)
                     Log.d(TAG, "Updated local notification enabled state")
 
                     // 알람 관리
@@ -139,7 +122,7 @@ class SettingsViewModel @Inject constructor(
                     settingsManager.updateNotificationTime(userId, newTime)
                     Log.d(TAG, "Successfully updated notification time in databases")
 
-                    _notificationTime.emit(newTime)
+                    settingsStateHolder.updateNotificationTime(newTime)
                     Log.d(TAG, "Updated local notification time state")
 
                     // 알림이 활성화된 상태에서만 알람 재설정
@@ -162,7 +145,7 @@ class SettingsViewModel @Inject constructor(
 
     fun logIn(onLogInSuccess: () -> Unit) {
         viewModelScope.launch {
-            _isLoading.emit(true)
+            settingsStateHolder.updateIsLoading(true)
             try {
                 if (getCurrentUser() != null) {
                     toastManager.showAlreadyLoggedInErrorToast()
@@ -173,7 +156,7 @@ class SettingsViewModel @Inject constructor(
                 Log.e(TAG, "Error during login", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                _isLoading.emit(false)
+                settingsStateHolder.updateIsLoading(false)
             }
         }
     }
@@ -186,7 +169,7 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
-                _isLoading.emit(true)
+                settingsStateHolder.updateIsLoading(true)
                 authManager.clearCredentials()
                 authStateHolder.setUnAuthenticated()
                 alarmScheduler.cancelExistingAlarm()
@@ -197,14 +180,14 @@ class SettingsViewModel @Inject constructor(
                 Log.e(TAG, "Error during logout", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                _isLoading.emit(false)
+                settingsStateHolder.updateIsLoading(false)
             }
         }
     }
 
     fun withdrawUser(onWithDrawlSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
         viewModelScope.launch {
-            _isLoading.emit(true)
+            settingsStateHolder.updateIsLoading(true)
             try {
                 val user = getCurrentUser() ?: run {
                     toastManager.showLogInRequiredErrorToast()
@@ -229,7 +212,7 @@ class SettingsViewModel @Inject constructor(
                 Log.e(TAG, "Error during withdrawal", e)
                 toastManager.showGeneralErrorToast()
             } finally {
-                _isLoading.emit(false)
+                settingsStateHolder.updateIsLoading(false)
             }
         }
     }
@@ -250,7 +233,7 @@ class SettingsViewModel @Inject constructor(
 
     fun updateShowWithdrawalDialog(show: Boolean) {
         viewModelScope.launch {
-            _showWithdrawalDialog.emit(show)
+            settingsStateHolder.updateShowWithdrawalDialog(show)
         }
     }
 }
