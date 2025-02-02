@@ -6,5 +6,5 @@ import com.example.passionDaily.util.QuoteCategory
 
 interface QuoteSharingActions : QuoteViewModelActions {
     override fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String)
-    override fun incrementShareCount(quoteId: String, category: QuoteCategory?)
+    override fun incrementShareCount(quoteId: String, category: QuoteCategory)
 }

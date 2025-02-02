@@ -10,8 +10,8 @@ import javax.inject.Singleton
 
 @Singleton
 class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
-    private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory?>(QuoteCategory.EFFORT)
-    override val selectedQuoteCategory: StateFlow<QuoteCategory?> =
+    private val _selectedQuoteCategory = MutableStateFlow<QuoteCategory>(QuoteCategory.EFFORT)
+    override val selectedQuoteCategory: StateFlow<QuoteCategory> =
         _selectedQuoteCategory.asStateFlow()
 
     private val _quotes = MutableStateFlow<List<Quote>>(emptyList())
@@ -26,7 +26,7 @@ class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
     private val _hasQuoteReachedEnd = MutableStateFlow(false)
     override val hasQuoteReachedEnd: StateFlow<Boolean> = _hasQuoteReachedEnd.asStateFlow()
 
-    override suspend fun updateSelectedCategory(category: QuoteCategory?) {
+    override suspend fun updateSelectedCategory(category: QuoteCategory) {
         _selectedQuoteCategory.emit(category)
     }
 

@@ -34,7 +34,7 @@ class QuoteListManagementUseCase @Inject constructor(
         quoteStateHolder.clearQuotes()
     }
 
-    suspend fun updateSelectedCategory(category: QuoteCategory?) {
+    suspend fun updateSelectedCategory(category: QuoteCategory) {
         quoteStateHolder.updateSelectedCategory(category)
     }
 }

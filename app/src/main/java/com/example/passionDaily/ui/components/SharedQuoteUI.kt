@@ -233,7 +233,7 @@ fun Buttons(
     quoteViewModel: QuoteViewModel,
     favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
-    category: QuoteCategory? = null,
+    category: QuoteCategory,
     onRequireLogin: () -> Unit,
     quoteDisplay: QuoteDisplay
 ) {
@@ -256,7 +256,7 @@ fun Buttons(
 fun ShareButton(
     quoteViewModel: QuoteViewModel,
     currentQuoteId: String,
-    category: QuoteCategory? = null,
+    category: QuoteCategory,
     quoteDisplay: QuoteDisplay
 ) {
     val context = LocalContext.current
@@ -286,7 +286,7 @@ fun ShareButton(
 fun AddToFavoritesButton(
     favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
-    category: QuoteCategory?,
+    category: QuoteCategory,
     onRequireLogin: () -> Unit,
 ) {
     val context = LocalContext.current

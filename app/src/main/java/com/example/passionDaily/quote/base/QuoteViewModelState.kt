@@ -9,6 +9,6 @@ interface QuoteViewModelState {
     val currentQuote: StateFlow<Quote?>
     val isLoading: StateFlow<Boolean>
     val hasReachedEnd: StateFlow<Boolean>
-    val selectedCategory: StateFlow<QuoteCategory?>
+    val selectedCategory: StateFlow<QuoteCategory>
     val currentQuoteIndex: StateFlow<Int>
 }

@@ -23,7 +23,7 @@ class LoadFavoritesUseCase @Inject constructor(
         favoritesStateHolder.updateFavoriteQuotes(quotes)
     }
 
-    fun isFavorite(
+    fun checkIfQuoteIsFavorite(
         userId: String,
         quoteId: String,
         categoryId: Int
@@ -39,4 +39,6 @@ class LoadFavoritesUseCase @Inject constructor(
                 } ?: false
             }
     }
+
+
 }

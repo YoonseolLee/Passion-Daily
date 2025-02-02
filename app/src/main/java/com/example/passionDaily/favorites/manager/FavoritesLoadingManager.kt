@@ -21,7 +21,7 @@ class FavoritesLoadingManager @Inject constructor(
         return loadFavoritesUseCase.getAllFavorites(currentUserId)
     }
 
-    fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
-        return loadFavoritesUseCase.isFavorite(userId, quoteId, categoryId)
+    fun checkIfQuoteIsFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
+        return loadFavoritesUseCase.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
     }
 }

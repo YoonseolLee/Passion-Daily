@@ -21,7 +21,7 @@ interface QuoteLoadingManager {
     suspend fun replaceQuotes(beforeQuotes: List<Quote>, targetQuote: Quote)
     suspend fun loadFurtherQuotes(quoteId: String, category: QuoteCategory): QuoteResult
     suspend fun clearQuotes()
-    suspend fun updateSelectedCategory(category: QuoteCategory?)
+    suspend fun updateSelectedCategory(category: QuoteCategory)
 
     fun getUpdatedLastLoadedQuote(document: DocumentSnapshot?): DocumentSnapshot?
     fun getUpdatedQuoteIndex(index: Int): Int

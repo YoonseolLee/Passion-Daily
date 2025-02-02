@@ -3,8 +3,13 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.work.WorkManager
+import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
+import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
+import com.example.passionDaily.favorites.usecase.GetRequiredDataUseCase
+import com.example.passionDaily.favorites.usecase.SaveFavoritesToLocalUseCase
+import com.example.passionDaily.favorites.usecase.SaveFavoritesToRemoteUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.AuthStateHolderImpl
 import com.example.passionDaily.login.stateholder.ConsentStateHolder
@@ -95,6 +100,16 @@ object AppModule {
     ): ShareQuoteManager {
         return ShareQuoteManagerImpl(imageShareUseCase, incrementShareCountUseCase)
     }
+
+//    @Provides
+//    @Singleton
+//    fun provideFavoritesLoadingManager(
+//        saveFavoritesToLocalUseCase: SaveFavoritesToLocalUseCase,
+//        saveFavoritesToRemoteUseCase: SaveFavoritesToRemoteUseCase,
+//        getRequiredDataUseCase: GetRequiredDataUseCase
+//    ) : FavoritesLoadingManager {
+//        return Favorite
+//    }
 
     @Provides
     @Singleton

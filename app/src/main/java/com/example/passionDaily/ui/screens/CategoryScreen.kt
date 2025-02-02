@@ -61,13 +61,17 @@ fun CategoryScreen(
     onBack: () -> Unit,
 ) {
     val categories by quoteStateHolder.categories.collectAsState()
-    val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
+    val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState(
+        initial = QuoteCategory.EFFORT
+    )
 
     CategoryScreenContent(
         categories = categories,
         selectedCategory = selectedCategory,
         onCategoryClicked = { category ->
-            quoteViewModel.onCategorySelected(category)
+            if (category != null) {
+                quoteViewModel.onCategorySelected(category)
+            }
             onNavigateToQuote()
         },
         onBack = onBack

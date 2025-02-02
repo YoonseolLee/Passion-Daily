@@ -20,6 +20,7 @@ import com.example.passionDaily.data.repository.local.LocalQuoteCategoryReposito
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
 import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
+import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.resources.StringProvider
@@ -59,7 +60,8 @@ class FavoritesViewModel @Inject constructor(
     private val stringProvider: StringProvider,
     private val firebaseAuth: FirebaseAuth,
     private val favoritesStateHolder: FavoritesStateHolder,
-    private val favoritesLoadingManager: FavoritesLoadingManager
+    private val favoritesLoadingManager: FavoritesLoadingManager,
+    private val favoritesSavingManager: FavoritesSavingManager
 ) : ViewModel(), QuoteInteractionHandler {
 
     private var userId: String = firebaseAuth.currentUser?.uid ?: ""
@@ -86,17 +88,10 @@ class FavoritesViewModel @Inject constructor(
     }
 
     private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> {
-        Log.d(TAG, "Creating flow with favoriteQuotes: $favoriteQuotes")
         return combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
-            Log.d(TAG, "Combining - quotes: $quotes, index: $index")
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
-
-//    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
-//        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
-//            quotes.getOrNull(index)
-//        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         viewModelScope.launch {
@@ -147,35 +142,6 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-
-//    override fun previousQuote() {
-//        try {
-//            val quotesSize = favoriteQuotes.value.size
-//            savedStateHandle[KEY_FAVORITE_INDEX] = when {
-//                _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
-//                _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
-//                else -> _currentQuoteIndex.value - 1
-//            }
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error in previousQuote: ${e.message}")
-//        }
-//    }
-//
-//    override fun nextQuote() {
-//        try {
-//            val nextIndex = _currentQuoteIndex.value + 1
-//            val quotesSize = favoriteQuotes.value.size
-//
-//            savedStateHandle[KEY_FAVORITE_INDEX] = when {
-//                nextIndex >= quotesSize && quotesSize > 0 -> 0
-//                nextIndex >= quotesSize -> _currentQuoteIndex.value
-//                else -> nextIndex
-//            }
-//        } catch (e: Exception) {
-//            Log.e(TAG, "Error in nextQuote: ${e.message}")
-//        }
-//    }
-
     fun loadFavorites() {
         val currentUserId = userId
         if (currentUserId.isEmpty()) {
@@ -214,21 +180,61 @@ class FavoritesViewModel @Inject constructor(
     }
 
     fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
-        return favoritesLoadingManager.isFavorite(userId, quoteId, categoryId)
+        return favoritesLoadingManager.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
     }
 
     fun addFavorite(quoteId: String) {
-        val (currentUser, selectedCategory, currentQuote) = getRequiredDataForAdd(quoteId) ?: return
+        val (currentUser, selectedCategory, currentQuote) = getRequiredDataForAdd(
+            firebaseAuth.currentUser,
+            selectedQuoteCategory.value,
+            quotes.value,
+            quoteId
+        ) ?: return
 
         viewModelScope.launch {
             try {
-                coroutineScope {
-                    launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
-                    launch { addFavoriteToFirestore(currentUser, quoteId) }
-                }
+                launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
+                launch { addFavoriteToFirestore(currentUser, quoteId, selectedCategory) }
                 loadFavorites()
             } catch (e: Exception) {
                 Log.e(TAG, "Error adding favorite: ${e.message}")
+            }
+        }
+    }
+
+    private fun getRequiredDataForAdd(
+        currentUser: FirebaseUser?,
+        selectedCategory: QuoteCategory,
+        quotes: List<Quote>,
+        quoteId: String
+    ): Triple<FirebaseUser, QuoteCategory, Quote>? {
+        return favoritesSavingManager.getRequiredDataForAdd(
+            currentUser,
+            selectedCategory,
+            quotes,
+            quoteId
+        )
+    }
+
+    private suspend fun saveToLocalDatabase(
+        currentUser: FirebaseUser,
+        selectedCategory: QuoteCategory,
+        currentQuote: Quote
+    ) {
+        favoritesSavingManager.saveToLocalDatabase(currentUser, selectedCategory, currentQuote)
+    }
+
+    private fun addFavoriteToFirestore(
+        currentUser: FirebaseUser,
+        quoteId: String,
+        selectedCategory: QuoteCategory
+    ){
+        viewModelScope.launch {
+            try {
+                favoritesSavingManager.addFavoriteToFirestore(currentUser, quoteId, selectedCategory)
+            } catch (e: Exception) {
+                Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
+                throw e
             }
         }
     }
@@ -279,117 +285,7 @@ class FavoritesViewModel @Inject constructor(
             Log.d(TAG, "No user logged in")
             return null
         }
-
         return Pair(currentUser, categoryId)
-    }
-
-    private fun getRequiredDataForAdd(quoteId: String): Triple<FirebaseUser, QuoteCategory, Quote>? {
-        val currentUser = firebaseAuth.currentUser ?: run {
-            Log.d(TAG, "No user logged in")
-            return null
-        }
-        val selectedCategory = selectedQuoteCategory.value ?: run {
-            Log.d(TAG, "No category selected")
-            return null
-        }
-        val currentQuote = quotes.value.find { it.id == quoteId } ?: run {
-            Log.d(TAG, "Quote not found: $quoteId")
-            return null
-        }
-
-        return Triple(currentUser, selectedCategory, currentQuote)
-    }
-
-    private suspend fun saveToLocalDatabase(
-        currentUser: FirebaseUser,
-        selectedCategory: QuoteCategory,
-        currentQuote: Quote
-    ) {
-        ensureCategoryExists(selectedCategory)
-        ensureQuoteExists(selectedCategory, currentQuote)
-        saveFavorite(currentUser, currentQuote.id, selectedCategory)
-    }
-
-    private suspend fun ensureCategoryExists(category: QuoteCategory) {
-        if (!localQuoteCategoryRepository.isCategoryExists(category.ordinal)) {
-            val categoryEntity = QuoteCategoryEntity(
-                categoryId = category.ordinal,
-                categoryName = category.getLowercaseCategoryId()
-            )
-            localQuoteCategoryRepository.insertCategory(categoryEntity)
-        }
-    }
-
-    private suspend fun ensureQuoteExists(
-        category: QuoteCategory,
-        quote: Quote
-    ) {
-        if (!localQuoteRepository.isQuoteExistsInCategory(quote.id, category.ordinal)) {
-            val quoteEntity = QuoteEntity(
-                quoteId = quote.id,
-                text = quote.text,
-                person = quote.person,
-                imageUrl = quote.imageUrl,
-                categoryId = category.ordinal
-            )
-            localQuoteRepository.insertQuote(quoteEntity)
-        }
-    }
-
-    private suspend fun saveFavorite(
-        user: FirebaseUser,
-        quoteId: String,
-        category: QuoteCategory
-    ) {
-        val favoriteEntity = FavoriteEntity(
-            userId = user.uid,
-            quoteId = quoteId,
-            categoryId = category.ordinal
-        )
-        localFavoriteRepository.insertFavorite(favoriteEntity)
-    }
-
-    private fun addFavoriteToFirestore(currentUser: FirebaseUser, quoteId: String) {
-        viewModelScope.launch {
-            try {
-                val favoriteData = createFavoriteData(quoteId)
-                val newDocumentId = generateNewDocumentId(currentUser)
-
-                remoteFavoriteRepository.addFavoriteToFirestore(
-                    currentUser,
-                    newDocumentId,
-                    favoriteData
-                )
-            } catch (e: Exception) {
-                Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
-                throw e
-            }
-        }
-    }
-
-    private fun createFavoriteData(quoteId: String): HashMap<String, String> {
-        val category = selectedQuoteCategory.value?.getLowercaseCategoryId().orEmpty()
-
-        return hashMapOf(
-            stringProvider.getString(R.string.added_at) to getCurrentFormattedDateTime(),
-            stringProvider.getString(R.string.quote_id) to quoteId,
-            stringProvider.getString(R.string.category) to category
-        )
-    }
-
-
-    private fun getCurrentFormattedDateTime(): String =
-        LocalDateTime.now()
-            .format(DateTimeFormatter.ofPattern(stringProvider.getString(R.string.datetime_format)))
-
-    private suspend fun generateNewDocumentId(currentUser: FirebaseUser): String {
-        val category = selectedQuoteCategory.value?.getLowercaseCategoryId().orEmpty()
-        val lastQuoteNumber = remoteFavoriteRepository.getLastQuoteNumber(currentUser, category)
-        val newQuoteNumber = String.format(
-            stringProvider.getString(R.string.quote_number_format),
-            lastQuoteNumber + 1
-        )
-        return stringProvider.getString(R.string.quote_id_prefix) + newQuoteNumber
     }
 
     override fun onCleared() {

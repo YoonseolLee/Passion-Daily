@@ -47,7 +47,7 @@ class QuoteViewModel @Inject constructor(
     override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
     override val isLoading: StateFlow<Boolean> = quoteStateHolder.isQuoteLoading
     override val hasReachedEnd: StateFlow<Boolean> = quoteStateHolder.hasQuoteReachedEnd
-    override val selectedCategory: StateFlow<QuoteCategory?> =
+    override val selectedCategory: StateFlow<QuoteCategory> =
         quoteStateHolder.selectedQuoteCategory
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
@@ -163,7 +163,7 @@ class QuoteViewModel @Inject constructor(
         quoteStateHolder.updateIsQuoteLoading(false)
     }
 
-    override fun loadInitialQuotes(category: QuoteCategory?) {
+    override fun loadInitialQuotes(category: QuoteCategory) {
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.Main) {
@@ -273,7 +273,7 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    override fun incrementShareCount(quoteId: String, category: QuoteCategory?) {
+    override fun incrementShareCount(quoteId: String, category: QuoteCategory) {
         viewModelScope.launch {
             supervisorScope {
                 try {
@@ -288,19 +288,19 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    override fun onCategorySelected(category: QuoteCategory?) {
+    override fun onCategorySelected(category: QuoteCategory) {
         viewModelScope.launch {
             resetCategorySelection(category)
             category?.let { loadQuotes(it) }
         }
     }
 
-    private suspend fun resetCategorySelection(category: QuoteCategory?) {
+    private suspend fun resetCategorySelection(category: QuoteCategory) {
         updateSelectedCategory(category)
         resetQuoteState()
     }
 
-    private suspend fun updateSelectedCategory(category: QuoteCategory?) {
+    private suspend fun updateSelectedCategory(category: QuoteCategory) {
         quoteLoadingManager.updateSelectedCategory(category)
     }
 
