@@ -6,7 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.passionDaily.ui.screens.TermsConsentScreen
-import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
+import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
     onNavigateToQuoteScreen: () -> Unit

@@ -14,6 +14,10 @@ class ToastManager @Inject constructor(
         showToast(R.string.error_general)
     }
 
+    fun showCredentialErrorToast() {
+        showToast(R.string.error_credential_retrieval)
+    }
+
     fun showNetworkErrorToast() {
         showToast(R.string.error_network_retry)
     }

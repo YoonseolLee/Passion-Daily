@@ -36,12 +36,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.passionDaily.R
+import com.example.passionDaily.quote.domain.model.NavigationEvent
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
 import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passionDaily.ui.viewmodels.AuthState
-import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
+import com.example.passionDaily.login.state.AuthState
+import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 @Composable
 fun LoginScreen(
@@ -56,11 +57,11 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         sharedLogInViewModel.navigationEvents.collect { event ->
             when (event) {
-                is SharedLogInViewModel.NavigationEvent.NavigateToQuote -> {
+                is NavigationEvent.NavigateToQuote -> {
                     onNavigateToQuote()
                 }
 
-                is SharedLogInViewModel.NavigationEvent.NavigateToTermsConsent -> {
+                is NavigationEvent.NavigateToTermsConsent -> {
                     onNavigateToTermsConsent(event.userProfileJson)
                 }
             }

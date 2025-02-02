@@ -1,6 +1,7 @@
 package com.example.passionDaily.mapper
 
 import com.example.passionDaily.data.local.entity.UserEntity
+import com.example.passionDaily.login.UserProfileKey
 import com.example.passionDaily.util.Converters
 import com.google.common.reflect.TypeToken
 import com.google.gson.GsonBuilder
@@ -18,15 +19,17 @@ class UserProfileMapper @Inject constructor() {
     }
 
     fun mapToUserEntity(profileMap: Map<String, Any?>): UserEntity {
-        return UserEntity(
-            userId = profileMap["id"] as String,
-            email = profileMap["email"] as String,
-            notificationEnabled = profileMap["notificationEnabled"] as Boolean,
-            lastSyncDate = (profileMap["lastSyncDate"] as String).let {
-                Converters.fromStringToLong(it)
-            },
-            notificationTime = profileMap["notificationTime"] as String,
-        )
+        try {
+            return UserEntity(
+                userId = profileMap[UserProfileKey.ID.key] as String,
+                email = profileMap[UserProfileKey.EMAIL.key] as String,
+                notificationEnabled = profileMap[UserProfileKey.NOTIFICATION_ENABLED.key] as Boolean,
+                lastSyncDate = Converters.fromStringToLong(profileMap[UserProfileKey.LAST_SYNC_DATE.key] as String),
+                notificationTime = profileMap[UserProfileKey.NOTIFICATION_TIME.key] as String
+            )
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("Failed to map user profile", e)
+        }
     }
 
     fun convertMapToJson(map: Map<String, Any?>): String {

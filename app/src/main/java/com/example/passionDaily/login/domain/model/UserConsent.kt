@@ -1,4 +1,4 @@
-package com.example.passionDaily.util
+package com.example.passionDaily.login.domain.model
 
 data class UserConsent(
     val termsOfService: Boolean,

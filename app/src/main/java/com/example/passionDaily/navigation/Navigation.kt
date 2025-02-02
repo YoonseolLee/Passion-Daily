@@ -21,7 +21,7 @@ import com.example.passionDaily.ui.screens.NavigationBarScreens
 import com.example.passionDaily.ui.screens.QuoteScreen
 import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
-import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
+import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 @Composable
 fun SetupNavigation(

@@ -3,7 +3,12 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.work.WorkManager
-import com.example.passionDaily.quote.manager.ImageShareManager
+import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.example.passionDaily.login.stateholder.AuthStateHolderImpl
+import com.example.passionDaily.login.stateholder.LoginStateHolder
+import com.example.passionDaily.login.stateholder.LoginStateHolderImpl
+import com.example.passionDaily.login.stateholder.UserProfileStateHolder
+import com.example.passionDaily.login.stateholder.UserProfileStateHolderImpl
 import com.example.passionDaily.manager.QuoteCategoryManager
 import com.example.passionDaily.quote.domain.usecase.ImageShareUseCase
 import com.example.passionDaily.quote.domain.usecase.IncrementShareCountUseCase
@@ -50,12 +55,6 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideImageShareManager(@ApplicationContext context: Context): ImageShareManager {
-        return ImageShareManager(context)
-    }
-
-    @Provides
-    @Singleton
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
         return WorkManager.getInstance(context)
     }
@@ -91,5 +90,23 @@ object AppModule {
         incrementShareCountUseCase: IncrementShareCountUseCase
     ): ShareQuoteManager {
         return ShareQuoteManagerImpl(imageShareUseCase, incrementShareCountUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthStateHolder(): AuthStateHolder {
+        return AuthStateHolderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideLoginStateHolder(): LoginStateHolder {
+        return LoginStateHolderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserProfileStateHolder(): UserProfileStateHolder {
+        return UserProfileStateHolderImpl()
     }
 }

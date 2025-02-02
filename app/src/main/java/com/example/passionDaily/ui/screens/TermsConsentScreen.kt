@@ -37,7 +37,7 @@ import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passionDaily.ui.viewmodels.SharedLogInViewModel
+import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 @Composable
 fun TermsConsentScreen(

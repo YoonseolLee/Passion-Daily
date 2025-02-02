@@ -1,8 +1,8 @@
-package com.example.passionDaily.ui.viewmodels
+package com.example.passionDaily.login.state
 
 sealed class AuthState {
-    object Unauthenticated : AuthState()
     data class Authenticated(val userId: String) : AuthState()
+    object Unauthenticated : AuthState()
     data class RequiresConsent(val userId: String, val userProfileJson: String?) : AuthState()
     data class Error(val message: String) : AuthState()
 }

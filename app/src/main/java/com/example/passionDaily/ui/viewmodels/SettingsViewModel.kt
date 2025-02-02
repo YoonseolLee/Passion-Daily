@@ -6,11 +6,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
-import com.example.passionDaily.manager.AuthenticationManager
+import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.manager.SettingsManager
 import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.ui.state.AuthStateHolder
+import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseUser
@@ -171,7 +171,7 @@ class SettingsViewModel @Inject constructor(
                 _isLoading.emit(true)
                 try {
                     authManager.clearCredentials()
-                    authStateHolder.setUnauthenticated()
+                    authStateHolder.setUnAuthenticated()
                     alarmScheduler.cancelExistingAlarm()
 
                     _toastMessage.emit(stringProvider.getString(R.string.success_logout))
