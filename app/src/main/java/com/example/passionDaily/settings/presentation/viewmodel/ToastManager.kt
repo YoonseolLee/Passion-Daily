@@ -1,4 +1,4 @@
-package com.example.passionDaily.manager
+package com.example.passionDaily.settings.presentation.viewmodel
 
 import android.content.Context
 import android.widget.Toast
@@ -30,13 +30,38 @@ class ToastManager @Inject constructor(
         showToast(R.string.error_local_database)
     }
 
-    fun showLoginSuccessMessage() {
+    fun showLoginSuccessToast() {
         showToast(R.string.login_success)
     }
 
-    fun showLoginErrorMessage() {
+    fun showLoginErrorToast() {
         showToast(R.string.login_error_format)
     }
+
+    fun showAlreadyLoggedInErrorToast() {
+        showToast(R.string.error_already_logged_in)
+    }
+
+    fun showAlreadyLoggedOutErrorToast() {
+        showToast(R.string.error_already_logged_out)
+    }
+
+    fun showLogInRequiredErrorToast() {
+        showToast(R.string.error_login_required)
+    }
+
+    fun showWithDrawlSuccessToast() {
+        showToast(R.string.success_withdrawal)
+    }
+
+    fun showWithDrawlErrorToast() {
+        showToast(R.string.error_withdrawal)
+    }
+
+    fun showReLoginForWithDrawlToast() {
+        showToast(R.string.re_login_forwithdrawl)
+    }
+
 
     private fun showToast(@StringRes resId: Int) {
         Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()

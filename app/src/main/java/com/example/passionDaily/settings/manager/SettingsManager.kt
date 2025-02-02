@@ -1,4 +1,4 @@
-package com.example.passionDaily.manager
+package com.example.passionDaily.settings.manager
 
 import android.util.Log
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository

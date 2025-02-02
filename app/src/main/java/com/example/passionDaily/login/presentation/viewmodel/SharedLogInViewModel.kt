@@ -11,7 +11,7 @@ import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.SharedLogin.TAG
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import com.example.passionDaily.login.manager.AuthenticationManager
-import com.example.passionDaily.manager.ToastManager
+import com.example.passionDaily.settings.presentation.viewmodel.ToastManager
 import com.example.passionDaily.manager.UrlManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.manager.UserProfileManager
@@ -163,12 +163,12 @@ class SharedLogInViewModel @Inject constructor(
                     if (updatedJson != null) {
                         authManager.updateUserProfileJsonV2(updatedJson)
                         saveUserProfile(updatedJson)
-                        toastManager.showLoginSuccessMessage()
+                        toastManager.showLoginSuccessToast()
                     } else {
-                        toastManager.showLoginErrorMessage()
+                        toastManager.showLoginErrorToast()
                     }
                 } ?: run {
-                    toastManager.showLoginSuccessMessage()
+                    toastManager.showLoginSuccessToast()
                 }
             } catch (e: Exception) {
                 handleException(e)
@@ -198,7 +198,7 @@ class SharedLogInViewModel @Inject constructor(
             try {
                 authManager.updateIsLoggedIn(true)
                 delay(100)
-                toastManager.showLoginSuccessMessage()
+                toastManager.showLoginSuccessToast()
             } catch (e: Exception) {
                 handleException(e)
             }
@@ -209,7 +209,7 @@ class SharedLogInViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 authManager.updateIsLoggedIn(false)
-                toastManager.showLoginErrorMessage()
+                toastManager.showLoginErrorToast()
             } catch (e: Exception) {
                 handleException(e)
             }

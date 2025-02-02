@@ -15,4 +15,8 @@ object ViewModelConstants {
         const val KEY_FAVORITE_INDEX = "favorite_quote_index"
         const val TAG = "FavoritesViewModel"
     }
+
+    object Settings {
+        const val TAG = "SettingsViewModel"
+    }
 }

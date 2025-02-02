@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.viewmodels.SettingsViewModel
+import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import java.time.LocalTime
 import android.provider.Settings
@@ -356,15 +356,7 @@ fun LoginSettingItem(
     onNavigateToLogin: () -> Unit
 ) {
     val context = LocalContext.current
-    val toastMessage by viewModel.toastMessage.collectAsState()
     val shouldNavigateToLogin by viewModel.navigateToLogin.collectAsState()
-
-    LaunchedEffect(toastMessage) {
-        toastMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearToastMessage()
-        }
-    }
 
     LaunchedEffect(shouldNavigateToLogin) {
         if (shouldNavigateToLogin) {
@@ -385,16 +377,8 @@ fun LogoutSettingItem(
     onNavigateToQuote: () -> Unit
 ) {
     val context = LocalContext.current
-    val toastMessage by viewModel.toastMessage.collectAsState()
     val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(toastMessage) {
-        toastMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearToastMessage()
-        }
-    }
 
     LaunchedEffect(shouldNavigateToQuote) {
         if (shouldNavigateToQuote) {
@@ -495,16 +479,8 @@ fun WithdrawalSettingItem(
     onNavigateToQuote: () -> Unit
 ) {
     val context = LocalContext.current
-    val toastMessage by viewModel.toastMessage.collectAsState()
     val shouldNavigateToQuote by viewModel.navigateToQuote.collectAsState()
     val showWithdrawalDialog by viewModel.showWithdrawalDialog.collectAsState()
-
-    LaunchedEffect(toastMessage) {
-        toastMessage?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            viewModel.clearToastMessage()
-        }
-    }
 
     LaunchedEffect(shouldNavigateToQuote) {
         if (shouldNavigateToQuote) {
