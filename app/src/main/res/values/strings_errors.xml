@@ -1,10 +1,10 @@
 <resources>
-    <string name="error_credential_retrieval">사용자 인증에 실패했어요. 다시 시도해주세요.</string>
-    <string name="error_network_retry">인터넷 연결을 확인하고 다시 시도해 주세요.</string>
+    <string name="error_credential">사용자 인증에 실패했어요. 다시 시도해주세요.</string>
+    <string name="error_network">인터넷 연결을 확인하고 다시 시도해 주세요.</string>
 
     <!-- Firebase 인증 관련 에러 -->
     <string name="error_firebase_firestore">데이터를 불러오는 중 문제가 발생했습니다.</string>
-    <string name="error_firebase_invalid_credential">유효하지 않은 인증 정보입니다: %1$s</string>
+    <string name="error_firebase_invalid_credential">유효하지 않은 인증 정보입니다.</string>
     <string name="error_firebase_auth">Firebase 인증 실패: %1$s</string>
     <string name="error_firebase_user_null">Firebase user is null</string>
     <string name="error_firebase_user_id_blank">Firebase user ID is blank</string>

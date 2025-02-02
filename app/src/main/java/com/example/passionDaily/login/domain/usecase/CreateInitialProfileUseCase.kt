@@ -2,14 +2,11 @@ package com.example.passionDaily.login.domain.usecase
 
 import com.example.passionDaily.constants.UseCaseConstants.UserProfileConstants
 import com.example.passionDaily.login.UserProfileKey
-import com.example.passionDaily.mapper.UserProfileMapper
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
 
-class CreateInitialProfileUseCase @Inject constructor(
-    private val userProfileMapper: UserProfileMapper
-) {
+class CreateInitialProfileUseCase @Inject constructor() {
     fun createInitialProfile(firebaseUser: FirebaseUser, userId: String): Map<String, Any?> {
         validateUserData(firebaseUser, userId)
         val now = TimeUtil.getCurrentTimestamp()
@@ -46,20 +43,5 @@ class CreateInitialProfileUseCase @Inject constructor(
             UserProfileKey.CREATED_DATE.key to timestamp,
             UserProfileKey.MODIFIED_DATE.key to timestamp
         )
-    }
-
-    fun extractUserInfo(userProfileJson: String): Pair<Map<String, Any?>, String> {
-        val profileMap = mapFromJson(userProfileJson)
-        val userId = requireUserId(profileMap)
-        return Pair(profileMap, userId)
-    }
-
-    private fun mapFromJson(userProfileJson: String): Map<String, Any?> {
-        return userProfileMapper.mapFromJson(userProfileJson)
-    }
-
-    private fun requireUserId(profileMap: Map<String, Any?>): String {
-        return profileMap[UserProfileKey.ID.key] as? String
-            ?: throw IllegalArgumentException("User ID not found in profile")
     }
 }

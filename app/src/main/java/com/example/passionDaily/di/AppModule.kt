@@ -5,6 +5,8 @@ import androidx.credentials.CredentialManager
 import androidx.work.WorkManager
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.AuthStateHolderImpl
+import com.example.passionDaily.login.stateholder.ConsentStateHolder
+import com.example.passionDaily.login.stateholder.ConsentStateHolderImpl
 import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolderImpl
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
@@ -108,5 +110,11 @@ object AppModule {
     @Singleton
     fun provideUserProfileStateHolder(): UserProfileStateHolder {
         return UserProfileStateHolderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideConsentStateHolder(): ConsentStateHolder {
+        return ConsentStateHolderImpl()
     }
 }

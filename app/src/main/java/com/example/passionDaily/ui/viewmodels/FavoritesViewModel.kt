@@ -375,7 +375,7 @@ class FavoritesViewModel @Inject constructor(
     private fun mapExceptionToErrorMessage(e: Exception): String {
         return when (e) {
             is NetworkOnMainThreadException ->
-                stringProvider.getString(R.string.error_network_retry)
+                stringProvider.getString(R.string.error_network)
 
             is FirebaseAuthInvalidUserException ->
                 stringProvider.getString(R.string.error_invalid_user)

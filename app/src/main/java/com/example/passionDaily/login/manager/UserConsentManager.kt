@@ -1,49 +1,44 @@
 package com.example.passionDaily.login.manager
 
 import com.example.passionDaily.login.domain.model.UserConsent
+import com.example.passionDaily.login.stateholder.ConsentStateHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-class UserConsentManager @Inject constructor() {
-
-    private val _consent = MutableStateFlow(
-        UserConsent(
-            termsOfService = false,
-            privacyPolicy = false
-        )
-    )
-    val consent = _consent.asStateFlow()
-
-    private val _isAgreeAllChecked = MutableStateFlow(false)
-    val isAgreeAllChecked = _isAgreeAllChecked.asStateFlow()
+class UserConsentManager @Inject constructor(
+    private val consentStateHolder: ConsentStateHolder
+) {
+    val consent = consentStateHolder.consent
+    val isAgreeAllChecked = consentStateHolder.isAgreeAllChecked
 
     fun toggleAgreeAll() {
-        val currentState = !_isAgreeAllChecked.value
-        _isAgreeAllChecked.value = currentState
-        _consent.value = UserConsent(
-            termsOfService = currentState,
-            privacyPolicy = currentState
+        val currentState = !isAgreeAllChecked.value
+        consentStateHolder.updateAgreeAllChecked(currentState)
+        consentStateHolder.updateConsent(
+            UserConsent(
+                termsOfService = currentState,
+                privacyPolicy = currentState
+            )
         )
     }
 
     fun toggleIndividualItem(item: String) {
-        val currentConsent = _consent.value
-        _consent.value = when (item) {
-            "termsOfService" -> currentConsent.copy(
+        val currentConsent = consent.value
+        val newConsent = when (item) {
+            UserConsent::termsOfService.name -> currentConsent.copy(
                 termsOfService = !currentConsent.termsOfService
             )
-
-            "privacyPolicy" -> currentConsent.copy(
+            UserConsent::privacyPolicy.name -> currentConsent.copy(
                 privacyPolicy = !currentConsent.privacyPolicy
             )
-
             else -> currentConsent
         }
+        consentStateHolder.updateConsent(newConsent)
         updateAgreeAllState()
     }
 
     private fun updateAgreeAllState() {
-        _isAgreeAllChecked.value = _consent.value.isAllAgreed
+        consentStateHolder.updateAgreeAllChecked(consent.value.isAllAgreed)
     }
 }

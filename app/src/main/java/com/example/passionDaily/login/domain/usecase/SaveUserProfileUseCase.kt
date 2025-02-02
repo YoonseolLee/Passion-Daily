@@ -18,6 +18,11 @@ class SaveUserProfileUseCase @Inject constructor(
         return userId
     }
 
+    suspend fun saveUserToFirestore(userId: String, profileMap: Map<String, Any?>): String {
+        remoteUserRepository.addUserProfile(userId, profileMap)
+        return userId
+    }
+
     suspend fun syncExistingUser(userId: String) {
         remoteUserRepository.updateLastSyncDate(userId)
         remoteUserRepository.syncFirestoreUserToRoom(userId)

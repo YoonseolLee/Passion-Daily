@@ -10,6 +10,7 @@ import com.example.passionDaily.mapper.UserProfileMapper
 import com.example.passionDaily.util.TimeUtil
 import com.example.passionDaily.login.domain.model.UserConsent
 import com.example.passionDaily.login.domain.usecase.CreateInitialProfileUseCase
+import com.example.passionDaily.login.domain.usecase.ManageJsonUseCase
 import com.example.passionDaily.login.domain.usecase.SaveUserProfileUseCase
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
 import com.google.firebase.auth.FirebaseUser
@@ -22,9 +23,9 @@ import javax.inject.Inject
 
 class UserProfileManager @Inject constructor(
     private val userProfileStateHolder: UserProfileStateHolder,
-    private val remoteUserRepository: RemoteUserRepository,
     private val createInitialProfileUseCase: CreateInitialProfileUseCase,
-    private val saveUserProfileUseCase: SaveUserProfileUseCase
+    private val saveUserProfileUseCase: SaveUserProfileUseCase,
+    private val manageJsonUseCase: ManageJsonUseCase
 ) {
     private val isJsonValid = userProfileStateHolder.isJsonValid
 
@@ -32,90 +33,29 @@ class UserProfileManager @Inject constructor(
         return createInitialProfileUseCase.createInitialProfile(firebaseUser, userId)
     }
 
-    fun verifyJson(json: String?): Boolean {
-        if (json.isNullOrEmpty()) {
-            Log.e("UserProfileJsonManager", "Invalid JSON: null or empty")
-            userProfileStateHolder.updateIsJsonValid(false)
-            return false
-        }
-
-        return try {
-            JSONObject(json)
-            Log.d("UserProfileJsonManager", "Valid JSON: $json")
-            userProfileStateHolder.updateIsJsonValid(true)
-            true
-        } catch (e: JSONException) {
-            Log.e("UserProfileJsonManager", "Invalid JSON format: $json", e)
-            userProfileStateHolder.updateIsJsonValid(false)
-            false
-        }
+    suspend fun verifyJson(json: String?): Boolean {
+        return manageJsonUseCase.verifyJson(json)
     }
 
-    fun updateUserProfileWithConsent(
+    suspend fun updateUserProfileWithConsent(
         userProfileJson: String,
         consent: UserConsent
     ): String? {
-        validateUserProfile(userProfileJson)
-        val jsonObject = parseToJsonObject(userProfileJson)
-        return updateJsonWithConsent(jsonObject, consent)
+        return manageJsonUseCase.updateUserProfileWithConsent(userProfileJson, consent)
     }
 
-    private fun validateUserProfile(userProfileJson: String) {
-        if (!isJsonValid.value || userProfileJson == null) {
-            Log.e(TAG, "Cannot update invalid JSON")
-            throw IllegalArgumentException("Invalid JSON")
-        }
+    suspend fun saveUserToFirestore(userProfileJson: String): String {
+        val (profileMap, userId) = extractUserInfo(userProfileJson)
+        return saveUserProfileUseCase.saveUserToFirestore(userId, profileMap)
     }
 
-    private fun parseToJsonObject(jsonString: String): JSONObject {
-        return try {
-            JSONObject(jsonString)
-        } catch (e: JSONException) {
-            throw IllegalArgumentException("Invalid JSON format", e)
-        }
-    }
-
-    private fun updateJsonWithConsent(jsonObject: JSONObject, consent: UserConsent): String {
-        return jsonObject.apply {
-            put(UserProfileKey.PRIVACY_POLICY_ENABLED.key, consent.privacyPolicy)
-            put(UserProfileKey.TERMS_OF_SERVICE_ENABLED.key, consent.termsOfService)
-        }.toString()
-    }
-
-    suspend fun saveUserToFirestore(userProfileJson: String, firebaseUser: FirebaseUser?): String {
-        if (firebaseUser == null) {
-            Log.e(TAG, "Firebase user is null")
-            throw IllegalStateException("Firebase user must not be null")
-        }
-
-        try {
-            val (profileMap, userId) = extractUserInfo(userProfileJson)
-            remoteUserRepository.addUserProfile(userId, profileMap)
-            return userId
-        } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Failed to save user to Firestore", e)
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save user to Firestore", e)
-            throw e
-        }
-    }
-
-    fun extractUserInfo(userProfileJson: String): Pair<Map<String, Any?>, String> {
-        return createInitialProfileUseCase.extractUserInfo(userProfileJson)
+    suspend fun extractUserInfo(userProfileJson: String): Pair<Map<String, Any?>, String> {
+        return manageJsonUseCase.extractUserInfo(userProfileJson)
     }
 
     suspend fun saveUserToRoom(userProfileJson: String): String {
-        try {
-            val (profileMap, userId) = extractUserInfo(userProfileJson)
-            return saveUserProfileUseCase.saveToRoom(profileMap, userId)
-        } catch (e: SQLiteException) {
-            Log.e(TAG, "Failed to save user to Room", e)
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save user to Room", e)
-            throw e
-        }
+        val (profileMap, userId) = extractUserInfo(userProfileJson)
+        return saveUserProfileUseCase.saveToRoom(profileMap, userId)
     }
 
     suspend fun syncExistingUser(userId: String) {

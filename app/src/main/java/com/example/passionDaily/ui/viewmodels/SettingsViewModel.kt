@@ -268,7 +268,7 @@ class SettingsViewModel @Inject constructor(
         return when (e) {
             is FirebaseFirestoreException -> when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE ->
-                    stringProvider.getString(R.string.error_network_retry)
+                    stringProvider.getString(R.string.error_network)
 
                 FirebaseFirestoreException.Code.PERMISSION_DENIED ->
                     stringProvider.getString(R.string.error_permission_denied)

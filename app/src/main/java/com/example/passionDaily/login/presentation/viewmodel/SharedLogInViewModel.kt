@@ -16,21 +16,15 @@ import com.example.passionDaily.manager.UrlManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.manager.UserProfileManager
 import com.example.passionDaily.mapper.UserProfileMapper
-import com.example.passionDaily.quote.domain.model.NavigationEvent
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import org.json.JSONException
 import java.io.IOException
@@ -38,7 +32,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SharedLogInViewModel @Inject constructor(
-    private val auth: FirebaseAuth,
     private val authManager: AuthenticationManager,
     private val userProfileManager: UserProfileManager,
     private val userConsentManager: UserConsentManager,
@@ -59,8 +52,8 @@ class SharedLogInViewModel @Inject constructor(
     val consent = userConsentManager.consent
     val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
 
-    private val _navigationEvents = Channel<NavigationEvent>()
-    val navigationEvents = _navigationEvents.receiveAsFlow()
+//    private val _navigationEvents = Channel<NavigationEvent>()
+//    val navigationEvents = _navigationEvents.receiveAsFlow()
 
     /**
      * LoginScreen
@@ -76,21 +69,8 @@ class SharedLogInViewModel @Inject constructor(
                 // 새로운 크리덴셜 요청
                 val result = authManager.getGoogleCredential()
                 processSignInResult(result)
-            } catch (e: CreateCredentialCancellationException) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_credential_retrieval)
-                )
-                toastManager.showLoginErrorMessage()
-            } catch (e: IOException) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_network_retry)
-                )
-                toastManager.showNetworkErrorToast()
             } catch (e: Exception) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_general)
-                )
-                toastManager.showGeneralErrorToast()
+                handleException(e)
             } finally {
                 authManager.stopLoading()
             }
@@ -106,21 +86,8 @@ class SharedLogInViewModel @Inject constructor(
                 val idToken = authManager.extractIdToken(credential)
                 val authResult = authManager.authenticateWithFirebase(idToken)
                 handleAuthResult(authResult)
-            } catch (e: FirebaseAuthInvalidCredentialsException) {
-                authStateHolder.setError(
-                    e.message
-                        ?: stringProvider.getString(R.string.error_firebase_invalid_credential)
-                )
-                toastManager.showNetworkErrorToast()
-            } catch (e: IOException) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_network_retry)
-                )
-                toastManager.showNetworkErrorToast()
             } catch (e: Exception) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_general)
-                )
+                handleException(e)
             }
         }
     }
@@ -131,46 +98,33 @@ class SharedLogInViewModel @Inject constructor(
             val userId = authManager.getUserId(firebaseUser)
             val userProfileMap = userProfileManager.createInitialProfile(firebaseUser, userId)
 
-            storeUserProfile(userProfileMap)
-            handleUserRegistrationStatus(userId)
-        } catch (e: IllegalArgumentException) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
-            toastManager.showLoginErrorMessage()
-        } catch (e: JSONException) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
-            toastManager.showLoginErrorMessage()
+            val userProfileJson = storeUserProfile(userProfileMap)
+            handleUserRegistrationStatus(userId, userProfileJson)
         } catch (e: Exception) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
-            toastManager.showGeneralErrorToast()
+            handleException(e)
         }
     }
 
-    private suspend fun storeUserProfile(userProfileMap: Map<String, Any?>) {
+    private suspend fun storeUserProfile(userProfileMap: Map<String, Any?>): String {
         val userProfileJson = userProfileMapper.convertMapToJson(userProfileMap)
         authManager.updateUserProfileJson(userProfileJson)
+        return userProfileJson
     }
 
-    private suspend fun handleUserRegistrationStatus(userId: String) {
+
+    private suspend fun handleUserRegistrationStatus(userId: String, userProfileJson: String) {
         if (remoteUserRepository.isUserRegistered(userId)) {
             syncExistingUser(userId)
         } else {
-            authStateHolder.setRequiresConsent(userId, userProfileJson.value)
+            authStateHolder.setRequiresConsent(userId, userProfileJson)
         }
     }
 
     private suspend fun syncExistingUser(userId: String) {
         try {
             userProfileManager.syncExistingUser(userId)
-        } catch (e: IOException) {
-            authStateHolder.setError(
-                e.message ?: stringProvider.getString(R.string.error_network_retry)
-            )
-            toastManager.showNetworkErrorToast()
-        } catch (e: FirebaseFirestoreException) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
-            toastManager.showFirebaseErrorToast()
         } catch (e: Exception) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
+            handleException(e)
         }
     }
 
@@ -178,7 +132,7 @@ class SharedLogInViewModel @Inject constructor(
      * TermsConsentScreen
      */
 
-    fun verifyUserProfileJson(json: String?) {
+    suspend fun verifyUserProfileJson(json: String?) {
         userProfileManager.verifyJson(json)
     }
 
@@ -209,17 +163,15 @@ class SharedLogInViewModel @Inject constructor(
                     if (updatedJson != null) {
                         authManager.updateUserProfileJsonV2(updatedJson)
                         saveUserProfile(updatedJson)
-                        showSignUpSuccessMessage()
+                        toastManager.showLoginSuccessMessage()
                     } else {
-                        showSignUpErrorMessage()
+                        toastManager.showLoginErrorMessage()
                     }
                 } ?: run {
-                    showSignUpErrorMessage()
+                    toastManager.showLoginSuccessMessage()
                 }
             } catch (e: Exception) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_general)
-                )
+                handleException(e)
             }
         }
     }
@@ -227,18 +179,10 @@ class SharedLogInViewModel @Inject constructor(
     private suspend fun saveUserProfile(json: String) {
         try {
             userProfileManager.saveUserToRoom(json)
-            userProfileManager.saveUserToFirestore(json, auth.currentUser)
+            userProfileManager.saveUserToFirestore(json)
         } catch (e: Exception) {
-            authStateHolder.setError(e.message ?: stringProvider.getString(R.string.error_general))
+            handleException(e)
         }
-    }
-
-    private fun showSignUpSuccessMessage() {
-        toastManager.showLoginSuccessMessage()
-    }
-
-    private fun showSignUpErrorMessage() {
-        toastManager.showLoginErrorMessage()
     }
 
     fun openUrl(context: Context, url: String) {
@@ -254,34 +198,36 @@ class SharedLogInViewModel @Inject constructor(
             try {
                 authManager.updateIsLoggedIn(true)
                 delay(100)
-                showLoginSuccessMessage()
-                _navigationEvents.send(NavigationEvent.NavigateToQuote)
+                toastManager.showLoginSuccessMessage()
             } catch (e: Exception) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_general)
-                )
+                handleException(e)
             }
         }
     }
 
-    fun signalLoginError(errorMessage: String) {
+    fun signalLoginError() {
         viewModelScope.launch {
             try {
                 authManager.updateIsLoggedIn(false)
-                showLoginErrorMessage(errorMessage)
+                toastManager.showLoginErrorMessage()
             } catch (e: Exception) {
-                authStateHolder.setError(
-                    e.message ?: stringProvider.getString(R.string.error_general)
-                )
+                handleException(e)
             }
         }
     }
 
-    private fun showLoginSuccessMessage() {
-        showSignUpSuccessMessage()
-    }
+    private suspend fun handleException(e: Exception) {
+        val errorMessage = e.message ?: stringProvider.getString(R.string.error_general)
+        Log.e(TAG, errorMessage, e)
+        authStateHolder.setError(errorMessage)
 
-    private fun showLoginErrorMessage(errorMessage: String) {
-        showSignUpErrorMessage()
+        when (e) {
+            is CreateCredentialCancellationException -> toastManager.showCredentialErrorToast()
+            is IOException -> toastManager.showNetworkErrorToast()
+            is FirebaseAuthInvalidCredentialsException -> toastManager.showCredentialErrorToast()
+            is IllegalArgumentException, is JSONException -> toastManager.showGeneralErrorToast()
+            is FirebaseFirestoreException -> toastManager.showFirebaseErrorToast()
+            else -> toastManager.showGeneralErrorToast()
+        }
     }
 }

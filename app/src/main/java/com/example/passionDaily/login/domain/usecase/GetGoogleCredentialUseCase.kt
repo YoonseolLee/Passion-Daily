@@ -50,10 +50,11 @@ class GetGoogleCredentialUseCase @Inject constructor(
         return credentialManager.getCredential(context, request)
     }
 
-    suspend fun authenticateWithFirebase(idToken: String): AuthResult = withContext(Dispatchers.IO) {
-        val firebaseCredential = createFirebaseCredential(idToken)
-        signInWithFirebaseCredential(firebaseCredential)
-    }
+    suspend fun authenticateWithFirebase(idToken: String): AuthResult =
+        withContext(Dispatchers.IO) {
+            val firebaseCredential = createFirebaseCredential(idToken)
+            signInWithFirebaseCredential(firebaseCredential)
+        }
 
     private fun createFirebaseCredential(idToken: String): AuthCredential {
         return GoogleAuthProvider.getCredential(idToken, null)
@@ -63,8 +64,8 @@ class GetGoogleCredentialUseCase @Inject constructor(
         return auth.signInWithCredential(firebaseCredential).await()
     }
 
-    fun extractIdToken(credential: CustomCredential): String {
-        return getIdTokenFromCredential(credential)
+    suspend fun extractIdToken(credential: CustomCredential): String = withContext(Dispatchers.IO) {
+        getIdTokenFromCredential(credential)
     }
 
     private fun getIdTokenFromCredential(credential: CustomCredential): String {

@@ -25,7 +25,7 @@ class AuthenticationManager @Inject constructor(
         return getGoogleCredentialUseCase.authenticateWithFirebase(idToken)
     }
 
-    fun extractIdToken(credential: CustomCredential): String {
+    suspend fun extractIdToken(credential: CustomCredential): String {
         return getGoogleCredentialUseCase.extractIdToken(credential)
     }
 

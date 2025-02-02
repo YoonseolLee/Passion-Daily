@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.passionDaily.R
-import com.example.passionDaily.quote.domain.model.NavigationEvent
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.OnSurface
@@ -54,24 +53,11 @@ fun LoginScreen(
     val userProfileJson by sharedLogInViewModel.userProfileJson.collectAsState()
     val isLoading by sharedLogInViewModel.isLoading.collectAsState()
 
-    LaunchedEffect(Unit) {
-        sharedLogInViewModel.navigationEvents.collect { event ->
-            when (event) {
-                is NavigationEvent.NavigateToQuote -> {
-                    onNavigateToQuote()
-                }
-
-                is NavigationEvent.NavigateToTermsConsent -> {
-                    onNavigateToTermsConsent(event.userProfileJson)
-                }
-            }
-        }
-    }
-
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Authenticated -> {
                 sharedLogInViewModel.signalLoginSuccess()
+                onNavigateToQuote()
             }
 
             is AuthState.RequiresConsent -> {
@@ -82,7 +68,7 @@ fun LoginScreen(
 
             is AuthState.Error -> {
                 val errorMessage = (authState as AuthState.Error).message
-                sharedLogInViewModel.signalLoginError(errorMessage)
+                sharedLogInViewModel.signalLoginError()
 
                 Log.e("LoginScreen", "Authentication failed: $errorMessage")
             }
