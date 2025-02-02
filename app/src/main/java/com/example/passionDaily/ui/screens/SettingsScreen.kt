@@ -63,6 +63,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.passionDaily.ui.theme.PrimaryColor
+import com.google.firebase.auth.FirebaseUser
 
 @Composable
 fun SettingsScreen(
@@ -235,92 +236,136 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
     val currentUser by viewModel.currentUser.collectAsState()
     var showSettingsDialog by remember { mutableStateOf(false) }
 
-    if (showSettingsDialog) {
-        AlertDialog(
-            onDismissRequest = { showSettingsDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.notification_permission_needed),
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.notification_permission_message),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        color = Color(0xFFE1E1E1),
-                        lineHeight = 24.sp
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSettingsDialog = false
-                        context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                        })
-                    }
-                ) {
-                    Text(
-                        stringResource(R.string.go_to_settings),
-                        color = Color(0xFFFF6B6B)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSettingsDialog = false }
-                ) {
-                    Text(
-                        stringResource(R.string.cancel),
-                        color = Color(0xFFCCCCCC)
-                    )
-                }
-            },
-            containerColor = Color(0xFF1A2847),
-            shape = RoundedCornerShape(8.dp),
-            properties = DialogProperties(
-                dismissOnClickOutside = true,
-                dismissOnBackPress = true
-            )
-        )
-    }
+    NotificationPermissionDialog(
+        showDialog = showSettingsDialog,
+        onDismiss = { showSettingsDialog = false },
+        onConfirm = {
+            showSettingsDialog = false
+            navigateToAppSettings(context)
+        }
+    )
 
+    NotificationToggle(
+        isEnabled = isEnabled,
+        currentUser = currentUser,
+        onToggleChange = { enabled ->
+            handleNotificationToggle(
+                enabled = enabled,
+                context = context,
+                currentUser = currentUser,
+                viewModel = viewModel,
+                showSettingsDialog = { showSettingsDialog = true }
+            )
+        }
+    )
+}
+
+@Composable
+private fun NotificationPermissionDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.notification_permission_needed),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFFFFF)
+                )
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.notification_permission_message),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    color = Color(0xFFE1E1E1),
+                    lineHeight = 24.sp
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    stringResource(R.string.go_to_settings),
+                    color = Color(0xFFFF6B6B)
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    stringResource(R.string.cancel),
+                    color = Color(0xFFCCCCCC)
+                )
+            }
+        },
+        containerColor = Color(0xFF1A2847),
+        shape = RoundedCornerShape(8.dp),
+        properties = DialogProperties(
+            dismissOnClickOutside = true,
+            dismissOnBackPress = true
+        )
+    )
+}
+
+@Composable
+private fun NotificationToggle(
+    isEnabled: Boolean,
+    currentUser: FirebaseUser?,
+    onToggleChange: (Boolean) -> Unit
+) {
     CommonToggleItem(
         title = stringResource(R.string.daily_quote_notification_setting),
         isEnabled = isEnabled,
-        onToggleChange = { enabled ->
-            if (currentUser == null) {
-                viewModel.updateNotificationSettings(false)
-                return@CommonToggleItem
-            }
-
-            if (enabled) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.POST_NOTIFICATIONS
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        viewModel.updateNotificationSettings(true)
-                    } else {
-                        // 권한이 없으면 설정으로 이동하는 다이얼로그 표시
-                        showSettingsDialog = true
-                    }
-                } else {
-                    viewModel.updateNotificationSettings(true)
-                }
-            } else {
-                viewModel.updateNotificationSettings(false)
-            }
-        }
+        onToggleChange = onToggleChange
     )
+}
+
+private fun handleNotificationToggle(
+    enabled: Boolean,
+    context: Context,
+    currentUser: FirebaseUser?,
+    viewModel: SettingsViewModel,
+    showSettingsDialog: () -> Unit
+) {
+    if (currentUser == null) {
+        viewModel.updateNotificationSettings(false)
+        return
+    }
+
+    if (!enabled) {
+        viewModel.updateNotificationSettings(false)
+        return
+    }
+
+    // Android 13(Tiramisu) 이상에서만 권한 체크
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            viewModel.updateNotificationSettings(true)
+        } else {
+            showSettingsDialog()
+        }
+    } else {
+        viewModel.updateNotificationSettings(true)
+    }
+}
+
+private fun navigateToAppSettings(context: Context) {
+    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+    })
 }
 
 @Composable
@@ -375,64 +420,99 @@ fun LogoutSettingItem(
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = {
-                Text(
-                    text = stringResource(R.string.logout),
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.logout_confirmation_message),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        color = Color(0xFFE1E1E1),
-                        lineHeight = 24.sp
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.logOut(onNavigateToQuote)
-                        showLogoutDialog = false
-                    }
-                ) {
-                    Text(
-                        stringResource(R.string.logout),
-                        color = Color(0xFFFF6B6B)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showLogoutDialog = false }
-                ) {
-                    Text(
-                        stringResource(R.string.cancel),
-                        color = Color(0xFFCCCCCC)
-                    )
-                }
-            },
-            containerColor = Color(0xFF1A2847),
-            shape = RoundedCornerShape(8.dp)
-        )
-    }
+    LogoutConfirmationDialog(
+        showDialog = showLogoutDialog,
+        onConfirm = {
+            viewModel.logOut(onNavigateToQuote)
+            showLogoutDialog = false
+        },
+        onDismiss = { showLogoutDialog = false }
+    )
 
-    CommonNavigationItem(
-        title = stringResource(R.string.logout),
+    LogoutButton(
         onClick = { showLogoutDialog = true }
     )
 }
 
-// 고객 지원 항목들
+@Composable
+private fun LogoutConfirmationDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            LogoutDialogTitle()
+        },
+        text = {
+            LogoutDialogMessage()
+        },
+        confirmButton = {
+            LogoutConfirmButton(onClick = onConfirm)
+        },
+        dismissButton = {
+            LogoutCancelButton(onClick = onDismiss)
+        },
+        containerColor = Color(0xFF1A2847),
+        shape = RoundedCornerShape(8.dp)
+    )
+}
+
+@Composable
+private fun LogoutDialogTitle() {
+    Text(
+        text = stringResource(R.string.logout),
+        style = TextStyle(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFFFFFF)
+        )
+    )
+}
+
+@Composable
+private fun LogoutDialogMessage() {
+    Text(
+        text = stringResource(R.string.logout_confirmation_message),
+        style = TextStyle(
+            fontSize = 15.sp,
+            color = Color(0xFFE1E1E1),
+            lineHeight = 24.sp
+        )
+    )
+}
+
+@Composable
+private fun LogoutConfirmButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.logout),
+            color = Color(0xFFFF6B6B)
+        )
+    }
+}
+
+@Composable
+private fun LogoutCancelButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.cancel),
+            color = Color(0xFFCCCCCC)
+        )
+    }
+}
+
+@Composable
+private fun LogoutButton(onClick: () -> Unit) {
+    CommonNavigationItem(
+        title = stringResource(R.string.logout),
+        onClick = onClick
+    )
+}
+
 @Composable
 fun SuggestionSettingItem(
     viewModel: SettingsViewModel
@@ -457,59 +537,91 @@ fun WithdrawalSettingItem(
 ) {
     val showWithdrawalDialog by viewModel.showWithdrawalDialog.collectAsState()
 
-    if (showWithdrawalDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.updateShowWithdrawalDialog(false) },
-            title = {
-                Text(
-                    text = stringResource(R.string.withdrawal),
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.withdrawal_confirmation_message),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        color = Color(0xFFFFFFFF)
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
-                        viewModel.updateShowWithdrawalDialog(false)
-                    }
-                ) {
-                    Text(
-                        stringResource(R.string.yes),
-                        color = Color(0xFFFFFFFF)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.updateShowWithdrawalDialog(false) }
-                ) {
-                    Text(
-                        stringResource(R.string.no),
-                        color = Color(0xFFFFFFFF)
-                    )
-                }
-            },
-            containerColor = Color(0xFF0E1C41),
-            shape = RoundedCornerShape(8.dp)
+    WithdrawalConfirmationDialog(
+        showDialog = showWithdrawalDialog,
+        onConfirm = {
+            viewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
+            viewModel.updateShowWithdrawalDialog(false)
+        },
+        onDismiss = {
+            viewModel.updateShowWithdrawalDialog(false)
+        }
+    )
+
+    WithdrawalButton(
+        onClick = {
+            viewModel.updateShowWithdrawalDialog(true)
+        }
+    )
+}
+
+@Composable
+private fun WithdrawalConfirmationDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { WithdrawalDialogTitle() },
+        text = { WithdrawalDialogMessage() },
+        confirmButton = { WithdrawalConfirmButton(onClick = onConfirm) },
+        dismissButton = { WithdrawalCancelButton(onClick = onDismiss) },
+        containerColor = Color(0xFF0E1C41),
+        shape = RoundedCornerShape(8.dp)
+    )
+}
+
+@Composable
+private fun WithdrawalDialogTitle() {
+    Text(
+        text = stringResource(R.string.withdrawal),
+        style = TextStyle(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFFFFFF)
+        )
+    )
+}
+
+@Composable
+private fun WithdrawalDialogMessage() {
+    Text(
+        text = stringResource(R.string.withdrawal_confirmation_message),
+        style = TextStyle(
+            fontSize = 15.sp,
+            color = Color(0xFFFFFFFF)
+        )
+    )
+}
+
+@Composable
+private fun WithdrawalConfirmButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.yes),
+            color = Color(0xFFFFFFFF)
         )
     }
+}
 
+@Composable
+private fun WithdrawalCancelButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.no),
+            color = Color(0xFFFFFFFF)
+        )
+    }
+}
+
+@Composable
+private fun WithdrawalButton(onClick: () -> Unit) {
     CommonNavigationItem(
         title = stringResource(R.string.withdrawal),
-        onClick = { viewModel.updateShowWithdrawalDialog(true) }
+        onClick = onClick
     )
 }
 
