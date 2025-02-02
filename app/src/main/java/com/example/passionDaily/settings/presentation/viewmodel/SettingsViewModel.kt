@@ -133,7 +133,6 @@ class SettingsViewModel @Inject constructor(
         settingsStateHolder.updateNotificationTime(newTime)
     }
 
-
     fun logIn(onLogInSuccess: () -> Unit) {
         viewModelScope.launch {
             settingsStateHolder.updateIsLoading(true)
@@ -155,16 +154,9 @@ class SettingsViewModel @Inject constructor(
     fun logOut(onLogoutSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
-                if (getCurrentUser() == null) {
-                    toastManager.showAlreadyLoggedOutErrorToast()
-                    return@launch
-                }
+                if (isUserLoggedOut()) return@launch
 
-                settingsStateHolder.updateIsLoading(true)
-                authManager.clearCredentials()
-                authStateHolder.setUnAuthenticated()
-                scheduleAlarmUseCase.cancelExistingAlarm()
-
+                performLogout()
                 toastManager.showLogoutSuccessToast()
                 onLogoutSuccess()
             } catch (e: Exception) {
@@ -174,6 +166,21 @@ class SettingsViewModel @Inject constructor(
                 settingsStateHolder.updateIsLoading(false)
             }
         }
+    }
+
+    private fun isUserLoggedOut(): Boolean {
+        if (getCurrentUser() == null) {
+            toastManager.showAlreadyLoggedOutErrorToast()
+            return true
+        }
+        return false
+    }
+
+    private suspend fun performLogout() {
+        settingsStateHolder.updateIsLoading(true)
+        authManager.clearCredentials()
+        authStateHolder.setUnAuthenticated()
+        scheduleAlarmUseCase.cancelExistingAlarm()
     }
 
     fun withdrawUser(onWithDrawlSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
