@@ -181,7 +181,7 @@ class SettingsViewModel @Inject constructor(
                 authStateHolder.setUnAuthenticated()
                 alarmScheduler.cancelExistingAlarm()
 
-                toastManager.showLoginSuccessToast()
+                toastManager.showLogoutSuccessToast()
                 _navigateToQuote.emit(true)
             } catch (e: Exception) {
                 Log.e(TAG, "Error during logout", e)

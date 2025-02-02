@@ -41,6 +41,8 @@
     <string name="login_loading">로그인 중이에요...</string>
     <string name="login_required">로그인이 필요해요.</string>
 
+    <string name="logout_success">로그아웃에 성공했어요.</string>
+
     <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
     <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
     <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>

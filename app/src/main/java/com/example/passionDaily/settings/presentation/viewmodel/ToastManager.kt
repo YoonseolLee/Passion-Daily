@@ -34,6 +34,10 @@ class ToastManager @Inject constructor(
         showToast(R.string.login_success)
     }
 
+    fun showLogoutSuccessToast() {
+        showToast(R.string.logout_success)
+    }
+
     fun showLoginErrorToast() {
         showToast(R.string.login_error_format)
     }
@@ -52,10 +56,6 @@ class ToastManager @Inject constructor(
 
     fun showWithDrawlSuccessToast() {
         showToast(R.string.success_withdrawal)
-    }
-
-    fun showWithDrawlErrorToast() {
-        showToast(R.string.error_withdrawal)
     }
 
     fun showReLoginForWithDrawlToast() {
