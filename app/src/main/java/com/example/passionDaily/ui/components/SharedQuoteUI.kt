@@ -43,10 +43,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
+import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @Composable
 fun BackgroundImage(imageUrl: String?) {
@@ -289,8 +290,9 @@ fun AddToFavoritesButton(
     category: QuoteCategory,
     onRequireLogin: () -> Unit,
 ) {
-    val context = LocalContext.current
     val currentUser = FirebaseAuth.getInstance().currentUser
+
+    val coroutineScope = rememberCoroutineScope()
 
     val categoryId = category?.categoryId ?: return
     val userId = currentUser?.uid ?: ""
@@ -350,7 +352,9 @@ fun AddToFavoritesButton(
                             "AddToFavoritesButton",
                             "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId"
                         )
-                        favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                        coroutineScope.launch {
+                            favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                        }
                     } else {
                         favoritesViewModel.addFavorite(currentQuoteId)
                     }

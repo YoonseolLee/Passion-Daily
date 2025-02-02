@@ -26,6 +26,10 @@ class ToastManager @Inject constructor(
         showToast(R.string.error_firebase_firestore)
     }
 
+    fun showRoomDatabaseErrorToast() {
+        showToast(R.string.error_local_database)
+    }
+
     fun showLoginSuccessMessage() {
         showToast(R.string.login_success)
     }

@@ -1,18 +1,13 @@
-package com.example.passionDaily.ui.viewmodels
+package com.example.passionDaily.favorites.presentation.viewmodel
 
-import android.database.sqlite.SQLiteConstraintException
-import android.os.NetworkOnMainThreadException
+import android.database.sqlite.SQLiteException
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
-import com.example.passionDaily.R
-import com.example.passionDaily.constants.ViewModelConstants
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
-import com.example.passionDaily.data.local.entity.FavoriteEntity
-import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
@@ -20,13 +15,15 @@ import com.example.passionDaily.data.repository.local.LocalQuoteCategoryReposito
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
 import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
+import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
 import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
+import com.example.passionDaily.manager.ToastManager
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.ui.viewmodels.QuoteInteractionHandler
 import com.example.passionDaily.util.QuoteCategory
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,34 +31,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
-    private val localFavoriteRepository: LocalFavoriteRepository,
-    private val remoteFavoriteRepository: RemoteFavoriteRepository,
-    private val localQuoteRepository: LocalQuoteRepository,
-    private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
-    private val stringProvider: StringProvider,
     private val firebaseAuth: FirebaseAuth,
     private val favoritesStateHolder: FavoritesStateHolder,
     private val favoritesLoadingManager: FavoritesLoadingManager,
-    private val favoritesSavingManager: FavoritesSavingManager
+    private val favoritesSavingManager: FavoritesSavingManager,
+    private val favoritesRemoveManager: FavoritesRemoveManager,
+    private val toastManager: ToastManager
 ) : ViewModel(), QuoteInteractionHandler {
 
     private var userId: String = firebaseAuth.currentUser?.uid ?: ""
@@ -81,11 +71,6 @@ class FavoritesViewModel @Inject constructor(
     val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
 
     private var favoritesJob: Job? = null
-
-    init {
-        Log.d(TAG, "ViewModel initialization started")
-        Log.d(TAG, "StateHolder instance: $favoritesStateHolder")
-    }
 
     private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> {
         return combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
@@ -121,7 +106,7 @@ class FavoritesViewModel @Inject constructor(
                 savedStateHandle[KEY_FAVORITE_INDEX] = _currentQuoteIndex.value - 1
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in previousQuote: ${e.message}")
+            handleError(e)
         }
     }
 
@@ -138,7 +123,7 @@ class FavoritesViewModel @Inject constructor(
                 savedStateHandle[KEY_FAVORITE_INDEX] = nextIndex
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in nextQuote: ${e.message}")
+            handleError(e)
         }
     }
 
@@ -154,22 +139,27 @@ class FavoritesViewModel @Inject constructor(
             favoritesLoadingManager.updateIsFavoriteLoading(true)
 
             try {
-                withContext(Dispatchers.IO) {
-                    favoritesLoadingManager.getAllFavorites(currentUserId)
-                        .catch { e ->
-                            favoritesLoadingManager.updateIsFavoriteLoading(false)
-                            favoritesStateHolder.updateIsFavoriteLoading(false)
-                            throw e
-                        }
-                        .collect { favorites ->
-                            handleFavoritesUpdate(favorites)
-                            favoritesLoadingManager.updateIsFavoriteLoading(false)
-                        }
-                }
+                favoritesLoadingManager.getAllFavorites(currentUserId)
+                    .catch { e ->
+                        favoritesLoadingManager.updateIsFavoriteLoading(false)
+                        favoritesStateHolder.updateIsFavoriteLoading(false)
+                        throw e
+                    }
+                    .collect { favorites ->
+                        handleFavoritesUpdate(favorites)
+                        favoritesLoadingManager.updateIsFavoriteLoading(false)
+                    }
             } catch (e: Exception) {
                 favoritesLoadingManager.updateIsFavoriteLoading(false)
+                handleError(e)
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        favoritesJob?.cancel()
+        firebaseAuth.removeAuthStateListener(authStateListener)
     }
 
     private fun handleFavoritesUpdate(favorites: List<QuoteEntity>) {
@@ -193,11 +183,14 @@ class FavoritesViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
-                launch { addFavoriteToFirestore(currentUser, quoteId, selectedCategory) }
+                // 동시 실행 보장 (둘 중 하나가 실패하면 즉시 취소됨)
+                coroutineScope {
+                    launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
+                    launch { addFavoriteToFirestore(currentUser, quoteId, selectedCategory) }
+                }
                 loadFavorites()
             } catch (e: Exception) {
-                Log.e(TAG, "Error adding favorite: ${e.message}")
+                handleError(e)
             }
         }
     }
@@ -228,69 +221,73 @@ class FavoritesViewModel @Inject constructor(
         currentUser: FirebaseUser,
         quoteId: String,
         selectedCategory: QuoteCategory
-    ){
+    ) {
         viewModelScope.launch {
             try {
-                favoritesSavingManager.addFavoriteToFirestore(currentUser, quoteId, selectedCategory)
+                favoritesSavingManager.addFavoriteToFirestore(
+                    currentUser,
+                    quoteId,
+                    selectedCategory
+                )
             } catch (e: Exception) {
-                Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
-                throw e
+                handleError(e)
             }
         }
     }
 
-    fun removeFavorite(quoteId: String, categoryId: Int) {
-        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId)
+    suspend fun removeFavorite(quoteId: String, categoryId: Int) {
+        val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
             ?: return
 
         viewModelScope.launch {
             try {
-                deleteLocalFavorite(currentUser.uid, quoteId, actualCategoryId)
-
-                remoteFavoriteRepository.deleteFavoriteFromFirestore(
-                    currentUser,
+                favoritesRemoveManager.deleteLocalFavorite(
+                    currentUser.uid,
                     quoteId,
-                    categoryId
+                    actualCategoryId
                 )
-
+                favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
                 loadFavorites()
             } catch (e: Exception) {
-                Log.e(TAG, "Error removing favorite: ${e.message}")
+                handleError(e)
             }
         }
     }
 
-    @Transaction
-    private suspend fun deleteLocalFavorite(userId: String, quoteId: String, categoryId: Int) {
-        try {
-            localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId)
-
-            val remainingFavorites =
-                localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
-            if (remainingFavorites.isEmpty()) {
-                localQuoteRepository.deleteQuote(quoteId, categoryId)
-            }
-            Log.d(TAG, "Successfully deleted favorite from local DB")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error deleting favorite: ${e.message}")
-            throw e
-        }
-    }
-
-    private fun getRequiredDataForRemove(
-        quoteId: String,
+    private suspend fun getRequiredDataForRemove(
+        firebaseAuth: FirebaseAuth,
         categoryId: Int
     ): Pair<FirebaseUser, Int>? {
-        val currentUser = firebaseAuth.currentUser ?: run {
-            Log.d(TAG, "No user logged in")
-            return null
-        }
-        return Pair(currentUser, categoryId)
+        return favoritesRemoveManager.getRequiredDataForRemove(firebaseAuth, categoryId)
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        favoritesJob?.cancel()
-        firebaseAuth.removeAuthStateListener {}
+    private fun handleError(e: Exception) {
+        when (e) {
+            is CancellationException -> throw e
+            is IOException -> {
+                Log.e(TAG, "Network error details: ${e.message}", e)
+                toastManager.showNetworkErrorToast()
+            }
+
+            is FirebaseFirestoreException -> {
+                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
+                toastManager.showFirebaseErrorToast()
+            }
+
+            is SQLiteException -> {
+                Log.e(TAG, "Room database error details: ${e.message}", e)
+                toastManager.showRoomDatabaseErrorToast()
+            }
+
+            is IllegalStateException -> {
+                Log.e(TAG, "Illegal state error details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
+            }
+
+            else -> {
+                Log.e(TAG, "Exception details: ${e.message}", e)
+                toastManager.showGeneralErrorToast()
+            }
+        }
     }
 }

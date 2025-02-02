@@ -50,7 +50,7 @@ import com.example.passionDaily.ui.components.LeftArrow
 import com.example.passionDaily.ui.components.QuoteAndPerson
 import com.example.passionDaily.ui.components.RightArrow
 import com.example.passionDaily.ui.components.toQuoteDisplay
-import com.example.passionDaily.ui.viewmodels.FavoritesViewModel
+import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.util.CommonNavigationBar
 import com.example.passionDaily.util.QuoteCategory

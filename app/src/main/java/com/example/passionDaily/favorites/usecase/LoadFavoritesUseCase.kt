@@ -39,6 +39,4 @@ class LoadFavoritesUseCase @Inject constructor(
                 } ?: false
             }
     }
-
-
 }

@@ -1,7 +1,6 @@
 package com.example.passionDaily.data.repository.local
 
 import com.example.passionDaily.data.local.dao.FavoriteDao
-import com.example.passionDaily.data.local.dto.FavoriteWithCategory
 import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +10,12 @@ import javax.inject.Inject
 class LocalFavoriteRepositoryImpl @Inject constructor(
     private val favoriteDao: FavoriteDao
 ) : LocalFavoriteRepository {
+
+    /**
+     * 1. Flow를 반환하는 함수에는 withContext(Dispatchers.IO)를 쓰지 않는다.
+     * 2. Room DAO의 suspend fun들은 기본적으로 IO에서 실행된다.
+     */
+
     override suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>> {
         return favoriteDao.getAllFavorites(userId)
     }
