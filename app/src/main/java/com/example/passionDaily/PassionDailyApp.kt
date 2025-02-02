@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
-import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
+import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +18,7 @@ import androidx.work.Configuration
 @HiltAndroidApp
 class PassionDailyApp : Application(), Configuration.Provider {
     @Inject
-    lateinit var alarmScheduler: DailyQuoteAlarmScheduler
+    lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 

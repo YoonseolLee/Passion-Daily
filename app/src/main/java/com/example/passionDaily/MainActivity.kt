@@ -8,7 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
+import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.navigation.SetupNavigation
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -27,7 +27,7 @@ import androidx.core.content.ContextCompat
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
-    lateinit var alarmScheduler: DailyQuoteAlarmScheduler
+    lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
 
     // 권한 요청을 위한 launcher 정의
     private val requestPermissionLauncher = registerForActivityResult(

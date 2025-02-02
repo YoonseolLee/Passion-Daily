@@ -12,7 +12,7 @@ import java.util.Calendar
 import javax.inject.Inject
 
 @Singleton
-class DailyQuoteAlarmScheduler @Inject constructor(
+class ScheduleDailyQuoteAlarmUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     companion object {

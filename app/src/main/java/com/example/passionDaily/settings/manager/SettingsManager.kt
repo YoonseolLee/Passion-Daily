@@ -1,7 +1,6 @@
 package com.example.passionDaily.settings.manager
 
 import android.util.Log
-import com.example.passionDaily.constants.ViewModelConstants.Settings
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
@@ -20,7 +19,7 @@ class SettingsManager @Inject constructor(
     private val localQuoteRepository: LocalQuoteRepository,
     private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
     private val loadUserInfoUseCase: LoadUserInfoUseCase,
-    private val parseTimeUseCase: ParseTimeUseCase
+    private val parseTimeUseCase: ParseTimeUseCase,
 ) {
 
     companion object {
@@ -36,21 +35,6 @@ class SettingsManager @Inject constructor(
 
     fun parseTime(timeStr: String): LocalTime {
         return parseTimeUseCase.parseTime(timeStr)
-    }
-
-    suspend fun updateNotificationSettings(userId: String, enabled: Boolean) {
-        Log.d(TAG, "Updating notification settings: enabled=$enabled for user=$userId")
-
-        try {
-            remoteUserRepository.updateNotificationSettingsToFirestore(userId, enabled)
-            Log.d(TAG, "Successfully updated notification settings in Firestore")
-
-            localUserRepository.updateNotificationSettingsToRoom(userId, enabled)
-            Log.d(TAG, "Successfully updated notification settings in Room")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification settings", e)
-            throw e
-        }
     }
 
     suspend fun updateNotificationTime(userId: String, time: LocalTime) {

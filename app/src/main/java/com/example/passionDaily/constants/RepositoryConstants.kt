@@ -5,4 +5,11 @@ object RepositoryConstants {
         const val TAG = "QuoteRepository"
         const val PAGE_SIZE = 20
     }
+
+    object RemoteUser {
+        const val TAG = "RemoteUserRepository"
+        const val USERS_COLLECTION = "users"
+        const val FAVORITES_COLLECTION = "favorites"
+    }
+
 }

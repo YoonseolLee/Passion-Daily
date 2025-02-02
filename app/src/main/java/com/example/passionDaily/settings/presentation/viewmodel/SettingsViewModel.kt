@@ -7,10 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.SettingsManager
-import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
-import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.settings.manager.EmailManager
+import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
@@ -25,8 +25,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
-    private val alarmScheduler: DailyQuoteAlarmScheduler,
+    private val scheduleAlarmUseCase: ScheduleDailyQuoteAlarmUseCase,
     private val authManager: AuthenticationManager,
+    private val notificationManager: NotificationManager,
     private val authStateHolder: AuthStateHolder,
     private val toastManager: ToastManager,
     private val emailManager: EmailManager,
@@ -83,16 +84,15 @@ class SettingsViewModel @Inject constructor(
             getCurrentUser()?.uid?.let { userId ->
                 try {
                     // 알림 설정을 Firestore와 Room에 저장
-                    settingsManager.updateNotificationSettings(userId, enabled)
-                    settingsStateHolder.updateNotificationEnabled(enabled)
+                    applyNotificationSettings(userId, enabled)
 
                     // 알림 활성화 상태에 따라 알람 스케줄링
                     if (enabled) {
                         notificationTime.value?.let { time ->
-                            alarmScheduler.scheduleNotification(time.hour, time.minute)
+                            notificationManager.scheduleNotification(time.hour, time.minute)
                         }
                     } else {
-                        alarmScheduler.cancelExistingAlarm()
+                        notificationManager.cancelExistingAlarm()
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error updating notification settings", e)
@@ -100,6 +100,11 @@ class SettingsViewModel @Inject constructor(
                 }
             } ?: Log.e(TAG, "Failed to update notification settings: User not logged in")
         }
+    }
+
+    private suspend fun applyNotificationSettings(userId: String, enabled: Boolean) {
+        notificationManager.updateNotificationSettings(userId, enabled)
+        settingsStateHolder.updateNotificationEnabled(enabled)
     }
 
     fun updateNotificationTime(newTime: LocalTime) {
@@ -124,7 +129,7 @@ class SettingsViewModel @Inject constructor(
                             TAG,
                             "Notifications are enabled, rescheduling alarm for new time ${newTime.hour}:${newTime.minute}"
                         )
-                        alarmScheduler.scheduleNotification(newTime.hour, newTime.minute)
+                        scheduleAlarmUseCase.scheduleNotification(newTime.hour, newTime.minute)
                     } else {
                         Log.d(TAG, "Notifications are disabled, skipping alarm scheduling")
                     }
@@ -165,7 +170,7 @@ class SettingsViewModel @Inject constructor(
                 settingsStateHolder.updateIsLoading(true)
                 authManager.clearCredentials()
                 authStateHolder.setUnAuthenticated()
-                alarmScheduler.cancelExistingAlarm()
+                scheduleAlarmUseCase.cancelExistingAlarm()
 
                 toastManager.showLogoutSuccessToast()
                 onLogoutSuccess()
