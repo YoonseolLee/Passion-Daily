@@ -3,6 +3,8 @@ package com.example.passionDaily.di
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.work.WorkManager
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.AuthStateHolderImpl
 import com.example.passionDaily.login.stateholder.ConsentStateHolder
@@ -116,5 +118,13 @@ object AppModule {
     @Singleton
     fun provideConsentStateHolder(): ConsentStateHolder {
         return ConsentStateHolderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFavoritesStateHolder(): FavoritesStateHolder {
+        return FavoritesStateHolderImpl().also { stateHolder ->
+            stateHolder.updateFavoriteQuotes(emptyList())
+        }
     }
 }

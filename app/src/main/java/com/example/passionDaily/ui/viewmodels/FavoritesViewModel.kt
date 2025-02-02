@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import com.example.passionDaily.R
+import com.example.passionDaily.constants.ViewModelConstants
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
 import com.example.passionDaily.data.local.entity.FavoriteEntity
@@ -18,6 +19,7 @@ import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
+import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.resources.StringProvider
@@ -56,12 +58,11 @@ class FavoritesViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val stringProvider: StringProvider,
     private val firebaseAuth: FirebaseAuth,
-    private val favoritesStateHolder: FavoritesStateHolder
+    private val favoritesStateHolder: FavoritesStateHolder,
+    private val favoritesLoadingManager: FavoritesLoadingManager
 ) : ViewModel(), QuoteInteractionHandler {
 
     private var userId: String = firebaseAuth.currentUser?.uid ?: ""
-    private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_FAVORITE_INDEX, 0)
-    val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
 
     val favoriteQuotes = favoritesStateHolder.favoriteQuotes
     val isFavoriteLoading: StateFlow<Boolean> = favoritesStateHolder.isFavoriteLoading
@@ -70,12 +71,32 @@ class FavoritesViewModel @Inject constructor(
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     val quotes = quoteStateHolder.quotes
 
+    private val _currentQuoteIndex = savedStateHandle.getStateFlow(
+        KEY_FAVORITE_INDEX,
+        0
+    )
+
+    val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
+
     private var favoritesJob: Job? = null
 
-    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
-        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
+    init {
+        Log.d(TAG, "ViewModel initialization started")
+        Log.d(TAG, "StateHolder instance: $favoritesStateHolder")
+    }
+
+    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> {
+        Log.d(TAG, "Creating flow with favoriteQuotes: $favoriteQuotes")
+        return combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
+            Log.d(TAG, "Combining - quotes: $quotes, index: $index")
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    }
+
+//    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
+//        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
+//            quotes.getOrNull(index)
+//        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         viewModelScope.launch {
@@ -96,10 +117,13 @@ class FavoritesViewModel @Inject constructor(
     override fun previousQuote() {
         try {
             val quotesSize = favoriteQuotes.value.size
-            savedStateHandle[KEY_FAVORITE_INDEX] = when {
-                _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
-                _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
-                else -> _currentQuoteIndex.value - 1
+
+            if (quotesSize == 0) return  // 즐겨찾기가 없는 경우
+
+            if (_currentQuoteIndex.value == 0) {
+                savedStateHandle[KEY_FAVORITE_INDEX] = quotesSize - 1
+            } else {
+                savedStateHandle[KEY_FAVORITE_INDEX] = _currentQuoteIndex.value - 1
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in previousQuote: ${e.message}")
@@ -111,15 +135,46 @@ class FavoritesViewModel @Inject constructor(
             val nextIndex = _currentQuoteIndex.value + 1
             val quotesSize = favoriteQuotes.value.size
 
-            savedStateHandle[KEY_FAVORITE_INDEX] = when {
-                nextIndex >= quotesSize && quotesSize > 0 -> 0
-                nextIndex >= quotesSize -> _currentQuoteIndex.value
-                else -> nextIndex
+            if (quotesSize == 0) return  // 즐겨찾기가 없는 경우
+
+            if (nextIndex >= quotesSize) {
+                savedStateHandle[KEY_FAVORITE_INDEX] = 0
+            } else {
+                savedStateHandle[KEY_FAVORITE_INDEX] = nextIndex
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error in nextQuote: ${e.message}")
         }
     }
+
+
+//    override fun previousQuote() {
+//        try {
+//            val quotesSize = favoriteQuotes.value.size
+//            savedStateHandle[KEY_FAVORITE_INDEX] = when {
+//                _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
+//                _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
+//                else -> _currentQuoteIndex.value - 1
+//            }
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error in previousQuote: ${e.message}")
+//        }
+//    }
+//
+//    override fun nextQuote() {
+//        try {
+//            val nextIndex = _currentQuoteIndex.value + 1
+//            val quotesSize = favoriteQuotes.value.size
+//
+//            savedStateHandle[KEY_FAVORITE_INDEX] = when {
+//                nextIndex >= quotesSize && quotesSize > 0 -> 0
+//                nextIndex >= quotesSize -> _currentQuoteIndex.value
+//                else -> nextIndex
+//            }
+//        } catch (e: Exception) {
+//            Log.e(TAG, "Error in nextQuote: ${e.message}")
+//        }
+//    }
 
     fun loadFavorites() {
         val currentUserId = userId
@@ -130,49 +185,36 @@ class FavoritesViewModel @Inject constructor(
 
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
-            favoritesStateHolder.updateIsFavoriteLoading(true)
+            favoritesLoadingManager.updateIsFavoriteLoading(true)
 
             try {
-                Log.d(TAG, "Starting to load favorites for user: $currentUserId")
-
                 withContext(Dispatchers.IO) {
-                    localFavoriteRepository.getAllFavorites(currentUserId)
+                    favoritesLoadingManager.getAllFavorites(currentUserId)
                         .catch { e ->
-                            Log.e(TAG, "Error in flow", e)
+                            favoritesLoadingManager.updateIsFavoriteLoading(false)
                             favoritesStateHolder.updateIsFavoriteLoading(false)
                             throw e
                         }
                         .collect { favorites ->
                             handleFavoritesUpdate(favorites)
-                            favoritesStateHolder.updateIsFavoriteLoading(false)
+                            favoritesLoadingManager.updateIsFavoriteLoading(false)
                         }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading favorites: ${e.message}")
-                favoritesStateHolder.updateIsFavoriteLoading(false)
+                favoritesLoadingManager.updateIsFavoriteLoading(false)
             }
         }
     }
 
-    private suspend fun handleFavoritesUpdate(favorites: List<QuoteEntity>) {
-        Log.d(TAG, "Received favorites: ${favorites.joinToString { it.quoteId }}")
-        favoritesStateHolder.updateFavoriteQuotes(favorites)
+    private fun handleFavoritesUpdate(favorites: List<QuoteEntity>) {
+        favoritesLoadingManager.updateFavoriteQuotes(favorites)
         if (_currentQuoteIndex.value >= favorites.size) {
-            Log.d(TAG, "Resetting current index from ${_currentQuoteIndex.value} to 0")
             savedStateHandle[KEY_FAVORITE_INDEX] = 0
         }
-        Log.d(TAG, "Successfully loaded ${favorites.size} favorites")
     }
 
     fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
-        return localFavoriteRepository.checkFavoriteEntity(userId, quoteId, categoryId)
-            .map { favorite ->
-                favorite?.let {
-                    it.userId == userId &&
-                            it.quoteId == quoteId &&
-                            it.categoryId == categoryId
-                } ?: false
-            }
+        return favoritesLoadingManager.isFavorite(userId, quoteId, categoryId)
     }
 
     fun addFavorite(quoteId: String) {
@@ -192,7 +234,8 @@ class FavoritesViewModel @Inject constructor(
     }
 
     fun removeFavorite(quoteId: String, categoryId: Int) {
-        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId) ?: return
+        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId)
+            ?: return
 
         viewModelScope.launch {
             try {
