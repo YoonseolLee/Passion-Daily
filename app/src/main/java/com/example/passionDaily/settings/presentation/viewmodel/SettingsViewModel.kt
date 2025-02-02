@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.login.manager.AuthenticationManager
-import com.example.passionDaily.settings.manager.SettingsManager
+import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.settings.manager.EmailManager
@@ -24,7 +24,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsManager: SettingsManager,
+    private val userSettingsManager: UserSettingsManager,
     private val scheduleAlarmUseCase: ScheduleDailyQuoteAlarmUseCase,
     private val authManager: AuthenticationManager,
     private val notificationManager: NotificationManager,
@@ -53,7 +53,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
-                    settingsManager.loadUserSettings(userId) { enabled, timeStr ->
+                    userSettingsManager.loadUserSettings(userId) { enabled, timeStr ->
                         settingsStateHolder.updateNotificationEnabled(enabled)
                         setNotificationTime(timeStr)
                     }
@@ -70,7 +70,7 @@ class SettingsViewModel @Inject constructor(
     private fun setNotificationTime(timeStr: String?) {
         timeStr?.let {
             try {
-                val time = settingsManager.parseTime(timeStr)
+                val time = notificationManager.parseTime(timeStr)
                 settingsStateHolder.updateNotificationTime(time)
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing notification time", e)
@@ -110,26 +110,13 @@ class SettingsViewModel @Inject constructor(
     fun updateNotificationTime(newTime: LocalTime) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
-                Log.d(
-                    TAG,
-                    "Attempting to update notification time to ${newTime.hour}:${newTime.minute} for user=$userId"
-                )
-
                 try {
                     // Firestore와 Room에 시간 업데이트
-                    settingsManager.updateNotificationTime(userId, newTime)
-                    Log.d(TAG, "Successfully updated notification time in databases")
-
-                    settingsStateHolder.updateNotificationTime(newTime)
-                    Log.d(TAG, "Updated local notification time state")
+                    updateNotificationTimeForUser(userId, newTime)
 
                     // 알림이 활성화된 상태에서만 알람 재설정
                     if (notificationEnabled.value) {
-                        Log.d(
-                            TAG,
-                            "Notifications are enabled, rescheduling alarm for new time ${newTime.hour}:${newTime.minute}"
-                        )
-                        scheduleAlarmUseCase.scheduleNotification(newTime.hour, newTime.minute)
+                        notificationManager.scheduleNotification(newTime.hour, newTime.minute)
                     } else {
                         Log.d(TAG, "Notifications are disabled, skipping alarm scheduling")
                     }
@@ -140,6 +127,12 @@ class SettingsViewModel @Inject constructor(
             } ?: Log.e(TAG, "Failed to update notification time: User not logged in")
         }
     }
+
+    private suspend fun updateNotificationTimeForUser(userId: String, newTime: LocalTime) {
+        notificationManager.updateNotificationTime(userId, newTime)
+        settingsStateHolder.updateNotificationTime(newTime)
+    }
+
 
     fun logIn(onLogInSuccess: () -> Unit) {
         viewModelScope.launch {
@@ -192,7 +185,7 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
-                settingsManager.deleteUserData(user.uid)
+                userSettingsManager.deleteUserData(user.uid)
 
                 // 계정 삭제 시도
                 Firebase.auth.currentUser?.let { currentUser ->

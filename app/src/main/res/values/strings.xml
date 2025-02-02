@@ -50,4 +50,5 @@
     <string name="email_address">mailto:thisyoon97@gmail.com</string>
     <string name="choose_email_app">이메일 앱 선택</string>
     <string name="success_send_email">이메일 전송에 성공했습니다.</string>
+    <string name="hour_pattern">HH:mm</string>
 </resources>
