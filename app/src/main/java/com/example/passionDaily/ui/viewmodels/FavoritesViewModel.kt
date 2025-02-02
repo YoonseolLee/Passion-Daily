@@ -18,6 +18,7 @@ import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.util.QuoteCategory
@@ -55,26 +56,26 @@ class FavoritesViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val stringProvider: StringProvider,
     private val firebaseAuth: FirebaseAuth,
+    private val favoritesStateHolder: FavoritesStateHolder
 ) : ViewModel(), QuoteInteractionHandler {
 
     private var userId: String = firebaseAuth.currentUser?.uid ?: ""
-
-    private val _favoriteQuotes = MutableStateFlow<List<QuoteEntity>>(emptyList())
-    val favoriteQuotes: StateFlow<List<QuoteEntity>> = _favoriteQuotes.asStateFlow()
-
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_FAVORITE_INDEX, 0)
     val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
 
-    private val _isFavoriteLoading = MutableStateFlow(false)
-    val isFavoriteLoading: StateFlow<Boolean> = _isFavoriteLoading.asStateFlow()
-
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    val favoriteQuotes = favoritesStateHolder.favoriteQuotes
+    val isFavoriteLoading: StateFlow<Boolean> = favoritesStateHolder.isFavoriteLoading
+    val error: StateFlow<String?> = favoritesStateHolder.error
 
     val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
     val quotes = quoteStateHolder.quotes
 
     private var favoritesJob: Job? = null
+
+    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
+        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
+            quotes.getOrNull(index)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         viewModelScope.launch {
@@ -92,33 +93,31 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-
-    private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> =
-        combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
-            quotes.getOrNull(index)
-        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
     override fun previousQuote() {
-        safeFavoriteOperation {
-            val quotesSize = _favoriteQuotes.value.size
+        try {
+            val quotesSize = favoriteQuotes.value.size
             savedStateHandle[KEY_FAVORITE_INDEX] = when {
                 _currentQuoteIndex.value == 0 && quotesSize > 0 -> quotesSize - 1
                 _currentQuoteIndex.value == 0 -> _currentQuoteIndex.value
                 else -> _currentQuoteIndex.value - 1
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in previousQuote: ${e.message}")
         }
     }
 
     override fun nextQuote() {
-        safeFavoriteOperation {
+        try {
             val nextIndex = _currentQuoteIndex.value + 1
-            val quotesSize = _favoriteQuotes.value.size
+            val quotesSize = favoriteQuotes.value.size
 
             savedStateHandle[KEY_FAVORITE_INDEX] = when {
                 nextIndex >= quotesSize && quotesSize > 0 -> 0
                 nextIndex >= quotesSize -> _currentQuoteIndex.value
                 else -> nextIndex
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in nextQuote: ${e.message}")
         }
     }
 
@@ -131,31 +130,33 @@ class FavoritesViewModel @Inject constructor(
 
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
-            _isFavoriteLoading.emit(true)
+            favoritesStateHolder.updateIsFavoriteLoading(true)
 
-            safeFavoriteOperation {
+            try {
                 Log.d(TAG, "Starting to load favorites for user: $currentUserId")
 
                 withContext(Dispatchers.IO) {
                     localFavoriteRepository.getAllFavorites(currentUserId)
                         .catch { e ->
                             Log.e(TAG, "Error in flow", e)
-                            _isFavoriteLoading.emit(false)
+                            favoritesStateHolder.updateIsFavoriteLoading(false)
                             throw e
                         }
                         .collect { favorites ->
                             handleFavoritesUpdate(favorites)
-                            _isFavoriteLoading.emit(false)
+                            favoritesStateHolder.updateIsFavoriteLoading(false)
                         }
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading favorites: ${e.message}")
+                favoritesStateHolder.updateIsFavoriteLoading(false)
             }
-            _isFavoriteLoading.emit(false)
         }
     }
 
     private suspend fun handleFavoritesUpdate(favorites: List<QuoteEntity>) {
         Log.d(TAG, "Received favorites: ${favorites.joinToString { it.quoteId }}")
-        _favoriteQuotes.emit(favorites)
+        favoritesStateHolder.updateFavoriteQuotes(favorites)
         if (_currentQuoteIndex.value >= favorites.size) {
             Log.d(TAG, "Resetting current index from ${_currentQuoteIndex.value} to 0")
             savedStateHandle[KEY_FAVORITE_INDEX] = 0
@@ -178,22 +179,23 @@ class FavoritesViewModel @Inject constructor(
         val (currentUser, selectedCategory, currentQuote) = getRequiredDataForAdd(quoteId) ?: return
 
         viewModelScope.launch {
-            safeFavoriteOperation {
+            try {
                 coroutineScope {
                     launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
                     launch { addFavoriteToFirestore(currentUser, quoteId) }
                 }
                 loadFavorites()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error adding favorite: ${e.message}")
             }
         }
     }
 
     fun removeFavorite(quoteId: String, categoryId: Int) {
-        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId)
-            ?: return
+        val (currentUser, actualCategoryId) = getRequiredDataForRemove(quoteId, categoryId) ?: return
 
         viewModelScope.launch {
-            safeFavoriteOperation {
+            try {
                 deleteLocalFavorite(currentUser.uid, quoteId, actualCategoryId)
 
                 remoteFavoriteRepository.deleteFavoriteFromFirestore(
@@ -203,6 +205,8 @@ class FavoritesViewModel @Inject constructor(
                 )
 
                 loadFavorites()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error removing favorite: ${e.message}")
             }
         }
     }
@@ -349,41 +353,5 @@ class FavoritesViewModel @Inject constructor(
         super.onCleared()
         favoritesJob?.cancel()
         firebaseAuth.removeAuthStateListener {}
-    }
-
-    private fun safeFavoriteOperation(block: suspend () -> Unit) {
-        viewModelScope.launch {
-            try {
-                _isFavoriteLoading.emit(true)
-                block()
-            } catch (e: CancellationException) {
-                Log.d(TAG, "Operation was cancelled", e)
-            } catch (e: Exception) {
-                val errorMessage = mapExceptionToErrorMessage(e)
-                Log.e(TAG, "Error in favorites operation", e)
-                _error.emit(errorMessage)
-            } finally {
-                _isFavoriteLoading.emit(false)
-            }
-        }
-    }
-
-    private fun mapExceptionToErrorMessage(e: Exception): String {
-        return when (e) {
-            is NetworkOnMainThreadException ->
-                stringProvider.getString(R.string.error_network)
-
-            is FirebaseAuthInvalidUserException ->
-                stringProvider.getString(R.string.error_invalid_user)
-
-            is SQLiteConstraintException ->
-                stringProvider.getString(R.string.error_duplicate_favorite)
-
-            is FirebaseFirestoreException ->
-                stringProvider.getString(R.string.error_firebase_firestore)
-
-            else ->
-                stringProvider.getString(R.string.error_general, e.message.orEmpty())
-        }
     }
 }
