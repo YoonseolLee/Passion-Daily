@@ -25,7 +25,6 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
-    private val stringProvider: StringProvider,
     private val alarmScheduler: DailyQuoteAlarmScheduler,
     private val authManager: AuthenticationManager,
     private val authStateHolder: AuthStateHolder,
@@ -41,14 +40,21 @@ class SettingsViewModel @Inject constructor(
     val isLoading = settingsStateHolder.isLoading
 
     init {
-        settingsStateHolder.updateCurrentUser(getCurrentUser())
+        initializeCurrentUser()
+        loadUserSettings()
+    }
 
+    private fun initializeCurrentUser() {
+        settingsStateHolder.updateCurrentUser(getCurrentUser())
+    }
+
+    private fun loadUserSettings() {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
                     settingsManager.loadUserSettings(userId) { enabled, timeStr ->
                         settingsStateHolder.updateNotificationEnabled(enabled)
-                        parseAndSetNotificationTime(timeStr)
+                        setNotificationTime(timeStr)
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error loading user settings", e)
@@ -60,10 +66,10 @@ class SettingsViewModel @Inject constructor(
 
     private fun getCurrentUser() = Firebase.auth.currentUser
 
-    private suspend fun parseAndSetNotificationTime(timeStr: String?) {
+    private fun setNotificationTime(timeStr: String?) {
         timeStr?.let {
             try {
-                val time = LocalTime.parse(timeStr)
+                val time = settingsManager.parseTime(timeStr)
                 settingsStateHolder.updateNotificationTime(time)
             } catch (e: Exception) {
                 Log.e(TAG, "Error parsing notification time", e)
@@ -75,30 +81,17 @@ class SettingsViewModel @Inject constructor(
     fun updateNotificationSettings(enabled: Boolean) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
-                Log.d(
-                    TAG,
-                    "Attempting to update notification settings: enabled=$enabled for user=$userId"
-                )
-
                 try {
-                    // Firestore와 Room에 설정 업데이트
+                    // 알림 설정을 Firestore와 Room에 저장
                     settingsManager.updateNotificationSettings(userId, enabled)
-                    Log.d(TAG, "Successfully updated notification settings in databases")
-
                     settingsStateHolder.updateNotificationEnabled(enabled)
-                    Log.d(TAG, "Updated local notification enabled state")
 
-                    // 알람 관리
+                    // 알림 활성화 상태에 따라 알람 스케줄링
                     if (enabled) {
                         notificationTime.value?.let { time ->
-                            Log.d(
-                                TAG,
-                                "Notification enabled, scheduling alarm for ${time.hour}:${time.minute}"
-                            )
                             alarmScheduler.scheduleNotification(time.hour, time.minute)
-                        } ?: Log.w(TAG, "Notification enabled but no time set")
+                        }
                     } else {
-                        Log.d(TAG, "Notification disabled, canceling existing alarm")
                         alarmScheduler.cancelExistingAlarm()
                     }
                 } catch (e: Exception) {

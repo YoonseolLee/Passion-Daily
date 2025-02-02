@@ -1,11 +1,14 @@
 package com.example.passionDaily.settings.manager
 
 import android.util.Log
+import com.example.passionDaily.constants.ViewModelConstants.Settings
 import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
 import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.LocalQuoteRepository
 import com.example.passionDaily.data.repository.local.LocalUserRepository
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.settings.usecase.LoadUserInfoUseCase
+import com.example.passionDaily.settings.usecase.ParseTimeUseCase
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -15,7 +18,9 @@ class SettingsManager @Inject constructor(
     private val localUserRepository: LocalUserRepository,
     private val localFavoriteRepository: LocalFavoriteRepository,
     private val localQuoteRepository: LocalQuoteRepository,
-    private val localQuoteCategoryRepository: LocalQuoteCategoryRepository
+    private val localQuoteCategoryRepository: LocalQuoteCategoryRepository,
+    private val loadUserInfoUseCase: LoadUserInfoUseCase,
+    private val parseTimeUseCase: ParseTimeUseCase
 ) {
 
     companion object {
@@ -26,9 +31,11 @@ class SettingsManager @Inject constructor(
         userId: String,
         onSettingsLoaded: suspend (notificationEnabled: Boolean, notificationTime: String?) -> Unit
     ) {
-        localUserRepository.getUserById(userId)?.let { user ->
-            onSettingsLoaded(user.notificationEnabled, user.notificationTime)
-        }
+        loadUserInfoUseCase.loadUserSettings(userId, onSettingsLoaded)
+    }
+
+    fun parseTime(timeStr: String): LocalTime {
+        return parseTimeUseCase.parseTime(timeStr)
     }
 
     suspend fun updateNotificationSettings(userId: String, enabled: Boolean) {
