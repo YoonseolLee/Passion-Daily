@@ -62,6 +62,9 @@ class ToastManager @Inject constructor(
         showToast(R.string.re_login_forwithdrawl)
     }
 
+    fun showURISyntaxException() {
+        showToast(R.string.error_uri_syntax)
+    }
 
     private fun showToast(@StringRes resId: Int) {
         Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()

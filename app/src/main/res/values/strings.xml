@@ -46,4 +46,8 @@
     <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
     <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
     <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>
+
+    <string name="email_address">mailto:thisyoon97@gmail.com</string>
+    <string name="choose_email_app">이메일 앱 선택</string>
+    <string name="success_send_email">이메일 전송에 성공했습니다.</string>
 </resources>

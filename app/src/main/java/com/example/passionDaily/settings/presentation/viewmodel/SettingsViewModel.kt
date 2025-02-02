@@ -1,5 +1,6 @@
 package com.example.passionDaily.settings.presentation.viewmodel
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -12,6 +13,7 @@ import com.example.passionDaily.settings.manager.SettingsManager
 import com.example.passionDaily.manager.alarm.DailyQuoteAlarmScheduler
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.example.passionDaily.settings.manager.EmailManager
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.net.URISyntaxException
 import java.time.LocalTime
 import javax.inject.Inject
 
@@ -32,7 +35,8 @@ class SettingsViewModel @Inject constructor(
     private val alarmScheduler: DailyQuoteAlarmScheduler,
     private val authManager: AuthenticationManager,
     private val authStateHolder: AuthStateHolder,
-    private val toastManager: ToastManager
+    private val toastManager: ToastManager,
+    private val emailManager: EmailManager
 ) : ViewModel() {
 
     private val _notificationEnabled = MutableStateFlow(false)
@@ -46,9 +50,6 @@ class SettingsViewModel @Inject constructor(
 
     private val _navigateToLogin = MutableStateFlow(false)
     val navigateToLogin: StateFlow<Boolean> = _navigateToLogin.asStateFlow()
-
-    private val _emailError = MutableStateFlow<String?>(null)
-    val emailError: StateFlow<String?> = _emailError.asStateFlow()
 
     private val _showWithdrawalDialog = MutableStateFlow(false)
     val showWithdrawalDialog: StateFlow<Boolean> = _showWithdrawalDialog.asStateFlow()
@@ -94,7 +95,10 @@ class SettingsViewModel @Inject constructor(
     fun updateNotificationSettings(enabled: Boolean) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
-                Log.d(TAG, "Attempting to update notification settings: enabled=$enabled for user=$userId")
+                Log.d(
+                    TAG,
+                    "Attempting to update notification settings: enabled=$enabled for user=$userId"
+                )
 
                 try {
                     // Firestore와 Room에 설정 업데이트
@@ -107,7 +111,10 @@ class SettingsViewModel @Inject constructor(
                     // 알람 관리
                     if (enabled) {
                         notificationTime.value?.let { time ->
-                            Log.d(TAG, "Notification enabled, scheduling alarm for ${time.hour}:${time.minute}")
+                            Log.d(
+                                TAG,
+                                "Notification enabled, scheduling alarm for ${time.hour}:${time.minute}"
+                            )
                             alarmScheduler.scheduleNotification(time.hour, time.minute)
                         } ?: Log.w(TAG, "Notification enabled but no time set")
                     } else {
@@ -125,7 +132,10 @@ class SettingsViewModel @Inject constructor(
     fun updateNotificationTime(newTime: LocalTime) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
-                Log.d(TAG, "Attempting to update notification time to ${newTime.hour}:${newTime.minute} for user=$userId")
+                Log.d(
+                    TAG,
+                    "Attempting to update notification time to ${newTime.hour}:${newTime.minute} for user=$userId"
+                )
 
                 try {
                     // Firestore와 Room에 시간 업데이트
@@ -137,7 +147,10 @@ class SettingsViewModel @Inject constructor(
 
                     // 알림이 활성화된 상태에서만 알람 재설정
                     if (notificationEnabled.value) {
-                        Log.d(TAG, "Notifications are enabled, rescheduling alarm for new time ${newTime.hour}:${newTime.minute}")
+                        Log.d(
+                            TAG,
+                            "Notifications are enabled, rescheduling alarm for new time ${newTime.hour}:${newTime.minute}"
+                        )
                         alarmScheduler.scheduleNotification(newTime.hour, newTime.minute)
                     } else {
                         Log.d(TAG, "Notifications are disabled, skipping alarm scheduling")
@@ -224,13 +237,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun createEmailIntent(): Intent = Intent(Intent.ACTION_SENDTO).apply {
-        data = Uri.parse("mailto:thisyoon97@gmail.com")
-    }
-
-    fun clearError() {
-        viewModelScope.launch {
-            _emailError.emit(null)
+    fun createEmailIntent(): Intent? {
+        return try {
+            emailManager.createEmailIntent()
+        } catch (e: URISyntaxException) {
+            Log.e(TAG, "Invalid URI syntax", e)
+            toastManager.showURISyntaxException()
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating email intent", e)
+            toastManager.showGeneralErrorToast()
+            null
         }
     }
 
@@ -243,12 +260,6 @@ class SettingsViewModel @Inject constructor(
     fun onNavigatedToLogin() {
         viewModelScope.launch {
             _navigateToLogin.emit(false)
-        }
-    }
-
-    fun setError(message: String) {
-        viewModelScope.launch {
-            _emailError.emit(message)
         }
     }
 

@@ -30,4 +30,7 @@
     <string name="error_already_logged_out">이미 로그아웃 되어 있습니다.</string>
     <string name="error_login_required">로그인이 필요합니다.</string>
 
+    <string name="error_email_send">메일 전송에 실패하였습니다.</string>
+    <string name="error_uri_syntax">잘못된 URI 형식입니다.</string>
+
 </resources>

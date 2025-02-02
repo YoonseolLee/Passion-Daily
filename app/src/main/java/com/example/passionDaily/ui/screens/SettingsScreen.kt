@@ -57,6 +57,8 @@ import com.example.passionDaily.util.CommonNavigationBar
 import java.time.LocalTime
 import android.provider.Settings
 import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.core.content.ContextCompat
 import com.example.passionDaily.ui.theme.PrimaryColor
@@ -450,25 +452,13 @@ fun SuggestionSettingItem(
     viewModel: SettingsViewModel
 ) {
     val context = LocalContext.current
-    val emailError by viewModel.emailError.collectAsState()
-
-    LaunchedEffect(emailError) {
-        emailError?.let { error ->
-            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-            viewModel.clearError()
-        }
-    }
 
     CommonIconItem(
         title = "제안 보내기",
         icon = Icons.Filled.Email,
         onClick = {
-            try {
-                val intent = viewModel.createEmailIntent()
-                context.startActivity(Intent.createChooser(intent, "이메일 앱 선택"))
-            } catch (e: Exception) {
-                viewModel.setError("이메일 전송에 실패했습니다.")
-            }
+            val intent = viewModel.createEmailIntent()
+            context.startActivity(intent)
         }
     )
 }
