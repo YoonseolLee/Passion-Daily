@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Transaction
 import com.example.passionDaily.R
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
 import com.example.passionDaily.data.local.entity.FavoriteEntity
 import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.data.local.entity.QuoteEntity
@@ -55,13 +57,7 @@ class FavoritesViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
 ) : ViewModel(), QuoteInteractionHandler {
 
-    companion object {
-        private const val KEY_FAVORITE_INDEX = "favorite_quote_index"
-        private const val TAG = "FavoritesViewModel"
-    }
-
-    private val _userId = MutableStateFlow(firebaseAuth.currentUser?.uid ?: "")
-    val userId: StateFlow<String> = _userId.asStateFlow()
+    private var userId: String = firebaseAuth.currentUser?.uid ?: ""
 
     private val _favoriteQuotes = MutableStateFlow<List<QuoteEntity>>(emptyList())
     val favoriteQuotes: StateFlow<List<QuoteEntity>> = _favoriteQuotes.asStateFlow()
@@ -82,7 +78,7 @@ class FavoritesViewModel @Inject constructor(
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         viewModelScope.launch {
-            _userId.emit(firebaseAuth.currentUser?.uid ?: "")
+            userId = firebaseAuth.currentUser?.uid ?: ""
             if (firebaseAuth.currentUser != null) {
                 loadFavorites()
             }
@@ -127,7 +123,7 @@ class FavoritesViewModel @Inject constructor(
     }
 
     fun loadFavorites() {
-        val currentUserId = userId.value
+        val currentUserId = userId
         if (currentUserId.isEmpty()) {
             Log.d(TAG, "Skipping loadFavorites: User not logged in")
             return

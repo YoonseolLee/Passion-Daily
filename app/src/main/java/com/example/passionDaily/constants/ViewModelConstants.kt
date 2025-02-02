@@ -10,4 +10,9 @@ object ViewModelConstants {
     object SharedLogin {
         const val TAG = "SharedLogInViewModel"
     }
+
+    object Favorites {
+        const val KEY_FAVORITE_INDEX = "favorite_quote_index"
+        const val TAG = "FavoritesViewModel"
+    }
 }
