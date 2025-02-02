@@ -16,8 +16,10 @@ import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.net.URISyntaxException
 import java.time.LocalTime
 import javax.inject.Inject
@@ -168,13 +170,17 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun isUserLoggedOut(): Boolean {
-        if (getCurrentUser() == null) {
-            toastManager.showAlreadyLoggedOutErrorToast()
-            return true
+    private suspend fun isUserLoggedOut(): Boolean {
+        return withContext(Dispatchers.IO) {
+            val user = getCurrentUser()
+            if (user == null) {
+                toastManager.showAlreadyLoggedOutErrorToast()
+                return@withContext true
+            }
+            false
         }
-        return false
     }
+
 
     private suspend fun performLogout() {
         settingsStateHolder.updateIsLoading(true)
@@ -183,7 +189,7 @@ class SettingsViewModel @Inject constructor(
         scheduleAlarmUseCase.cancelExistingAlarm()
     }
 
-    fun withdrawUser(onWithDrawlSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
+    fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
         viewModelScope.launch {
             settingsStateHolder.updateIsLoading(true)
             try {
@@ -193,19 +199,7 @@ class SettingsViewModel @Inject constructor(
                 }
 
                 userSettingsManager.deleteUserData(user.uid)
-
-                // 계정 삭제 시도
-                Firebase.auth.currentUser?.let { currentUser ->
-                    try {
-                        currentUser.delete().await()
-                        toastManager.showWithDrawlSuccessToast()
-                        onWithDrawlSuccess()
-                    } catch (e: FirebaseAuthRecentLoginRequiredException) {
-                        toastManager.showReLoginForWithDrawlToast()
-                        Firebase.auth.signOut()
-                        onReLogInRequired()
-                    }
-                }
+                attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
             } catch (e: Exception) {
                 Log.e(TAG, "Error during withdrawal", e)
                 toastManager.showGeneralErrorToast()
@@ -213,6 +207,24 @@ class SettingsViewModel @Inject constructor(
                 settingsStateHolder.updateIsLoading(false)
             }
         }
+    }
+
+    private suspend fun attemptAccountDeletion(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
+        Firebase.auth.currentUser?.let { currentUser ->
+            try {
+                currentUser.delete().await()
+                toastManager.showWithDrawlSuccessToast()
+                onWithdrawSuccess()
+            } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                handleReLoginForWithdrawal(onReLogInRequired)
+            }
+        }
+    }
+
+    private fun handleReLoginForWithdrawal(onReLogInRequired: () -> Unit) {
+        toastManager.showReLoginForWithDrawlToast()
+        Firebase.auth.signOut()
+        onReLogInRequired()
     }
 
     fun createEmailIntent(): Intent? {
