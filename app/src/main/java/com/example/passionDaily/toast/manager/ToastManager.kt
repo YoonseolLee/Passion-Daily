@@ -1,4 +1,4 @@
-package com.example.passionDaily.settings.presentation.viewmodel
+package com.example.passionDaily.toast.manager
 
 import android.content.Context
 import android.widget.Toast

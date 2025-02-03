@@ -76,14 +76,43 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
+        val currentUser by settingsViewModel.currentUser.collectAsState()
+        val isNotificationEnabled by settingsViewModel.notificationEnabled.collectAsState()
+        val notificationTime by settingsViewModel.notificationTime.collectAsState()
+        val showWithdrawalDialog by settingsViewModel.showWithdrawalDialog.collectAsState()
+
         SettingsScreenContent(
-            viewModel = settingsViewModel,
+            currentUser = currentUser,
+            isNotificationEnabled = isNotificationEnabled,
+            notificationTime = notificationTime,
+            showWithdrawalDialog = showWithdrawalDialog,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
             onNavigateToLogin = onNavigateToLogin,
             currentScreen = currentScreen,
-            onBack = onBack
+            onBack = onBack,
+            onUpdateNotificationSettings = { enabled ->
+                settingsViewModel.updateNotificationSettings(enabled)
+            },
+            onUpdateNotificationTime = { time ->
+                settingsViewModel.updateNotificationTime(time)
+            },
+            onLogin = {
+                settingsViewModel.logIn(onNavigateToLogin)
+            },
+            onLogout = {
+                settingsViewModel.logOut(onNavigateToQuote)
+            },
+            onCreateEmailIntent = {
+                settingsViewModel.createEmailIntent() ?: Intent()
+            },
+            onUpdateShowWithdrawalDialog = { show ->
+                settingsViewModel.updateShowWithdrawalDialog(show)
+            },
+            onWithdrawUser = {
+                settingsViewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
+            }
         )
 
         if (settingsViewModel.isLoading.collectAsState().value) {
@@ -105,16 +134,24 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsScreenContent(
-    viewModel: SettingsViewModel,
+    currentUser: FirebaseUser?,
+    isNotificationEnabled: Boolean,
+    notificationTime: LocalTime?,
+    showWithdrawalDialog: Boolean,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onUpdateNotificationSettings: (Boolean) -> Unit,
+    onUpdateNotificationTime: (LocalTime) -> Unit,
+    onLogin: () -> Unit,
+    onLogout: () -> Unit,
+    onCreateEmailIntent: () -> Intent,
+    onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
+    onWithdrawUser: () -> Unit
 ) {
-    val currentUser by viewModel.currentUser.collectAsState()
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -152,24 +189,37 @@ fun SettingsScreenContent(
         ) {
             // 알림 설정
             SettingsCategoryHeader(text = stringResource(id = R.string.notification_settings))
-            NotificationSettingItem(viewModel)
-            NotificationTimeSettingItem(viewModel)
+            NotificationSettingItem(
+                isEnabled = isNotificationEnabled,
+                currentUser = currentUser,
+                onUpdateNotificationSettings = onUpdateNotificationSettings
+            )
+            NotificationTimeSettingItem(
+                notificationTime = notificationTime,
+                onUpdateNotificationTime = onUpdateNotificationTime
+            )
 
             // 프로필 설정
             SettingsCategoryHeader(text = stringResource(id = R.string.account_management))
             if (currentUser != null) {
-                LogoutSettingItem(viewModel, onNavigateToQuote = onNavigateToQuote)
+                LogoutSettingItem(
+                    onLogout = onLogout
+                )
             } else {
-                LoginSettingItem(viewModel, onNavigateToLogin = onNavigateToLogin)
+                LoginSettingItem(
+                    onLogin = onLogin
+                )
             }
 
             // 고객 지원
             SettingsCategoryHeader(text = stringResource(id = R.string.customer_support))
-            SuggestionSettingItem(viewModel)
+            SuggestionSettingItem(
+                onCreateEmailIntent = onCreateEmailIntent
+            )
             WithdrawalSettingItem(
-                viewModel,
-                onNavigateToQuote = onNavigateToQuote,
-                onNavigateToLogin = onNavigateToLogin
+                showWithdrawalDialog = showWithdrawalDialog,
+                onUpdateShowWithdrawalDialog = onUpdateShowWithdrawalDialog,
+                onWithdrawUser = onWithdrawUser
             )
             VersionInfoItem()
 
@@ -196,44 +246,12 @@ fun SettingsScreenContent(
 }
 
 @Composable
-fun SettingsCategoryHeader(text: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(45.dp)
-            .background(color = Color(0xFF0E1C41))
-            .padding(horizontal = 24.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = text,
-            style = TextStyle(
-                fontSize = 15.sp,
-                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                fontWeight = FontWeight(400),
-                color = Color(0xFFFFFFFF),
-            )
-        )
-    }
-}
-
-@Composable
-fun SettingsHeaderText() {
-    Text(
-        text = stringResource(R.string.settings),
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-            fontWeight = FontWeight(400),
-            color = Color(0xFFFFFFFF),
-        )
-    )
-}
-
-@Composable
-fun NotificationSettingItem(viewModel: SettingsViewModel) {
+fun NotificationSettingItem(
+    isEnabled: Boolean,
+    currentUser: FirebaseUser?,
+    onUpdateNotificationSettings: (Boolean) -> Unit
+) {
     val context = LocalContext.current
-    val isEnabled by viewModel.notificationEnabled.collectAsState()
-    val currentUser by viewModel.currentUser.collectAsState()
     var showSettingsDialog by remember { mutableStateOf(false) }
 
     NotificationPermissionDialog(
@@ -253,78 +271,10 @@ fun NotificationSettingItem(viewModel: SettingsViewModel) {
                 enabled = enabled,
                 context = context,
                 currentUser = currentUser,
-                viewModel = viewModel,
+                onUpdateNotificationSettings = onUpdateNotificationSettings,
                 showSettingsDialog = { showSettingsDialog = true }
             )
         }
-    )
-}
-
-@Composable
-private fun NotificationPermissionDialog(
-    showDialog: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    if (!showDialog) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.notification_permission_needed),
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF)
-                )
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(R.string.notification_permission_message),
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    color = Color(0xFFE1E1E1),
-                    lineHeight = 24.sp
-                )
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    stringResource(R.string.go_to_settings),
-                    color = Color(0xFFFF6B6B)
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(R.string.cancel),
-                    color = Color(0xFFCCCCCC)
-                )
-            }
-        },
-        containerColor = Color(0xFF1A2847),
-        shape = RoundedCornerShape(8.dp),
-        properties = DialogProperties(
-            dismissOnClickOutside = true,
-            dismissOnBackPress = true
-        )
-    )
-}
-
-@Composable
-private fun NotificationToggle(
-    isEnabled: Boolean,
-    currentUser: FirebaseUser?,
-    onToggleChange: (Boolean) -> Unit
-) {
-    CommonToggleItem(
-        title = stringResource(R.string.daily_quote_notification_setting),
-        isEnabled = isEnabled,
-        onToggleChange = onToggleChange
     )
 }
 
@@ -332,16 +282,16 @@ private fun handleNotificationToggle(
     enabled: Boolean,
     context: Context,
     currentUser: FirebaseUser?,
-    viewModel: SettingsViewModel,
+    onUpdateNotificationSettings: (Boolean) -> Unit,
     showSettingsDialog: () -> Unit
 ) {
     if (currentUser == null) {
-        viewModel.updateNotificationSettings(false)
+        onUpdateNotificationSettings(false)
         return
     }
 
     if (!enabled) {
-        viewModel.updateNotificationSettings(false)
+        onUpdateNotificationSettings(false)
         return
     }
 
@@ -353,26 +303,20 @@ private fun handleNotificationToggle(
         ) == PackageManager.PERMISSION_GRANTED
 
         if (hasPermission) {
-            viewModel.updateNotificationSettings(true)
+            onUpdateNotificationSettings(true)
         } else {
             showSettingsDialog()
         }
     } else {
-        viewModel.updateNotificationSettings(true)
+        onUpdateNotificationSettings(true)
     }
-}
-
-private fun navigateToAppSettings(context: Context) {
-    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = Uri.fromParts("package", context.packageName, null)
-    })
 }
 
 @Composable
 fun NotificationTimeSettingItem(
-    viewModel: SettingsViewModel
+    notificationTime: LocalTime?,
+    onUpdateNotificationTime: (LocalTime) -> Unit
 ) {
-    val notificationTime by viewModel.notificationTime.collectAsState()
     val context = LocalContext.current
     var showTimePickerDialog by remember { mutableStateOf(false) }
 
@@ -382,7 +326,7 @@ fun NotificationTimeSettingItem(
                 context,
                 { _, selectedHour, selectedMinute ->
                     val selectedTime = LocalTime.of(selectedHour, selectedMinute)
-                    viewModel.updateNotificationTime(selectedTime)
+                    onUpdateNotificationTime(selectedTime)
                     showTimePickerDialog = false
                 },
                 notificationTime?.hour ?: 8,
@@ -404,26 +348,24 @@ fun NotificationTimeSettingItem(
 
 @Composable
 fun LoginSettingItem(
-    viewModel: SettingsViewModel,
-    onNavigateToLogin: () -> Unit
+    onLogin: () -> Unit
 ) {
     CommonNavigationItem(
         title = stringResource(R.string.login),
-        onClick = { viewModel.logIn(onNavigateToLogin) }
+        onClick = onLogin
     )
 }
 
 @Composable
 fun LogoutSettingItem(
-    viewModel: SettingsViewModel,
-    onNavigateToQuote: () -> Unit
+    onLogout: () -> Unit
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     LogoutConfirmationDialog(
         showDialog = showLogoutDialog,
         onConfirm = {
-            viewModel.logOut(onNavigateToQuote)
+            onLogout()
             showLogoutDialog = false
         },
         onDismiss = { showLogoutDialog = false }
@@ -431,6 +373,121 @@ fun LogoutSettingItem(
 
     LogoutButton(
         onClick = { showLogoutDialog = true }
+    )
+}
+
+@Composable
+fun SuggestionSettingItem(
+    onCreateEmailIntent: () -> Intent
+) {
+    val context = LocalContext.current
+
+    CommonIconItem(
+        title = stringResource(R.string.send_suggestion),
+        icon = Icons.Filled.Email,
+        onClick = {
+            val intent = onCreateEmailIntent()
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    )
+}
+
+@Composable
+fun WithdrawalSettingItem(
+    showWithdrawalDialog: Boolean,
+    onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
+    onWithdrawUser: () -> Unit
+) {
+    WithdrawalConfirmationDialog(
+        showDialog = showWithdrawalDialog,
+        onConfirm = {
+            onWithdrawUser()
+            onUpdateShowWithdrawalDialog(false)
+        },
+        onDismiss = {
+            onUpdateShowWithdrawalDialog(false)
+        }
+    )
+
+    WithdrawalButton(
+        onClick = {
+            onUpdateShowWithdrawalDialog(true)
+        }
+    )
+}
+
+// The rest of the composables remain unchanged as they don't interact with ViewModel
+@Composable
+private fun WithdrawalConfirmationDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { WithdrawalDialogTitle() },
+        text = { WithdrawalDialogMessage() },
+        confirmButton = { WithdrawalConfirmButton(onClick = onConfirm) },
+        dismissButton = { WithdrawalCancelButton(onClick = onDismiss) },
+        containerColor = Color(0xFF0E1C41),
+        shape = RoundedCornerShape(8.dp)
+    )
+}
+
+@Composable
+private fun WithdrawalDialogTitle() {
+    Text(
+        text = stringResource(R.string.withdrawal),
+        style = TextStyle(
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFFFFFF)
+        )
+    )
+}
+
+@Composable
+private fun WithdrawalDialogMessage() {
+    Text(
+        text = stringResource(R.string.withdrawal_confirmation_message),
+        style = TextStyle(
+            fontSize = 15.sp,
+            color = Color(0xFFFFFFFF)
+        )
+    )
+}
+
+@Composable
+private fun WithdrawalConfirmButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.yes),
+            color = Color(0xFFFFFFFF)
+        )
+    }
+}
+
+@Composable
+private fun WithdrawalCancelButton(onClick: () -> Unit) {
+    TextButton(onClick = onClick) {
+        Text(
+            stringResource(R.string.no),
+            color = Color(0xFFFFFFFF)
+        )
+    }
+}
+
+@Composable
+private fun WithdrawalButton(onClick: () -> Unit) {
+    CommonNavigationItem(
+        title = stringResource(R.string.withdrawal),
+        onClick = onClick
     )
 }
 
@@ -509,118 +566,6 @@ private fun LogoutCancelButton(onClick: () -> Unit) {
 private fun LogoutButton(onClick: () -> Unit) {
     CommonNavigationItem(
         title = stringResource(R.string.logout),
-        onClick = onClick
-    )
-}
-
-@Composable
-fun SuggestionSettingItem(
-    viewModel: SettingsViewModel
-) {
-    val context = LocalContext.current
-
-    CommonIconItem(
-        title = stringResource(R.string.send_suggestion),
-        icon = Icons.Filled.Email,
-        onClick = {
-            val intent = viewModel.createEmailIntent()
-            context.startActivity(intent)
-        }
-    )
-}
-
-@Composable
-fun WithdrawalSettingItem(
-    viewModel: SettingsViewModel,
-    onNavigateToQuote: () -> Unit,
-    onNavigateToLogin: () -> Unit
-) {
-    val showWithdrawalDialog by viewModel.showWithdrawalDialog.collectAsState()
-
-    WithdrawalConfirmationDialog(
-        showDialog = showWithdrawalDialog,
-        onConfirm = {
-            viewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
-            viewModel.updateShowWithdrawalDialog(false)
-        },
-        onDismiss = {
-            viewModel.updateShowWithdrawalDialog(false)
-        }
-    )
-
-    WithdrawalButton(
-        onClick = {
-            viewModel.updateShowWithdrawalDialog(true)
-        }
-    )
-}
-
-@Composable
-private fun WithdrawalConfirmationDialog(
-    showDialog: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    if (!showDialog) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { WithdrawalDialogTitle() },
-        text = { WithdrawalDialogMessage() },
-        confirmButton = { WithdrawalConfirmButton(onClick = onConfirm) },
-        dismissButton = { WithdrawalCancelButton(onClick = onDismiss) },
-        containerColor = Color(0xFF0E1C41),
-        shape = RoundedCornerShape(8.dp)
-    )
-}
-
-@Composable
-private fun WithdrawalDialogTitle() {
-    Text(
-        text = stringResource(R.string.withdrawal),
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFFFFFF)
-        )
-    )
-}
-
-@Composable
-private fun WithdrawalDialogMessage() {
-    Text(
-        text = stringResource(R.string.withdrawal_confirmation_message),
-        style = TextStyle(
-            fontSize = 15.sp,
-            color = Color(0xFFFFFFFF)
-        )
-    )
-}
-
-@Composable
-private fun WithdrawalConfirmButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.yes),
-            color = Color(0xFFFFFFFF)
-        )
-    }
-}
-
-@Composable
-private fun WithdrawalCancelButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.no),
-            color = Color(0xFFFFFFFF)
-        )
-    }
-}
-
-@Composable
-private fun WithdrawalButton(onClick: () -> Unit) {
-    CommonNavigationItem(
-        title = stringResource(R.string.withdrawal),
         onClick = onClick
     )
 }
@@ -813,5 +758,113 @@ private fun CommonTextItem(
             )
         )
     }
+}
+
+@Composable
+fun NotificationPermissionDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    if (!showDialog) return
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.notification_permission_needed),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFFFFFF)
+                )
+            )
+        },
+        text = {
+            Text(
+                text = stringResource(R.string.notification_permission_message),
+                style = TextStyle(
+                    fontSize = 15.sp,
+                    color = Color(0xFFE1E1E1),
+                    lineHeight = 24.sp
+                )
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    stringResource(R.string.go_to_settings),
+                    color = Color(0xFFFF6B6B)
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    stringResource(R.string.cancel),
+                    color = Color(0xFFCCCCCC)
+                )
+            }
+        },
+        containerColor = Color(0xFF1A2847),
+        shape = RoundedCornerShape(8.dp),
+        properties = DialogProperties(
+            dismissOnClickOutside = true,
+            dismissOnBackPress = true
+        )
+    )
+}
+
+@Composable
+private fun NotificationToggle(
+    isEnabled: Boolean,
+    currentUser: FirebaseUser?,
+    onToggleChange: (Boolean) -> Unit
+) {
+    CommonToggleItem(
+        title = stringResource(R.string.daily_quote_notification_setting),
+        isEnabled = isEnabled,
+        onToggleChange = onToggleChange
+    )
+}
+
+private fun navigateToAppSettings(context: Context) {
+    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+        data = Uri.fromParts("package", context.packageName, null)
+    })
+}
+
+@Composable
+fun SettingsCategoryHeader(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(45.dp)
+            .background(color = Color(0xFF0E1C41))
+            .padding(horizontal = 24.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = TextStyle(
+                fontSize = 15.sp,
+                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+                fontWeight = FontWeight(400),
+                color = Color(0xFFFFFFFF),
+            )
+        )
+    }
+}
+
+@Composable
+fun SettingsHeaderText() {
+    Text(
+        text = stringResource(R.string.settings),
+        style = TextStyle(
+            fontSize = 18.sp,
+            fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
+            fontWeight = FontWeight(400),
+            color = Color(0xFFFFFFFF),
+        )
+    )
 }
 

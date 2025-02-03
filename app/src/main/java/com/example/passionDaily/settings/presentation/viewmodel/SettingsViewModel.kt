@@ -12,6 +12,7 @@ import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.settings.manager.EmailManager
 import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
+import com.example.passionDaily.toast.manager.ToastManager
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase

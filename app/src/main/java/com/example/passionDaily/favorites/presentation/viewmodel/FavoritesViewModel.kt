@@ -13,7 +13,7 @@ import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
 import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
 import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
-import com.example.passionDaily.settings.presentation.viewmodel.ToastManager
+import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.ui.viewmodels.QuoteInteractionHandler
 import com.example.passionDaily.util.QuoteCategory

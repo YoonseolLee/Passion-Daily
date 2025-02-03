@@ -11,7 +11,7 @@ import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.SharedLogin.TAG
 import com.example.passionDaily.data.repository.remote.RemoteUserRepository
 import com.example.passionDaily.login.manager.AuthenticationManager
-import com.example.passionDaily.settings.presentation.viewmodel.ToastManager
+import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.manager.UrlManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.manager.UserProfileManager

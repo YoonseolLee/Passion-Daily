@@ -10,7 +10,7 @@ import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.data.remote.model.Quote
 import com.example.passionDaily.manager.QuoteCategoryManager
-import com.example.passionDaily.settings.presentation.viewmodel.ToastManager
+import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.base.QuoteViewModelState
