@@ -47,14 +47,19 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
     private fun createPendingIntent(category: String, quoteId: String): PendingIntent {
         val intent = Intent(this, MainActivity::class.java).apply {
             data = Uri.parse("passiondaily://quote/$category/$quoteId")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+            // 카테고리와 ID를 추가 데이터로도 포함
+            putExtra("category", category)
+            putExtra("quoteId", quoteId)
         }
 
         return PendingIntent.getActivity(
             this,
             System.currentTimeMillis().toInt(),
             intent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
