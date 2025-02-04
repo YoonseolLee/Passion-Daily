@@ -1,13 +1,13 @@
 package com.example.passionDaily.favorites.usecase
 
-import com.example.passionDaily.data.local.entity.FavoriteEntity
-import com.example.passionDaily.data.local.entity.QuoteCategoryEntity
-import com.example.passionDaily.data.local.entity.QuoteEntity
-import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
-import com.example.passionDaily.quote.data.local.LocalQuoteRepository
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
+import com.example.passionDaily.quotecategory.data.local.entity.QuoteCategoryEntity
+import com.example.passionDaily.quote.data.local.entity.QuoteEntity
+import com.example.passionDaily.quote.data.remote.model.Quote
+import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
+import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
+import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
 

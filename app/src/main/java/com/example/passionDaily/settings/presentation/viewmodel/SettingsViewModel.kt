@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
-import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
+import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.settings.manager.EmailManager
 import com.example.passionDaily.settings.manager.NotificationManager

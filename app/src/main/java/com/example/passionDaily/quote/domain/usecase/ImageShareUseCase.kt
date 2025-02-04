@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import com.example.passionDaily.ui.screens.ShareableQuoteImage
+import com.example.passionDaily.quote.presentation.screen.ShareableQuoteImage
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay

@@ -2,8 +2,8 @@ package com.example.passionDaily.navigation.destinations
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.passionDaily.ui.screens.FavoritesScreen
-import com.example.passionDaily.ui.screens.NavigationBarScreens
+import com.example.passionDaily.favorites.presentation.screen.FavoritesScreen
+import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 

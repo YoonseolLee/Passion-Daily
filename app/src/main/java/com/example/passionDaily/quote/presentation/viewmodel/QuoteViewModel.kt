@@ -8,8 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
-import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.manager.QuoteCategoryManager
+import com.example.passionDaily.quote.data.remote.model.Quote
+import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
@@ -17,7 +17,7 @@ import com.example.passionDaily.quote.base.QuoteViewModelState
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.manager.QuoteLoadingManager
 import com.example.passionDaily.quote.manager.ShareQuoteManager
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel

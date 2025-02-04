@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
-import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
+import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope

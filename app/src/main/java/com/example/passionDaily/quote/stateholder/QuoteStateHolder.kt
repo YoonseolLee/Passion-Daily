@@ -1,7 +1,7 @@
 package com.example.passionDaily.quote.stateholder
 
-import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quote.data.remote.model.Quote
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import kotlinx.coroutines.flow.StateFlow
 
 interface QuoteStateHolder {

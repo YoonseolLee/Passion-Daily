@@ -1,7 +1,7 @@
 package com.example.passionDaily.quote.manager
 
 import android.content.Context
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 
 interface ShareQuoteManager {
     suspend fun shareQuote(

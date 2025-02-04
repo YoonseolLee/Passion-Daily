@@ -1,6 +1,6 @@
 package com.example.passionDaily.settings.manager
 
-import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
+import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.settings.usecase.ParseTimeUseCase
 import com.example.passionDaily.settings.usecase.SaveNotificationUseCase
 import com.example.passionDaily.settings.usecase.UpdateNotificationUseCase

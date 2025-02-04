@@ -1,11 +1,12 @@
 package com.example.passionDaily.quote.data.remote
 
 import android.util.Log
+import com.example.passionDaily.R
 import com.example.passionDaily.constants.RepositoryConstants.Quote.TAG
-import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
-import com.example.passionDaily.util.QuoteCategory
-import com.example.passionDaily.util.QuoteConstants.DEFAULT_TIMESTAMP
+import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 class RemoteQuoteRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val stringProvider: StringProvider
 ) : RemoteQuoteRepository {
 
     override suspend fun getQuotesBeforeId(
@@ -180,8 +182,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
             text = getString("text") ?: "",
             person = getString("person") ?: "",
             imageUrl = getString("imageUrl") ?: "",
-            createdAt = getString("createdAt") ?: DEFAULT_TIMESTAMP,
-            modifiedAt = getString("modifiedAt") ?: DEFAULT_TIMESTAMP,
+            createdAt = getString("createdAt") ?: stringProvider.getString(R.string.default_timestamp),
+            modifiedAt = getString("modifiedAt") ?: stringProvider.getString(R.string.default_timestamp),
             shareCount = getLong("shareCount")?.toInt() ?: 0
         )
     }

@@ -1,9 +1,9 @@
 package com.example.passionDaily.login.domain.usecase
 
-import com.example.passionDaily.data.repository.local.LocalUserRepository
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.user.data.local.repository.LocalUserRepository
+import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import com.example.passionDaily.login.stateholder.AuthStateHolder
-import com.example.passionDaily.mapper.UserProfileMapper
+import com.example.passionDaily.util.mapper.UserProfileMapper
 import javax.inject.Inject
 
 class SaveUserProfileUseCase @Inject constructor(

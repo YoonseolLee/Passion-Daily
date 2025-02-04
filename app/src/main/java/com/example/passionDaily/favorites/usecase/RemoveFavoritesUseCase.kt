@@ -3,11 +3,10 @@ package com.example.passionDaily.favorites.usecase
 import android.util.Log
 import androidx.room.Transaction
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
-import com.example.passionDaily.data.local.entity.FavoriteEntity
-import com.example.passionDaily.data.local.entity.QuoteEntity
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
-import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
-import com.example.passionDaily.quote.data.local.LocalQuoteRepository
+import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
+import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
+import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
+import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.Dispatchers

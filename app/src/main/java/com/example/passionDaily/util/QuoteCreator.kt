@@ -1,7 +1,8 @@
 package com.example.passionDaily.util
 
 import android.util.Log
-import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.data.remote.model.Quote
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat

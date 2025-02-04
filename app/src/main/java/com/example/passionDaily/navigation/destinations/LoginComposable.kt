@@ -2,7 +2,7 @@ package com.example.passionDaily.navigation.destinations
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.passionDaily.ui.screens.LoginScreen
+import com.example.passionDaily.login.presentation.screen.LoginScreen
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 fun NavGraphBuilder.loginComposable(

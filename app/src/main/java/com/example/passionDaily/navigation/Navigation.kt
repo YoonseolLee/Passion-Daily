@@ -17,8 +17,8 @@ import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.settingsComposable
 import com.example.passionDaily.navigation.destinations.termsConsentComposable
-import com.example.passionDaily.ui.screens.NavigationBarScreens
-import com.example.passionDaily.ui.screens.QuoteScreen
+import com.example.passionDaily.constants.NavigationBarScreens
+import com.example.passionDaily.quote.presentation.screen.QuoteScreen
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel

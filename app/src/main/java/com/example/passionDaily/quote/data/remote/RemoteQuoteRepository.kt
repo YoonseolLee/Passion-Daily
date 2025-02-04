@@ -1,8 +1,8 @@
 package com.example.passionDaily.quote.data.remote
 
-import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 
 interface RemoteQuoteRepository {

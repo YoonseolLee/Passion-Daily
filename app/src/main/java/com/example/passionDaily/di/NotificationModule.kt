@@ -1,7 +1,7 @@
 package com.example.passionDaily.di
 
 import android.content.Context
-import com.example.passionDaily.manager.notification.QuoteNotificationService
+import com.example.passionDaily.notification.service.QuoteNotificationService
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.Module

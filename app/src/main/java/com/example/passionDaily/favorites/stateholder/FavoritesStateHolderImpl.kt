@@ -1,6 +1,6 @@
 package com.example.passionDaily.favorites.stateholder
 
-import com.example.passionDaily.data.local.entity.QuoteEntity
+import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

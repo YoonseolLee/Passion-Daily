@@ -1,7 +1,7 @@
 package com.example.passionDaily.favorites.usecase
 
-import com.example.passionDaily.data.local.entity.QuoteEntity
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
+import com.example.passionDaily.quote.data.local.entity.QuoteEntity
+import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

@@ -1,6 +1,6 @@
 package com.example.passionDaily.settings.usecase
 
-import com.example.passionDaily.data.repository.local.LocalUserRepository
+import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import javax.inject.Inject
 
 class LoadUserInfoUseCase @Inject constructor(

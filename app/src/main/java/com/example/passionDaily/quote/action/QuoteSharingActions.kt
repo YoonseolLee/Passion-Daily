@@ -2,7 +2,7 @@ package com.example.passionDaily.quote.action
 
 import android.content.Context
 import com.example.passionDaily.quote.base.QuoteViewModelActions
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 
 interface QuoteSharingActions : QuoteViewModelActions {
     override fun shareQuote(context: Context, imageUrl: String?, quoteText: String, author: String)

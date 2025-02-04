@@ -48,7 +48,7 @@
         </provider>
 
         <service
-            android:name=".manager.notification.QuoteFirebaseMessagingService"
+            android:name=".notification.service.QuoteFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -62,7 +62,7 @@
         </service>
 
         <receiver
-            android:name=".manager.alarm.DailyQuoteAlarmReceiver"
+            android:name=".notification.receiver.DailyQuoteAlarmReceiver"
             android:enabled="true"
             android:exported="false">
         </receiver>

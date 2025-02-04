@@ -1,6 +1,6 @@
 package com.example.passionDaily.favorites.manager
 
-import com.example.passionDaily.data.local.entity.QuoteEntity
+import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.favorites.usecase.LoadFavoritesUseCase
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

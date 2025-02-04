@@ -1,14 +1,11 @@
 package com.example.passionDaily.settings.manager
 
-import com.example.passionDaily.data.repository.local.LocalFavoriteRepository
-import com.example.passionDaily.data.repository.local.LocalQuoteCategoryRepository
-import com.example.passionDaily.quote.data.local.LocalQuoteRepository
-import com.example.passionDaily.data.repository.local.LocalUserRepository
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
+import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
+import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
+import com.example.passionDaily.user.data.local.repository.LocalUserRepository
+import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import com.example.passionDaily.settings.usecase.LoadUserInfoUseCase
-import com.example.passionDaily.settings.usecase.ParseTimeUseCase
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class UserSettingsManager @Inject constructor(

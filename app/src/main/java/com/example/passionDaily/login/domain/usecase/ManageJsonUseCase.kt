@@ -1,11 +1,10 @@
 package com.example.passionDaily.login.domain.usecase
 
 import android.util.Log
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
-import com.example.passionDaily.login.UserProfileKey
+import com.example.passionDaily.login.domain.model.UserProfileKey
 import com.example.passionDaily.login.domain.model.UserConsent
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
-import com.example.passionDaily.mapper.UserProfileMapper
+import com.example.passionDaily.util.mapper.UserProfileMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONException

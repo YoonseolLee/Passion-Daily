@@ -2,6 +2,7 @@
     <string name="app_name">Passion_Daily</string>
     <string name="header_title_login_screen">간편로그인 후
 이용이 가능합니다.</string>
+    <string name="default_timestamp">"1970-01-01 00:00"</string>
     <string name="header_subtitle1_login_screen">30초</string>
     <string name="header_subtitle2_login_screen">면 가입이 가능해요.</string>
     <string name="kakao_login">카카오로 로그인</string>
@@ -74,4 +75,5 @@
     <string name="terms_of_service">이용약관</string>
     <string name="privacy_policy">개인정보 처리방침</string>
     <string name="unknown">Unknown</string>
+    <string name="daily_quote">오늘의 명언</string>
 </resources>

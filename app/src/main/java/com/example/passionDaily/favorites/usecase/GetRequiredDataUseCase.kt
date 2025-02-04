@@ -2,8 +2,8 @@ package com.example.passionDaily.favorites.usecase
 
 import android.util.Log
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
-import com.example.passionDaily.data.remote.model.Quote
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quote.data.remote.model.Quote
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
 

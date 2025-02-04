@@ -1,24 +1,11 @@
 package com.example.passionDaily.login.manager
 
-import android.database.sqlite.SQLiteException
-import android.util.Log
-import com.example.passionDaily.constants.ManagerConstants.UserProfile.TAG
-import com.example.passionDaily.data.repository.local.LocalUserRepository
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
-import com.example.passionDaily.login.UserProfileKey
-import com.example.passionDaily.mapper.UserProfileMapper
-import com.example.passionDaily.util.TimeUtil
 import com.example.passionDaily.login.domain.model.UserConsent
 import com.example.passionDaily.login.domain.usecase.CreateInitialProfileUseCase
 import com.example.passionDaily.login.domain.usecase.ManageJsonUseCase
 import com.example.passionDaily.login.domain.usecase.SaveUserProfileUseCase
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.FirebaseFirestoreException
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import org.json.JSONException
-import org.json.JSONObject
 import javax.inject.Inject
 
 class UserProfileManager @Inject constructor(

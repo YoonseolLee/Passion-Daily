@@ -1,7 +1,7 @@
 package com.example.passionDaily.login.domain.usecase
 
 import com.example.passionDaily.constants.UseCaseConstants.UserProfileConstants
-import com.example.passionDaily.login.UserProfileKey
+import com.example.passionDaily.login.domain.model.UserProfileKey
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject

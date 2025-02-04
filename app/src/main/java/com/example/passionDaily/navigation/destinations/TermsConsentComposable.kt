@@ -5,7 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.passionDaily.ui.screens.TermsConsentScreen
+import com.example.passionDaily.termsConsent.TermsConsentScreen
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(

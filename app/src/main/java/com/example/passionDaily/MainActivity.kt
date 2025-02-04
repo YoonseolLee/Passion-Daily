@@ -8,7 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.example.passionDaily.manager.alarm.ScheduleDailyQuoteAlarmUseCase
+import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.navigation.SetupNavigation
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
 import com.google.firebase.auth.FirebaseAuth

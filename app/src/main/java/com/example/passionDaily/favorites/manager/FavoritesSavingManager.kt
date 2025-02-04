@@ -1,10 +1,10 @@
 package com.example.passionDaily.favorites.manager
 
-import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.favorites.usecase.GetRequiredDataUseCase
 import com.example.passionDaily.favorites.usecase.SaveFavoritesToLocalUseCase
 import com.example.passionDaily.favorites.usecase.SaveFavoritesToRemoteUseCase
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
 

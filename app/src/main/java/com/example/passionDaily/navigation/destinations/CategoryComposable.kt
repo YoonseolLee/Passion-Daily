@@ -2,7 +2,7 @@ package com.example.passionDaily.navigation.destinations
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.passionDaily.ui.screens.CategoryScreen
+import com.example.passionDaily.quotecategory.presentation.screen.CategoryScreen
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 

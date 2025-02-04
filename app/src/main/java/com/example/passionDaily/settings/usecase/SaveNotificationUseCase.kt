@@ -1,8 +1,8 @@
 package com.example.passionDaily.settings.usecase
 
 import com.example.passionDaily.R
-import com.example.passionDaily.data.repository.local.LocalUserRepository
-import com.example.passionDaily.data.repository.remote.RemoteUserRepository
+import com.example.passionDaily.user.data.local.repository.LocalUserRepository
+import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import com.example.passionDaily.resources.StringProvider
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

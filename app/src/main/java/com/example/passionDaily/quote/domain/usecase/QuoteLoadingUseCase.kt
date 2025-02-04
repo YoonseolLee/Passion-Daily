@@ -2,11 +2,11 @@ package com.example.passionDaily.quote.domain.usecase
 
 import android.util.Log
 import com.example.passionDaily.constants.UseCaseConstants.QuoteLoading.TAG
-import com.example.passionDaily.data.remote.model.Quote
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.Dispatchers

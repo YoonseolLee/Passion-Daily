@@ -1,9 +1,9 @@
 package com.example.passionDaily.favorites.usecase
 
 import com.example.passionDaily.R
-import com.example.passionDaily.data.repository.remote.RemoteFavoriteRepository
+import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.util.QuoteCategory
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

@@ -2,8 +2,8 @@ package com.example.passionDaily.navigation.destinations
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.example.passionDaily.ui.screens.NavigationBarScreens
-import com.example.passionDaily.ui.screens.SettingsScreen
+import com.example.passionDaily.constants.NavigationBarScreens
+import com.example.passionDaily.settings.presentation.screen.SettingsScreen
 
 fun NavGraphBuilder.settingsComposable(
     onNavigateToFavorites: () -> Unit,
