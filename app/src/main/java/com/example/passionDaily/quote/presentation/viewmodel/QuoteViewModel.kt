@@ -119,6 +119,10 @@ class QuoteViewModel @Inject constructor(
                     // 4. 추가 데이터 로딩
                     val result = fetchFurtherQuotes(quoteId, quoteCategory)
                     lastLoadedQuote = updateLastLoadedDocument(result.lastDocument)
+
+                    if (result.quotes.isEmpty()) {
+                        quoteLoadingManager.setHasQuoteReachedEndTrue()
+                    }
                 }
             } catch (e: Exception) {
                 handleError(e)
@@ -214,15 +218,22 @@ class QuoteViewModel @Inject constructor(
                         }
                     }
 
-                    // 2. 데이터 로드가 성공적으로 완료된 후에만 인덱스를 업데이트
-                    result?.let {
-                        quoteLoadingManager.updateQuotesAfterLoading(it) { newLastDocument ->
-                            lastLoadedQuote = newLastDocument
-                        }
-                        savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
+                    // 2. 결과가 null이거나 비어있으면 hasReachedEnd를 true로 설정하고 첫 번째 명언으로 이동
+                    if (result == null || result.quotes.isEmpty()) {
+                        quoteLoadingManager.setHasQuoteReachedEndTrue()
+                        savedStateHandle[KEY_QUOTE_INDEX] = 0
+                        return@launch
                     }
+
+                    // 3. 데이터가 있는 경우에만 업데이트 진행
+                    quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
+                        lastLoadedQuote = newLastDocument
+                    }
+                    savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
                 } catch (e: Exception) {
                     handleError(e)
+                    // 에러 발생시에도 첫 번째 명언으로 이동
+                    savedStateHandle[KEY_QUOTE_INDEX] = 0
                 } finally {
                     quoteStateHolder.updateIsQuoteLoading(false)
                 }
