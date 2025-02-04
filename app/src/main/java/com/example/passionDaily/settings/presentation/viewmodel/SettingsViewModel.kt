@@ -182,14 +182,11 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-
     private suspend fun performLogout() {
         settingsStateHolder.updateIsLoading(true)
         authManager.clearCredentials()
-        authStateHolder.setUnAuthenticated()
-        scheduleAlarmUseCase.cancelExistingAlarm()
-        settingsStateHolder.updateNotificationEnabled(false)
-        settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
+        clearUserSession()
+        resetNotificationSettings()
     }
 
     fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
@@ -203,6 +200,8 @@ class SettingsViewModel @Inject constructor(
 
                 userSettingsManager.deleteUserData(user.uid)
                 attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
+                clearUserSession()
+                resetNotificationSettings()
             } catch (e: Exception) {
                 Log.e(TAG, "Error during withdrawal", e)
                 toastManager.showGeneralErrorToast()
@@ -210,6 +209,16 @@ class SettingsViewModel @Inject constructor(
                 settingsStateHolder.updateIsLoading(false)
             }
         }
+    }
+
+    private suspend fun clearUserSession() {
+        authStateHolder.setUnAuthenticated()
+        scheduleAlarmUseCase.cancelExistingAlarm()
+    }
+
+    private fun resetNotificationSettings() {
+        settingsStateHolder.updateNotificationEnabled(false)
+        settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
     }
 
     private suspend fun attemptAccountDeletion(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
