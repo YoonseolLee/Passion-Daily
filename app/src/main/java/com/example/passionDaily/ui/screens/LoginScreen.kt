@@ -66,13 +66,6 @@ fun LoginScreen(
                 }
             }
 
-            is AuthState.Error -> {
-                val errorMessage = (authState as AuthState.Error).message
-                sharedLogInViewModel.signalLoginError()
-
-                Log.e("LoginScreen", "Authentication failed: $errorMessage")
-            }
-
             is AuthState.Unauthenticated -> {
                 Log.d("LoginScreen", "User is not authenticated")
             }

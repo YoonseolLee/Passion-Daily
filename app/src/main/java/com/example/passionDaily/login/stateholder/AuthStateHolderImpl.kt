@@ -28,9 +28,4 @@ class AuthStateHolderImpl @Inject constructor() : AuthStateHolder {
         _authState.emit(AuthState.RequiresConsent(userId, userProfileJson))
         Log.d("AuthStateHolder", "User requires consent with ID: $userId")
     }
-
-    override suspend fun setError(errorMessage: String) {
-        _authState.emit(AuthState.Error(errorMessage))
-        Log.e("AuthStateHolder", "Authentication error: $errorMessage")
-    }
 }

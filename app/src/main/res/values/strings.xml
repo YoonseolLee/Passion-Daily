@@ -36,7 +36,7 @@
     <string name="re_login_forwithdrawl">보안을 위해 다시 로그인해주세요.</string>
 
     <string name="login_success">로그인에 성공했어요.</string>
-    <string name="login_error_format">로그인 중 오류가 발생했어요: %s</string>
+    <string name="login_error_format">로그인 중 오류가 발생했어요.</string>
     <string name="login_loading">로그인 중이에요...</string>
     <string name="login_required">로그인이 필요해요.</string>
 

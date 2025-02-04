@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.CreateCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
@@ -205,24 +206,15 @@ class SharedLogInViewModel @Inject constructor(
         }
     }
 
-    fun signalLoginError() {
-        viewModelScope.launch {
-            try {
-                authManager.updateIsLoggedIn(false)
-                toastManager.showLoginErrorToast()
-            } catch (e: Exception) {
-                handleException(e)
-            }
-        }
-    }
-
-    private suspend fun handleException(e: Exception) {
+    private fun handleException(e: Exception) {
         val errorMessage = e.message ?: stringProvider.getString(R.string.error_general)
         Log.e(TAG, errorMessage, e)
-        authStateHolder.setError(errorMessage)
 
         when (e) {
-            is CreateCredentialCancellationException -> toastManager.showCredentialErrorToast()
+            is GetCredentialCancellationException -> {
+                // 사용자의 의도적인 취소이므로 에러 메시지를 표시하지 않음
+                Log.d(TAG, "User cancelled the login process")
+            }
             is IOException -> toastManager.showNetworkErrorToast()
             is FirebaseAuthInvalidCredentialsException -> toastManager.showCredentialErrorToast()
             is IllegalArgumentException, is JSONException -> toastManager.showGeneralErrorToast()
