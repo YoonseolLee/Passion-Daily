@@ -188,6 +188,8 @@ class SettingsViewModel @Inject constructor(
         authManager.clearCredentials()
         authStateHolder.setUnAuthenticated()
         scheduleAlarmUseCase.cancelExistingAlarm()
+        settingsStateHolder.updateNotificationEnabled(false)
+        settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
     }
 
     fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {

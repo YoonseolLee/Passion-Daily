@@ -150,7 +150,7 @@ fun SettingsScreenContent(
     onLogout: () -> Unit,
     onCreateEmailIntent: () -> Intent,
     onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
-    onWithdrawUser: () -> Unit
+    onWithdrawUser: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -192,11 +192,13 @@ fun SettingsScreenContent(
             NotificationSettingItem(
                 isEnabled = isNotificationEnabled,
                 currentUser = currentUser,
-                onUpdateNotificationSettings = onUpdateNotificationSettings
+                onUpdateNotificationSettings = onUpdateNotificationSettings,
+                onLogin = onLogin
             )
             NotificationTimeSettingItem(
                 notificationTime = notificationTime,
-                onUpdateNotificationTime = onUpdateNotificationTime
+                onUpdateNotificationTime = onUpdateNotificationTime,
+                currentUser = currentUser,
             )
 
             // 프로필 설정
@@ -249,7 +251,8 @@ fun SettingsScreenContent(
 fun NotificationSettingItem(
     isEnabled: Boolean,
     currentUser: FirebaseUser?,
-    onUpdateNotificationSettings: (Boolean) -> Unit
+    onUpdateNotificationSettings: (Boolean) -> Unit,
+    onLogin: () -> Unit
 ) {
     val context = LocalContext.current
     var showSettingsDialog by remember { mutableStateOf(false) }
@@ -263,10 +266,15 @@ fun NotificationSettingItem(
         }
     )
 
+    // 비로그인 상태면 항상 off, 클릭시 로그인으로 이동
     NotificationToggle(
-        isEnabled = isEnabled,
+        isEnabled = if (currentUser == null) false else isEnabled,
         currentUser = currentUser,
         onToggleChange = { enabled ->
+            if (currentUser == null) {
+                onLogin()
+                return@NotificationToggle
+            }
             handleNotificationToggle(
                 enabled = enabled,
                 context = context,
@@ -315,35 +323,44 @@ private fun handleNotificationToggle(
 @Composable
 fun NotificationTimeSettingItem(
     notificationTime: LocalTime?,
-    onUpdateNotificationTime: (LocalTime) -> Unit
+    onUpdateNotificationTime: (LocalTime) -> Unit,
+    currentUser: FirebaseUser?
 ) {
     val context = LocalContext.current
     var showTimePickerDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(showTimePickerDialog) {
-        if (showTimePickerDialog) {
-            TimePickerDialog(
-                context,
-                { _, selectedHour, selectedMinute ->
-                    val selectedTime = LocalTime.of(selectedHour, selectedMinute)
-                    onUpdateNotificationTime(selectedTime)
-                    showTimePickerDialog = false
-                },
-                notificationTime?.hour ?: 8,
-                notificationTime?.minute ?: 0,
-                true
-            ).apply {
-                setOnDismissListener { showTimePickerDialog = false }
-                show()
-            }
-        }
+    // 비로그인 상태면 항상 default 시간
+    val displayTime = if (currentUser == null) {
+        stringResource(R.string.default_notification_time)
+    } else {
+        notificationTime?.toString() ?: stringResource(R.string.default_notification_time)
     }
 
     CommonTextItem(
         title = stringResource(R.string.notification_time_setting),
-        value = notificationTime?.toString() ?: stringResource(R.string.default_notification_time),
-        onClick = { showTimePickerDialog = true }
+        value = displayTime,
+        onClick = {
+            // 로그인 상태일 때만 클릭 가능
+            if (currentUser != null) {
+                showTimePickerDialog = true
+            }
+        }
     )
+
+    // 로그인 상태일 때만 시간 선택 다이얼로그 표시
+    if (showTimePickerDialog && currentUser != null) {
+        TimePickerDialog(
+            context,
+            { _, selectedHour, selectedMinute ->
+                val selectedTime = LocalTime.of(selectedHour, selectedMinute)
+                onUpdateNotificationTime(selectedTime)
+                showTimePickerDialog = false
+            },
+            notificationTime?.hour ?: 8,
+            notificationTime?.minute ?: 0,
+            true
+        ).show()
+    }
 }
 
 @Composable
@@ -390,6 +407,7 @@ fun SuggestionSettingItem(
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
+                // Handle the case where email intent cannot be handled
                 e.printStackTrace()
             }
         }
