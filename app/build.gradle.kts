@@ -134,9 +134,33 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.9.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
 
+    // firebase config
     implementation("com.google.firebase:firebase-config")
     implementation("com.google.firebase:firebase-analytics")
 
+    // JSON
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.6.3")
+
+    // AndroidX Test
+    testImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("androidx.test:core-ktx:1.5.0")
+
+    // Mockk
+    testImplementation("io.mockk:mockk:1.13.11")
+    androidTestImplementation ("io.mockk:mockk-android:1.13.11")
+
+    // Coroutines Test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0")
+
+    // Truth
+    testImplementation("com.google.truth:truth:1.4.2")
+
+    // Compose UI Testing
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // turbine
+    testImplementation("app.cash.turbine:turbine:1.1.0")
 
 }
