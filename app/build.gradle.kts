@@ -48,7 +48,14 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1,DEPENDENCIES}"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/*.kotlin_module"
         }
     }
 }
@@ -103,7 +110,6 @@ dependencies {
     implementation ("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore:25.1.1")
 
-
     // Credential Manager
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
@@ -149,11 +155,14 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.11")
     androidTestImplementation ("io.mockk:mockk-android:1.13.11")
 
-    // Coroutines Test
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.0")
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 
     // Truth
-    testImplementation("com.google.truth:truth:1.4.2")
+    testImplementation("com.google.truth:truth:1.4.3")
+    androidTestImplementation("com.google.truth:truth:1.4.3")
 
     // Compose UI Testing
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
@@ -161,6 +170,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     // turbine
-    testImplementation("app.cash.turbine:turbine:1.1.0")
-
+    testImplementation("app.cash.turbine:turbine:1.2.0")
+    androidTestImplementation("com.google.truth:truth:1.4.3")
 }

@@ -52,9 +52,6 @@ class SharedLogInViewModel @Inject constructor(
     val consent = userConsentManager.consent
     val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
 
-//    private val _navigationEvents = Channel<NavigationEvent>()
-//    val navigationEvents = _navigationEvents.receiveAsFlow()
-
     /**
      * LoginScreen
      */
