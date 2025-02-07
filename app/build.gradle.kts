@@ -107,7 +107,7 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-core:21.1.1")
-    implementation ("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore:25.1.1")
 
     // Credential Manager
@@ -153,12 +153,12 @@ dependencies {
 
     // Mockk
     testImplementation("io.mockk:mockk:1.13.11")
-    androidTestImplementation ("io.mockk:mockk-android:1.13.11")
+    androidTestImplementation("io.mockk:mockk-android:1.13.11")
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
 
     // Truth
     testImplementation("com.google.truth:truth:1.4.3")
