@@ -202,7 +202,11 @@ class SharedLogInViewModel @Inject constructor(
         }
     }
 
-    private fun handleException(e: Exception) {
+    fun handleException(e:Exception) {
+        showToastForException(e)
+    }
+
+    private fun showToastForException(e: Exception) {
         val errorMessage = e.message ?: stringProvider.getString(R.string.error_general)
         Log.e(TAG, errorMessage, e)
 
