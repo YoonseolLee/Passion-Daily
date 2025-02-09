@@ -7,5 +7,5 @@ interface UserProfileStateHolder {
 
     fun updateIsJsonValid(isValid: Boolean)
 
-    fun isJsonValid(): Boolean
+    fun checkJsonValidity(): Boolean
 }

@@ -11,7 +11,7 @@ class UserProfileStateHolderImpl() : UserProfileStateHolder {
         _isJsonValid.value = isValid
     }
 
-    override fun isJsonValid(): Boolean {
+    override fun checkJsonValidity(): Boolean {
         return _isJsonValid.value
     }
 }
