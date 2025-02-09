@@ -58,6 +58,14 @@ android {
             excludes += "META-INF/*.kotlin_module"
         }
     }
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+            all {
+                it.systemProperty("robolectric.logging.enabled", "false")
+            }
+        }
+    }
 }
 
 dependencies {
