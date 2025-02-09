@@ -66,7 +66,7 @@ class LoginScreenTest {
     }
 
     @Test
-    fun clickGoogleLoginButton_callsSignInWithGoogle() = mainCoroutineRule.runTest {
+    fun GoogleLoginButton을_클릭하면_SignInWithGoogle이_실행된다() = mainCoroutineRule.runTest {
         // Given
         composeTestRule.setContent {
             LoginScreen(
@@ -88,7 +88,7 @@ class LoginScreenTest {
     }
 
     @Test
-    fun whenAuthStateChangesToAuthenticated_navigatesToQuote() = mainCoroutineRule.runTest {
+    fun AuthState가_Authenticated이면_navigatesToQuote가_실행된다() = mainCoroutineRule.runTest {
         // Given
         every { mockNavigateToQuote.invoke() } returns Unit
         every { mockViewModel.signalLoginSuccess() } returns Unit
@@ -120,7 +120,7 @@ class LoginScreenTest {
 
 
     @Test
-    fun whenAuthStateChangesToRequiresConsent_navigatesToTermsConsent() = mainCoroutineRule.runTest {
+    fun AuthState가_ToRequiresConsent이면_navigatesToTermsConsent가_실행된다() = mainCoroutineRule.runTest {
         // Given
         val userProfileJson = """{"id": "123", "name": "Test User"}"""
         every { mockNavigateToTermsConsent.invoke(any()) } returns Unit
