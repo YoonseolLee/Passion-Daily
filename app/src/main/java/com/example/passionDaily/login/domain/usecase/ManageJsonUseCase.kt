@@ -24,9 +24,15 @@ class ManageJsonUseCase @Inject constructor(
 
         return@withContext try {
             JSONObject(json)
+
+            // 최소한 하나의 따옴표가 있어야 함
+            val isValid = json.trim().startsWith("{") &&
+                    json.trim().endsWith("}") &&
+                    json.contains("\"")
+
             Log.d("UserProfileJsonManager", "Valid JSON: $json")
-            userProfileStateHolder.updateIsJsonValid(true)
-            true
+            userProfileStateHolder.updateIsJsonValid(isValid)
+            isValid
         } catch (e: JSONException) {
             Log.e("UserProfileJsonManager", "Invalid JSON format: $json", e)
             userProfileStateHolder.updateIsJsonValid(false)
