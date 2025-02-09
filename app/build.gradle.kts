@@ -180,4 +180,7 @@ dependencies {
     // turbine
     testImplementation("app.cash.turbine:turbine:1.2.0")
     androidTestImplementation("com.google.truth:truth:1.4.3")
+
+    // json - 테스트환경
+    testImplementation("org.json:json:20240303")
 }
