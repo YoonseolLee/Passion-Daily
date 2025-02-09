@@ -24,11 +24,7 @@ class ManageJsonUseCase @Inject constructor(
 
         return@withContext try {
             JSONObject(json)
-
-            // 최소한 하나의 따옴표가 있어야 함
-            val isValid = json.trim().startsWith("{") &&
-                    json.trim().endsWith("}") &&
-                    json.contains("\"")
+            val isValid = isJsonValidFormat(json)
 
             Log.d("UserProfileJsonManager", "Valid JSON: $json")
             userProfileStateHolder.updateIsJsonValid(isValid)
@@ -38,6 +34,12 @@ class ManageJsonUseCase @Inject constructor(
             userProfileStateHolder.updateIsJsonValid(false)
             false
         }
+    }
+
+    private fun isJsonValidFormat(json: String): Boolean {
+        return json.trim().startsWith("{") &&
+                json.trim().endsWith("}") &&
+                json.contains("\"")
     }
 
     suspend fun updateUserProfileWithConsent(
@@ -65,10 +67,9 @@ class ManageJsonUseCase @Inject constructor(
     }
 
     private fun updateJsonWithConsent(jsonObject: JSONObject, consent: UserConsent): String {
-        return jsonObject.apply {
-            put(UserProfileKey.PRIVACY_POLICY_ENABLED.key, consent.privacyPolicy)
-            put(UserProfileKey.TERMS_OF_SERVICE_ENABLED.key, consent.termsOfService)
-        }.toString()
+        jsonObject.put(UserProfileKey.PRIVACY_POLICY_ENABLED.key, consent.privacyPolicy ?: false)
+        jsonObject.put(UserProfileKey.TERMS_OF_SERVICE_ENABLED.key, consent.termsOfService ?: false)
+        return jsonObject.toString()
     }
 
     suspend fun extractUserInfo(userProfileJson: String): Pair<Map<String, Any?>, String> =
