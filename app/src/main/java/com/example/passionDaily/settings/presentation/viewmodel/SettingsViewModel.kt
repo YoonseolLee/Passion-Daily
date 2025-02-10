@@ -52,7 +52,7 @@ class SettingsViewModel @Inject constructor(
         settingsStateHolder.updateCurrentUser(getCurrentUser())
     }
 
-    private fun loadUserSettings() {
+    fun loadUserSettings() {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
