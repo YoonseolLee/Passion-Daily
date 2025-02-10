@@ -9,9 +9,6 @@ import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVOR
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.data.remote.model.Quote
-import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
-import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
-import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
