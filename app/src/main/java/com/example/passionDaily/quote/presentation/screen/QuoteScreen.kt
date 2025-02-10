@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
 import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
@@ -109,6 +110,7 @@ fun QuoteScreen(
         if (isQuoteLoading || currentQuote == null) {
             CircularProgressIndicator(
                 modifier = Modifier
+                    .testTag("LoadingIndicator")
                     .align(Alignment.Center),
                 color = PrimaryColor
             )
