@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.SharedLogin.TAG
+import com.example.passionDaily.login.base.SharedLogInActions
+import com.example.passionDaily.login.base.SharedLogInState
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.manager.UrlManager
 import com.example.passionDaily.login.manager.UserConsentManager
@@ -42,21 +44,21 @@ class SharedLogInViewModel @Inject constructor(
     private val stringProvider: StringProvider,
     private val authStateHolder: AuthStateHolder,
     private val loginStateHolder: LoginStateHolder
-) : ViewModel() {
-    val authState = authStateHolder.authState
+) : ViewModel(), SharedLogInActions, SharedLogInState {
+    override val authState = authStateHolder.authState
 
-    val userProfileJson = loginStateHolder.userProfileJson
-    val userProfileJsonV2 = loginStateHolder.userProfileJsonV2
-    val isLoading = loginStateHolder.isLoading
+    override val userProfileJson = loginStateHolder.userProfileJson
+    override val userProfileJsonV2 = loginStateHolder.userProfileJsonV2
+    override val isLoading = loginStateHolder.isLoading
 
-    val consent = userConsentManager.consent
-    val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
+    override val consent = userConsentManager.consent
+    override val isAgreeAllChecked = userConsentManager.isAgreeAllChecked
 
     /**
      * LoginScreen
      */
 
-    fun signInWithGoogle() {
+    override fun signInWithGoogle() {
         viewModelScope.launch {
             authManager.startLoading()
             try {
@@ -134,16 +136,16 @@ class SharedLogInViewModel @Inject constructor(
     }
 
     // 전체 동의 토글 메서드
-    fun toggleAgreeAll() {
+    override fun toggleAgreeAll() {
         userConsentManager.toggleAgreeAll()
     }
 
     // 개별 항목 토글 메서드
-    fun toggleIndividualItem(item: String) {
+    override fun toggleIndividualItem(item: String) {
         userConsentManager.toggleIndividualItem(item)
     }
 
-    fun handleNextClick(userProfileJson: String?) {
+    override fun handleNextClick(userProfileJson: String?) {
         if (!consent.value.isAllAgreed) {
             Log.e(TAG, "User did not agree to required terms")
             return
@@ -182,7 +184,7 @@ class SharedLogInViewModel @Inject constructor(
         }
     }
 
-    fun openUrl(context: Context, url: String) {
+    override fun openUrl(context: Context, url: String) {
         urlManager.openUrl(context, url)
     }
 
@@ -190,7 +192,7 @@ class SharedLogInViewModel @Inject constructor(
      * QuoteScreen
      */
 
-    fun signalLoginSuccess() {
+    override fun signalLoginSuccess() {
         viewModelScope.launch {
             try {
                 authManager.updateIsLoggedIn(true)
@@ -202,7 +204,7 @@ class SharedLogInViewModel @Inject constructor(
         }
     }
 
-    fun handleException(e:Exception) {
+    override fun handleException(e: Exception) {
         showToastForException(e)
     }
 
@@ -215,6 +217,7 @@ class SharedLogInViewModel @Inject constructor(
                 // 사용자의 의도적인 취소이므로 에러 메시지를 표시하지 않음
                 Log.d(TAG, "User cancelled the login process")
             }
+
             is IOException -> toastManager.showNetworkErrorToast()
             is FirebaseAuthInvalidCredentialsException -> toastManager.showCredentialErrorToast()
             is IllegalArgumentException, is JSONException -> toastManager.showGeneralErrorToast()
