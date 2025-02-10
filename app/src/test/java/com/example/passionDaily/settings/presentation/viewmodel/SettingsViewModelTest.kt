@@ -1,7 +1,6 @@
 package com.example.passionDaily.settings.presentation.viewmodel
 
 import android.util.Log
-import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.MainCoroutineRule

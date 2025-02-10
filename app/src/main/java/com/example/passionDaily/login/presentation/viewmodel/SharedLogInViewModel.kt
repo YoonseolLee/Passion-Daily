@@ -9,12 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.ViewModelConstants.SharedLogin.TAG
-import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import com.example.passionDaily.login.manager.AuthenticationManager
-import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.login.manager.UrlManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.manager.UserProfileManager
+import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
+import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.mapper.UserProfileMapper
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.login.stateholder.AuthStateHolder

@@ -7,10 +7,6 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.example.passionDaily.login.domain.model.UserConsent
-import com.example.passionDaily.login.manager.AuthenticationManager
-import com.example.passionDaily.login.manager.UrlManager
-import com.example.passionDaily.login.manager.UserConsentManager
-import com.example.passionDaily.login.manager.UserProfileManager
 import com.example.passionDaily.login.state.AuthState.Unauthenticated
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
