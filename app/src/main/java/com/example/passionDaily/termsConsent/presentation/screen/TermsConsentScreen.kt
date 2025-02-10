@@ -1,4 +1,4 @@
-package com.example.passionDaily.termsConsent
+package com.example.passionDaily.termsConsent.presentation.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

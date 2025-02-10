@@ -8,9 +8,6 @@
       <SelectionState runConfigName="FavoritesScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="이전_버튼_클릭시_이전_명언으로_이동한다()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="QuoteScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -18,6 +15,9 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="CategoryScreenTest">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="뒤로가기_버튼_클릭시_이전화면으로_이동한다()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
