@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SettingsViewModelState {
     val notificationEnabled: StateFlow<Boolean>
-    val notificationTime: StateFlow<LocalTime>
+    val notificationTime: StateFlow<LocalTime?>
     val showWithdrawalDialog: StateFlow<Boolean>
     val currentUser: StateFlow<FirebaseUser?>
     val isLoading: StateFlow<Boolean>

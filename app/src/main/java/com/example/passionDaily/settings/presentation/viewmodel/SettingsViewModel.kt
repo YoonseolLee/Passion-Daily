@@ -9,6 +9,8 @@ import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.example.passionDaily.settings.base.SettingsViewModelActions
+import com.example.passionDaily.settings.base.SettingsViewModelState
 import com.example.passionDaily.settings.manager.EmailManager
 import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
@@ -35,13 +37,13 @@ class SettingsViewModel @Inject constructor(
     private val toastManager: ToastManager,
     private val emailManager: EmailManager,
     private val settingsStateHolder: SettingsStateHolder
-) : ViewModel() {
+) : ViewModel(), SettingsViewModelActions, SettingsViewModelState {
 
-    val notificationEnabled = settingsStateHolder.notificationEnabled
-    val notificationTime = settingsStateHolder.notificationTime
-    val showWithdrawalDialog = settingsStateHolder.showWithdrawalDialog
-    val currentUser = settingsStateHolder.currentUser
-    val isLoading = settingsStateHolder.isLoading
+    override val notificationEnabled = settingsStateHolder.notificationEnabled
+    override val notificationTime = settingsStateHolder.notificationTime
+    override val showWithdrawalDialog = settingsStateHolder.showWithdrawalDialog
+    override val currentUser = settingsStateHolder.currentUser
+    override val isLoading = settingsStateHolder.isLoading
 
     init {
         initializeCurrentUser()
@@ -52,7 +54,7 @@ class SettingsViewModel @Inject constructor(
         settingsStateHolder.updateCurrentUser(getCurrentUser())
     }
 
-    fun loadUserSettings() {
+    override fun loadUserSettings() {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
@@ -82,7 +84,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateNotificationSettings(enabled: Boolean) {
+    override fun updateNotificationSettings(enabled: Boolean) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
@@ -110,7 +112,7 @@ class SettingsViewModel @Inject constructor(
         settingsStateHolder.updateNotificationEnabled(enabled)
     }
 
-    fun updateNotificationTime(newTime: LocalTime) {
+    override fun updateNotificationTime(newTime: LocalTime) {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
                 try {
@@ -136,7 +138,7 @@ class SettingsViewModel @Inject constructor(
         settingsStateHolder.updateNotificationTime(newTime)
     }
 
-    fun logIn(onLogInSuccess: () -> Unit) {
+    override fun logIn(onLogInSuccess: () -> Unit) {
         viewModelScope.launch {
             settingsStateHolder.updateIsLoading(true)
             try {
@@ -154,7 +156,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun logOut(onLogoutSuccess: () -> Unit) {
+    override fun logOut(onLogoutSuccess: () -> Unit) {
         viewModelScope.launch {
             try {
                 if (isUserLoggedOut()) return@launch
@@ -189,7 +191,7 @@ class SettingsViewModel @Inject constructor(
         resetNotificationSettings()
     }
 
-    fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
+    override fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
         viewModelScope.launch {
             settingsStateHolder.updateIsLoading(true)
             try {
@@ -239,7 +241,7 @@ class SettingsViewModel @Inject constructor(
         onReLogInRequired()
     }
 
-    fun createEmailIntent(): Intent? {
+    override fun createEmailIntent(): Intent? {
         return try {
             emailManager.createEmailIntent()
         } catch (e: URISyntaxException) {
@@ -253,7 +255,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun updateShowWithdrawalDialog(show: Boolean) {
+    override fun updateShowWithdrawalDialog(show: Boolean) {
         viewModelScope.launch {
             settingsStateHolder.updateShowWithdrawalDialog(show)
         }
