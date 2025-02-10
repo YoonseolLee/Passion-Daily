@@ -1,9 +1,7 @@
 package com.example.passionDaily.settings.usecase
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.test.core.app.ApplicationProvider
 import com.example.passionDaily.resources.StringProvider
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
