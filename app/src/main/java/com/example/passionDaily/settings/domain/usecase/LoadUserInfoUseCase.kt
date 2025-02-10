@@ -1,4 +1,4 @@
-package com.example.passionDaily.settings.usecase
+package com.example.passionDaily.settings.domain.usecase
 
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import javax.inject.Inject

@@ -5,7 +5,7 @@ import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCa
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
-import com.example.passionDaily.settings.usecase.LoadUserInfoUseCase
+import com.example.passionDaily.settings.domain.usecase.LoadUserInfoUseCase
 import javax.inject.Inject
 
 class UserSettingsManager @Inject constructor(

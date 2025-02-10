@@ -1,4 +1,4 @@
-package com.example.passionDaily.settings.usecase
+package com.example.passionDaily.settings.domain.usecase
 
 import android.content.Intent
 import android.net.Uri

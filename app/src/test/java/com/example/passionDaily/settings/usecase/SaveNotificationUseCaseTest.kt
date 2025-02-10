@@ -2,6 +2,7 @@ package com.example.passionDaily.settings.usecase
 
 
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.settings.domain.usecase.SaveNotificationUseCase
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import com.example.passionDaily.util.MainCoroutineRule

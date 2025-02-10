@@ -1,5 +1,6 @@
 package com.example.passionDaily.settings.usecase
 
+import com.example.passionDaily.settings.domain.usecase.ParseTimeUseCase
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test

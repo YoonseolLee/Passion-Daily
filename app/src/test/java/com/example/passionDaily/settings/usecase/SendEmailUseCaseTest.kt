@@ -3,6 +3,7 @@ package com.example.passionDaily.settings.usecase
 import android.content.Intent
 import android.net.Uri
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.settings.domain.usecase.SendEmailUseCase
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
 import io.mockk.mockk
