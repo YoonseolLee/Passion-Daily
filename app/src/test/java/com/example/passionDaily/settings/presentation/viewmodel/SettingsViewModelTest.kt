@@ -241,7 +241,7 @@ class SettingsViewModelTest {
         coVerify(exactly = 0) { settingsStateHolder.updateNotificationEnabled(any()) }
         coVerify(exactly = 0) { settingsStateHolder.updateNotificationTime(any()) }
     }
-    
+
     @Test
     fun `로그인되지_않은_상태에서_회원탈퇴_시도시_에러_토스트가_표시된다`() = mainCoroutineRule.runTest {
         // Given
