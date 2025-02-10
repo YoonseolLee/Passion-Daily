@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseUser
 import javax.inject.Inject
 
 class GetRequiredDataUseCase @Inject constructor() {
+
     fun getRequiredDataForAdd(
         currentUser: FirebaseUser?,
         selectedCategory: QuoteCategory?,
