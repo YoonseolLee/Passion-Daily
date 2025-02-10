@@ -8,102 +8,92 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import com.google.common.truth.Truth.assertThat
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@ExperimentalCoroutinesApi
 class UserNotificationRepositoryTest {
     @get:Rule
     val mainCoroutineRule = MainCoroutineRule()
 
     private lateinit var db: FirebaseFirestore
     private lateinit var repository: UserNotificationRepository
-    private lateinit var collectionRef: CollectionReference
+    private lateinit var collectionReference: CollectionReference
     private lateinit var query: Query
-    private lateinit var queryTask: Task<QuerySnapshot>
     private lateinit var querySnapshot: QuerySnapshot
+
+    // mockTask 헬퍼 함수
+    private inline fun <reified T> mockTask(result: T?, exception: Exception? = null): Task<T> {
+        val task: Task<T> = mockk(relaxed = true)
+        every { task.isComplete } returns true
+        every { task.exception } returns exception
+        every { task.isCanceled } returns false
+        every { task.result } returns result
+        return task
+    }
 
     @Before
     fun setup() {
-        // 필요한 모든 Firebase 관련 객체들을 모의 객체로 생성
-        db = mockk(relaxed = true)
-        collectionRef = mockk(relaxed = true)
-        query = mockk(relaxed = true)
-        queryTask = mockk(relaxed = true)
-        querySnapshot = mockk(relaxed = true)
-        repository = UserNotificationRepository(db)
+        db = mockk()
+        collectionReference = mockk()
+        query = mockk()
+        querySnapshot = mockk()
+        repository = spyk(UserNotificationRepository(db), recordPrivateCalls = true)
 
-        // 기본적인 체이닝 동작 설정
-        every { db.collection("users") } returns collectionRef
-        every { collectionRef.whereEqualTo("notificationEnabled", true) } returns query
-        every { query.whereEqualTo("notificationTime", any()) } returns query
+        every { db.collection("users") } returns collectionReference
+        every { collectionReference.whereEqualTo("notificationEnabled", true) } returns query
     }
 
     @Test
-    fun `특정 시간에 알림을 받을 사용자 목록을 가져온다`() = runTest {
+    fun `알림을 받을 사용자 목록을 가져온다`() = mainCoroutineRule.runTest {
         // Given
         val currentTime = "09:00"
-        val latch = CountDownLatch(1)
-        var result: QuerySnapshot? = null
-        var testError: Exception? = null
-
-        every { query.get() } returns queryTask
-        every { queryTask.addOnSuccessListener(any()) } answers {
-            firstArg<(QuerySnapshot) -> Unit>().invoke(querySnapshot)
-            latch.countDown()
-            queryTask
-        }
-        every { queryTask.addOnFailureListener(any()) } answers {
-            queryTask
-        }
+        every { query.whereEqualTo("notificationTime", currentTime) } returns query
+        every { query.get() } returns mockTask(querySnapshot)
 
         // When
-        try {
-            result = repository.getTargetUsers(currentTime)
-        } catch (e: Exception) {
-            testError = e
-        }
+        val result = repository.getTargetUsers(currentTime)
 
         // Then
-        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue() // 5초 타임아웃 설정
-        assertThat(testError).isNull()
         assertThat(result).isEqualTo(querySnapshot)
+
+        // 메소드 호출 검증
+        verify(exactly = 1) {
+            db.collection("users")
+            collectionReference.whereEqualTo("notificationEnabled", true)
+            query.whereEqualTo("notificationTime", currentTime)
+            query.get()
+        }
     }
 
     @Test
-    fun `Firestore 쿼리 실패시 예외가 발생한다`() = runTest {
+    fun `쿼리 실패시 예외가 발생한다`() = mainCoroutineRule.runTest {
         // Given
         val currentTime = "09:00"
-        val latch = CountDownLatch(1)
-        val testException = RuntimeException("Firestore query failed")
-        var result: QuerySnapshot? = null
-        var testError: Exception? = null
+        val exception = RuntimeException("Firestore query failed")
 
-        every { query.get() } returns queryTask
-        every { queryTask.addOnSuccessListener(any()) } answers { queryTask }
-        every { queryTask.addOnFailureListener(any()) } answers {
-            firstArg<(Exception) -> Unit>().invoke(testException)
-            latch.countDown()
-            queryTask
-        }
+        every { query.whereEqualTo("notificationTime", currentTime) } returns query
+        every { query.get() } returns mockTask(null, exception)
 
-        // When
+        // When & Then
         try {
-            result = repository.getTargetUsers(currentTime)
+            repository.getTargetUsers(currentTime)
+            error("Expected exception was not thrown")
         } catch (e: Exception) {
-            testError = e
+            assertThat(e).hasMessageThat().contains("Firestore query failed")
         }
 
-        // Then
-        assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue()
-        assertThat(testError).isNotNull()
-        assertThat(testError).hasMessageThat().contains("Firestore query failed")
-        assertThat(result).isNull()
+        // 메소드 호출 검증
+        verify(exactly = 1) {
+            db.collection("users")
+            collectionReference.whereEqualTo("notificationEnabled", true)
+            query.whereEqualTo("notificationTime", currentTime)
+            query.get()
+        }
     }
 }
