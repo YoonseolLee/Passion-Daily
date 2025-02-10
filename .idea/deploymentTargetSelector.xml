@@ -5,19 +5,19 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="FavoritesScreenTest">
+      <SelectionState runConfigName="TermsConsentScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="QuoteScreenTest">
+      <SelectionState runConfigName="모든_필수요소가_화면에_표시된다()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="카테고리선택_버튼_클릭시_카테고리화면으로_이동한다()">
+      <SelectionState runConfigName="SettingsScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="CategoryScreenTest">
+      <SelectionState runConfigName="설정화면_기본요소들이_표시된다()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="뒤로가기_버튼_클릭시_이전화면으로_이동한다()">
+      <SelectionState runConfigName="로그아웃_클릭시_확인_다이얼로그가_표시된다()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

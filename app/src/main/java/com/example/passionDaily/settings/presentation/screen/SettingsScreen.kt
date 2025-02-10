@@ -56,6 +56,7 @@ import java.time.LocalTime
 import android.provider.Settings
 import android.Manifest
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.passionDaily.ui.component.BackButton
@@ -123,7 +124,9 @@ fun SettingsScreen(
             ) {
                 CircularProgressIndicator(
                     color = PrimaryColor,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier
+                        .size(48.dp)
+                        .testTag("LoadingIndicator")
                 )
             }
         }
@@ -858,6 +861,7 @@ fun SettingsCategoryHeader(text: String) {
             .height(45.dp)
             .background(color = Color(0xFF0E1C41))
             .padding(horizontal = 24.dp, vertical = 8.dp)
+            .testTag("CategoryHeader")
     ) {
         Text(
             text = text,
@@ -880,7 +884,8 @@ fun SettingsHeaderText() {
             fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
             fontWeight = FontWeight(400),
             color = Color(0xFFFFFFFF),
-        )
+        ),
+        modifier = Modifier.testTag("SettingsTitle")
     )
 }
 
