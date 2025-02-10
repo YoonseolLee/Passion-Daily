@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
+import com.example.passionDaily.favorites.base.FavoritesViewModelActions
+import com.example.passionDaily.favorites.base.FavoritesViewModelState
 import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
 import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
 import com.example.passionDaily.favorites.manager.FavoritesSavingManager
@@ -44,23 +46,23 @@ class FavoritesViewModel @Inject constructor(
     private val favoritesSavingManager: FavoritesSavingManager,
     private val favoritesRemoveManager: FavoritesRemoveManager,
     private val toastManager: ToastManager
-) : ViewModel(), QuoteInteractionHandler {
+) : ViewModel(), QuoteInteractionHandler, FavoritesViewModelActions, FavoritesViewModelState {
 
     private var userId: String = firebaseAuth.currentUser?.uid ?: ""
 
-    val favoriteQuotes = favoritesStateHolder.favoriteQuotes
-    val isFavoriteLoading: StateFlow<Boolean> = favoritesStateHolder.isFavoriteLoading
-    val error: StateFlow<String?> = favoritesStateHolder.error
+    override val favoriteQuotes = favoritesStateHolder.favoriteQuotes
+    override val isFavoriteLoading: StateFlow<Boolean> = favoritesStateHolder.isFavoriteLoading
+    override val error: StateFlow<String?> = favoritesStateHolder.error
 
-    val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
-    val quotes = quoteStateHolder.quotes
+    override val selectedQuoteCategory = quoteStateHolder.selectedQuoteCategory
+    override val quotes = quoteStateHolder.quotes
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(
         KEY_FAVORITE_INDEX,
         0
     )
 
-    val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
+    override val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
 
     private var favoritesJob: Job? = null
 
@@ -119,7 +121,7 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    fun loadFavorites() {
+    override fun loadFavorites() {
         val currentUserId = userId
         if (currentUserId.isEmpty()) {
             Log.d(TAG, "Skipping loadFavorites: User not logged in")
@@ -165,7 +167,7 @@ class FavoritesViewModel @Inject constructor(
         return favoritesLoadingManager.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
     }
 
-    fun addFavorite(quoteId: String) {
+    override fun addFavorite(quoteId: String) {
         val (currentUser, selectedCategory, currentQuote) = getRequiredDataForAdd(
             firebaseAuth.currentUser,
             selectedQuoteCategory.value,
@@ -227,7 +229,7 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    suspend fun removeFavorite(quoteId: String, categoryId: Int) {
+    override suspend fun removeFavorite(quoteId: String, categoryId: Int) {
         val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
             ?: return
 
