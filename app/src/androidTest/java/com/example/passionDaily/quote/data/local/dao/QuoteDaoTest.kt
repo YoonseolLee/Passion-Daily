@@ -15,8 +15,10 @@ import app.cash.turbine.test
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quotecategory.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.quotecategory.data.local.entity.QuoteCategoryEntity
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class QuoteDaoTest {
     @get:Rule

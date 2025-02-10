@@ -76,7 +76,7 @@ class RemoteUserRepositoryImplTest {
     fun `마지막 동기화 날짜를 업데이트한다`() = mainCoroutineRule.runTest {
         // Given
         val userId = "testUserId"
-        val currentTime = "2024-02-10T12:34:56Z"  // String 타입으로 변경
+        val currentTime = "2024-02-10T12:34:56Z"
         every { timeUtil.getCurrentTimestamp() } returns currentTime
         every {
             firestore.collection("users")

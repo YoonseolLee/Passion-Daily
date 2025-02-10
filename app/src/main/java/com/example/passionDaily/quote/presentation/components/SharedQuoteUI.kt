@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -105,13 +106,15 @@ private fun ArrowButton(
     }
 }
 
+// SharedQuoteUI.kt 수정사항
 @Composable
 fun LeftArrow(onClick: () -> Unit) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.left_arrow),
             contentDescription = "quote_arrow_left",
-            contentScale = ContentScale.None
+            contentScale = ContentScale.None,
+            modifier = Modifier.testTag("LeftArrow")
         )
     }
 }
@@ -121,8 +124,9 @@ fun RightArrow(onClick: () -> Unit) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.right_arrow),
-            contentDescription = "quote_arrow_right",  // 오른쪽 화살표 설명 수정
-            contentScale = ContentScale.None
+            contentDescription = "quote_arrow_right",
+            contentScale = ContentScale.None,
+            modifier = Modifier.testTag("RightArrow")
         )
     }
 }
