@@ -1,6 +1,5 @@
 package com.example.passionDaily.favorites.usecase
 
-import android.util.Log
 import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
 import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
@@ -9,25 +8,11 @@ import com.example.passionDaily.util.MainCoroutineRule
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.withContext
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestRule
 import com.google.common.truth.Truth.assertThat
-import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.test.resetMain
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class RemoveFavoritesUseCaseTest {
 
     @get:Rule

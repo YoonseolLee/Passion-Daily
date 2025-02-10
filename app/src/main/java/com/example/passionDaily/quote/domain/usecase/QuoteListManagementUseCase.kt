@@ -30,10 +30,6 @@ class QuoteListManagementUseCase @Inject constructor(
         return document
     }
 
-    suspend fun clearQuotes() {
-        quoteStateHolder.clearQuotes()
-    }
-
     suspend fun updateSelectedCategory(category: QuoteCategory) {
         quoteStateHolder.updateSelectedCategory(category)
     }

@@ -31,20 +31,24 @@ class RemoveFavoritesUseCase @Inject constructor(
     }
 
     @Transaction
-    suspend fun deleteLocalFavorite(userId: String, quoteId: String, categoryId: Int) = withContext(Dispatchers.IO) {
-        deleteFavorite(userId, quoteId, categoryId)
+    suspend fun deleteLocalFavorite(userId: String, quoteId: String, categoryId: Int) =
+        withContext(Dispatchers.IO) {
+            deleteFavorite(userId, quoteId, categoryId)
 
-        val remainingFavorites = getRemainingFavorites(quoteId, categoryId)
-        if (remainingFavorites.isEmpty()) {
-            deleteQuoteIfNoFavorites(quoteId, categoryId)
+            val remainingFavorites = getRemainingFavorites(quoteId, categoryId)
+            if (remainingFavorites.isEmpty()) {
+                deleteQuoteIfNoFavorites(quoteId, categoryId)
+            }
         }
-    }
 
     private suspend fun deleteFavorite(userId: String, quoteId: String, categoryId: Int) {
         localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId)
     }
 
-    private suspend fun getRemainingFavorites(quoteId: String, categoryId: Int): List<FavoriteEntity> {
+    private suspend fun getRemainingFavorites(
+        quoteId: String,
+        categoryId: Int
+    ): List<FavoriteEntity> {
         return localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
     }
 
@@ -55,7 +59,11 @@ class RemoveFavoritesUseCase @Inject constructor(
         }
     }
 
-    suspend fun deleteFavoriteFromFirestore(currentUser: FirebaseUser, quoteId: String, categoryId: Int) = withContext(Dispatchers.IO) {
+    suspend fun deleteFavoriteFromFirestore(
+        currentUser: FirebaseUser,
+        quoteId: String,
+        categoryId: Int
+    ) = withContext(Dispatchers.IO) {
         remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
     }
 }

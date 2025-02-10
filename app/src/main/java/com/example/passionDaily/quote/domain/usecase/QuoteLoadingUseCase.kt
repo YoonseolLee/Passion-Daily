@@ -109,14 +109,6 @@ class QuoteLoadingUseCase @Inject constructor(
         return nextIndex >= currentQuotes.size
     }
 
-    fun shouldLoadMoreQuotesIfNeeded(
-        selectedCategory: QuoteCategory?,
-        isQuoteLoading: Boolean,
-        lastLoadedQuote: DocumentSnapshot?
-    ): Boolean {
-        return selectedCategory != null && !isQuoteLoading && lastLoadedQuote != null
-    }
-
     suspend fun loadQuotesAfter(
         category: QuoteCategory,
         lastQuoteId: String,
