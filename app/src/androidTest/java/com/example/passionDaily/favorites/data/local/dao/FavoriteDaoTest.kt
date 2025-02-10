@@ -1,14 +1,12 @@
-package com.example.passionDaily
+package com.example.passionDaily.favorites.data.local.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.passionDaily.database.PassionDailyDatabase
-import com.example.passionDaily.favorites.data.local.dao.FavoriteDao
 import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
