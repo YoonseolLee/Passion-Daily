@@ -6,6 +6,7 @@ import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.firebase.auth.FirebaseUser
 import android.content.Intent
+import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.settings.manager.EmailManager
