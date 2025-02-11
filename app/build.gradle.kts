@@ -195,4 +195,5 @@ dependencies {
 
     // splash
     implementation ("androidx.core:core-splashscreen:1.0.1")
+    debugImplementation ("com.squareup.leakcanary:leakcanary-android:2.12")
 }
