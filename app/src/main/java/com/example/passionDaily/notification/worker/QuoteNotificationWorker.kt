@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.example.passionDaily.constants.WorkerConstants.QuoteNotification.TAG
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
 import com.example.passionDaily.notification.data.repository.remote.UserNotificationRepository
 import com.example.passionDaily.notification.manager.FCMNotificationManager
@@ -58,9 +59,5 @@ class QuoteNotificationWorker @AssistedInject constructor(
 
     private suspend fun sendNotifications(quote: DailyQuoteDTO, users: List<DocumentSnapshot>) {
         fcmManager.sendQuoteNotification(quote, users)
-    }
-
-    companion object {
-        private const val TAG = "QuoteNotificationWorker"
     }
 }

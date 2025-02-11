@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.example.passionDaily.constants.UseCaseConstants.ScheduleDailyQuoteAlarm.ALARM_REQUEST_CODE
+import com.example.passionDaily.constants.UseCaseConstants.ScheduleDailyQuoteAlarm.TAG
 import com.example.passionDaily.notification.receiver.DailyQuoteAlarmReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar
@@ -16,37 +18,35 @@ import javax.inject.Inject
 class ScheduleDailyQuoteAlarmUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    companion object {
-        private const val TAG = "AlarmScheduler"
-        const val ALARM_REQUEST_CODE = 100
-    }
 
     fun cancelExistingAlarm() {
-        try {
+        executeWithExceptionHandling {
             getPendingIntent()?.let { pendingIntent ->
                 getAlarmManager().cancel(pendingIntent)
                 Log.d(TAG, "Successfully cancelled existing alarm")
             }
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Permission denied while cancelling alarm", e)
-        } catch (e: NullPointerException) {
-            Log.e(TAG, "PendingIntent is null while cancelling alarm", e)
-        } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while cancelling alarm", e)
         }
     }
 
     fun scheduleNotification(hour: Int, minute: Int) {
-        try {
+        executeWithExceptionHandling {
             cancelExistingAlarm()
             schedulePreciseAlarm(createAlarmCalendar(hour, minute))
             Log.d(TAG, "Successfully scheduled alarm")
-        } catch (e: IllegalArgumentException) {
-            Log.e(TAG, "Invalid time arguments provided: hour=$hour, minute=$minute", e)
+        }
+    }
+
+    private fun executeWithExceptionHandling(block: () -> Unit) {
+        try {
+            block()
         } catch (e: SecurityException) {
-            Log.e(TAG, "Permission denied while scheduling notification", e)
+            Log.e(TAG, "Permission denied while performing operation", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "NullPointerException occurred during operation", e)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid arguments provided", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while scheduling notification", e)
+            Log.e(TAG, "Unexpected error occurred", e)
         }
     }
 

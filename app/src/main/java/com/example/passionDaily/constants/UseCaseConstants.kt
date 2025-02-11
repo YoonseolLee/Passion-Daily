@@ -10,4 +10,9 @@ object UseCaseConstants {
         const val DEFAULT_NOTIFICATION_TIME = "12:00"
         const val DEFAULT_NOTIFICATION_ENABLED = true
     }
+
+    object ScheduleDailyQuoteAlarm {
+        const val TAG = "ScheduleDailyQuoteAlarm"
+        const val ALARM_REQUEST_CODE = 100
+    }
 }
