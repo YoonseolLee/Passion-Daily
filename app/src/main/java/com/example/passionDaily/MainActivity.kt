@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         checkNotificationPermission()
         getFCMToken()
+        setTheme(R.style.Theme_Passion_Daily)
 
         lifecycleScope.launch {
             handleIntentData(intent)
