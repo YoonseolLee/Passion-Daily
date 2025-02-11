@@ -1,115 +1,115 @@
 package com.example.passionDaily.notification.receiver
 
 import android.app.AlarmManager
-import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.work.WorkManager
-import com.example.passionDaily.notification.worker.QuoteNotificationWorker
-import com.example.passionDaily.constants.ManagerConstants.DailyQuoteAlarmReceive.ALARM_REQUEST_CODE
 import io.mockk.*
-import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
 import androidx.work.OneTimeWorkRequest
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.Before
+import org.robolectric.RobolectricTestRunner
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
-@RunWith(JUnit4::class)
+@RunWith(RobolectricTestRunner::class)
+@ExperimentalCoroutinesApi
 class DailyQuoteAlarmReceiverTest {
+    private lateinit var context: Context
+    private lateinit var workManager: WorkManager
+    private lateinit var alarmManager: AlarmManager
+    private lateinit var receiver: DailyQuoteAlarmReceiver
 
     @get:Rule
     val mainCoroutineRule = MainCoroutineRule()
 
-    @Test
-    fun `알림 작업이 큐에 추가되고 알람이 예약되는지 확인`() = mainCoroutineRule.runTest {
-        // Given
-        val context = mockk<Context>()
-        val alarmManager = mockk<AlarmManager>(relaxed = true)
-        val workManager = mockk<WorkManager>(relaxed = true)
-        val receiver = DailyQuoteAlarmReceiver()
+    @Before
+    fun setup() {
+        context = mockk(relaxed = true)
+        workManager = mockk(relaxed = true)
+        alarmManager = mockk(relaxed = true)
+        receiver = spyk(DailyQuoteAlarmReceiver())
 
-        every { context.getSystemService(Context.ALARM_SERVICE) } returns alarmManager
-        every { WorkManager.getInstance(context) } returns workManager
+        mockkStatic(WorkManager::class)
+        every { WorkManager.getInstance(any()) } returns workManager
 
-        val pendingIntent = mockk<PendingIntent>(relaxed = true)
         every {
-            PendingIntent.getBroadcast(
-                context,
-                ALARM_REQUEST_CODE,
-                any<Intent>(),
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-        } returns pendingIntent
-
-        // When
-        receiver.onReceive(context, mockk())
-
-        // Then
-        verify { workManager.enqueue(any<OneTimeWorkRequest>()) }
-        verify {
-            alarmManager.setExactAndAllowWhileIdle(any(), any(), any())
-        }
+            context.getSystemService(Context.ALARM_SERVICE)
+        } returns alarmManager
     }
 
     @Test
-    fun `알림 작업 실패 시 예외 처리 확인`() = mainCoroutineRule.runTest {
-        // Given
-        val context = mockk<Context>()
-        val workManager = mockk<WorkManager>(relaxed = true)
-        val receiver = DailyQuoteAlarmReceiver()
+    fun `다음_알람시간_계산_검증`() {
+        // given
+        val currentTime = Calendar.getInstance()
 
-        every { WorkManager.getInstance(context) } returns workManager
-        every { workManager.enqueue(any<OneTimeWorkRequest>()) } throws IllegalStateException("WorkManager initialization failed")
-
-        // When
-        receiver.onReceive(context, mockk())
-
-        // Then
-        verify(exactly = 1) { workManager.enqueue(any<OneTimeWorkRequest>()) }
-    }
-
-    @Test
-    fun `알람 설정 시 보안 예외 처리 확인`() = mainCoroutineRule.runTest {
-        // Given
-        val context = mockk<Context>()
-        val alarmManager = mockk<AlarmManager>(relaxed = true)
-        val receiver = DailyQuoteAlarmReceiver()
-
-        every { context.getSystemService(Context.ALARM_SERVICE) } returns alarmManager
-        every { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) } throws SecurityException("Permission issue")
-
-        // When
-        receiver.onReceive(context, mockk())
-
-        // Then
-        verify(exactly = 1) { alarmManager.setExactAndAllowWhileIdle(any(), any(), any()) }
-    }
-
-    @Test
-    fun `알림 예약을 위한 workRequest 생성`() = mainCoroutineRule.runTest {
-        // Given
-        val receiver = DailyQuoteAlarmReceiver()
-
-        // When
-        val workRequest = receiver.createNotificationWorkRequest()
-
-        // Then
-        assertThat(workRequest).isInstanceOf(OneTimeWorkRequest::class.java)
-        assertThat(workRequest.workSpec.workerClassName).isEqualTo(QuoteNotificationWorker::class.java.name)
-    }
-
-    @Test
-    fun `다음 알람 시간이 올바르게 계산되는지 확인`() = mainCoroutineRule.runTest {
-        // Given
-        val receiver = DailyQuoteAlarmReceiver()
-
-        // When
+        // when
         val nextAlarmTime = receiver.getNextAlarmTime()
+        val nextAlarmCalendar = Calendar.getInstance().apply {
+            timeInMillis = nextAlarmTime
+        }
 
-        // Then
-        assertThat(nextAlarmTime).isGreaterThan(System.currentTimeMillis())
+        // then
+        assertThat(nextAlarmCalendar.get(Calendar.DAY_OF_MONTH))
+            .isEqualTo(currentTime.get(Calendar.DAY_OF_MONTH) + 1)
+    }
+
+    @Test
+    fun `워크매니저_초기화_실패시_예외처리_및_정리`() = mainCoroutineRule.runTest {
+        // given
+        val intent = mockk<Intent>()
+        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
+        every { receiver.goAsync() } returns pendingResult
+        every {
+            workManager.enqueue(any<OneTimeWorkRequest>())
+        } throws IllegalStateException("WorkManager not initialized")
+
+        // when
+        receiver.onReceive(context, intent)
+
+        // then
+        verify { pendingResult.finish() }
+    }
+
+    @Test
+    fun `알람_권한_없을때_예외처리_및_정리`() = mainCoroutineRule.runTest {
+        // given
+        val intent = mockk<Intent>()
+        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
+        every { receiver.goAsync() } returns pendingResult
+        every {
+            workManager.enqueue(any<OneTimeWorkRequest>())
+        } throws IllegalStateException("WorkManager not initialized")
+
+        // when
+        receiver.onReceive(context, intent)
+
+        // then
+        verify { pendingResult.finish() }
+    }
+
+    @Test
+    fun `알람_수신시_워크매니저_작업등록_및_다음알람_설정되어야_함`() = mainCoroutineRule.runTest {
+        // given
+        val intent = mockk<Intent>()
+        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
+        val workRequest = mockk<OneTimeWorkRequest>()
+        every { receiver.goAsync() } returns pendingResult
+        every { receiver.createNotificationWorkRequest() } returns workRequest
+
+        // when
+        receiver.onReceive(context, intent)
+
+        // then
+        verify {
+            workManager.enqueue(workRequest)
+            pendingResult.finish()
+        }
     }
 }

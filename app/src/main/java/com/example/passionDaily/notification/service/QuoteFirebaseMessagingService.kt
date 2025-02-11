@@ -9,6 +9,7 @@ import androidx.core.app.NotificationCompat
 import com.example.passionDaily.MainActivity
 import com.example.passionDaily.PassionDailyApp
 import com.example.passionDaily.R
+import com.example.passionDaily.constants.AppConstants.PassionDaily.CHANNEL_ID
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -66,7 +67,7 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
     private fun displayNotification(remoteMessage: RemoteMessage, pendingIntent: PendingIntent) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager
 
-        val notificationBuilder = NotificationCompat.Builder(this, PassionDailyApp.CHANNEL_ID)
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle(remoteMessage.notification?.title)
             .setContentText(remoteMessage.notification?.body)

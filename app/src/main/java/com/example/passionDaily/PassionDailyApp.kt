@@ -81,11 +81,6 @@ class PassionDailyApp : Application(), Configuration.Provider {
             }
         }
     }
-
-    companion object {
-        const val CHANNEL_ID = "default"
-        const val CHANNEL_NAME = "기본 알림"
-    }
 }
 
 
