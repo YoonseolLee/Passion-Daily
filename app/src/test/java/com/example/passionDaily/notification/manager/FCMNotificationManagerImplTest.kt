@@ -60,11 +60,11 @@ class FCMNotificationManagerImplTest {
             listOf(Triple("category", "quoteId", 0))
         )
 
-        manager = FCMNotificationManagerImpl(fcmService, stringProvider, context)
+        manager = FCMNotificationManagerImpl(fcmService, context, stringProvider)
     }
 
     @Test
-    fun `알림_발송_성공_시나리오`() = mainCoroutineRule.runTest {
+    fun `FCM_알림_성공적으로_발송되는_경우`() = mainCoroutineRule.runTest {
         // given
         val users = listOf(
             mockk<DocumentSnapshot> {
@@ -98,7 +98,7 @@ class FCMNotificationManagerImplTest {
     }
 
     @Test
-    fun `초기화시_월간_명언_구독_성공`() = mainCoroutineRule.runTest {
+    fun `FCM_알림_발송_전_월간_명언_구독이_성공적으로_초기화되는_경우`() = mainCoroutineRule.runTest {
         // given
         val quotes = listOf(
             Triple("category1", "quote1", 0),
@@ -118,7 +118,7 @@ class FCMNotificationManagerImplTest {
     }
 
     @Test
-    fun `FCM_요청_실패시_예외_처리`() = mainCoroutineRule.runTest {
+    fun `FCM_알림_발송_요청이_실패한_경우_예외가_정상적으로_처리되는지_확인`() = mainCoroutineRule.runTest {
         // given
         val users = listOf(
             mockk<DocumentSnapshot> {
