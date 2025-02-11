@@ -76,4 +76,6 @@
     <string name="privacy_policy">개인정보 처리방침</string>
     <string name="unknown">Unknown</string>
     <string name="daily_quote">오늘의 명언</string>
+    <string name="service_account_json">service-account.json</string>
+    <string name="google_api_url">"https://www.googleapis.com/auth/firebase.messaging"</string>
 </resources>

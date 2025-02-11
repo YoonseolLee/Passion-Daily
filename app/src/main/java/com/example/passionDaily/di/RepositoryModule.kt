@@ -10,6 +10,8 @@ import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.user.data.local.repository.LocalUserRepositoryImpl
 import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
 import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepositoryImpl
+import com.example.passionDaily.notification.data.repository.remote.UserNotificationRepository
+import com.example.passionDaily.notification.data.repository.remote.UserNotificationRepositoryImpl
 import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.quote.data.remote.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
@@ -57,4 +59,9 @@ abstract class RepositoryModule {
     abstract fun bindRemoteUserRepository(
         repository: RemoteUserRepositoryImpl
     ): RemoteUserRepository
+
+    @Binds
+    abstract fun bindUserNotificationRepository(
+        repository: UserNotificationRepositoryImpl
+    ): UserNotificationRepository
 }

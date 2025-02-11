@@ -43,7 +43,7 @@ class UserNotificationRepositoryTest {
         collectionReference = mockk()
         query = mockk()
         querySnapshot = mockk()
-        repository = spyk(UserNotificationRepository(db), recordPrivateCalls = true)
+        repository = spyk(UserNotificationRepositoryImpl(db), recordPrivateCalls = true)
 
         every { db.collection("users") } returns collectionReference
         every { collectionReference.whereEqualTo("notificationEnabled", true) } returns query

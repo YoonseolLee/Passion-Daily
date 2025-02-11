@@ -17,4 +17,15 @@ object ManagerConstants {
     object UserSettings {
         const val TAG = "UserSettingsManager"
     }
+
+    object FCMNotification {
+        const val TAG = "FCMNotificationManager"
+        const val FCM_URL =
+            "https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send"
+    }
+
+    object DailyQuoteAlarmReceive {
+        const val TAG = "DailyQuoteAlarmReceiver"
+        const val ALARM_REQUEST_CODE = 100
+    }
 }

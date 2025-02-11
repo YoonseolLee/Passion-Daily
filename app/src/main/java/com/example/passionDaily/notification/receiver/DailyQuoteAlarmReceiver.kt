@@ -10,16 +10,13 @@ import android.util.Log
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.passionDaily.constants.ManagerConstants.DailyQuoteAlarmReceive.ALARM_REQUEST_CODE
+import com.example.passionDaily.constants.ManagerConstants.DailyQuoteAlarmReceive.TAG
 import com.example.passionDaily.notification.worker.QuoteNotificationWorker
 import java.util.Calendar
 import java.util.Date
 
 class DailyQuoteAlarmReceiver : BroadcastReceiver() {
-
-    companion object {
-        private const val TAG = "DailyQuoteAlarmReceiver"
-        private const val ALARM_REQUEST_CODE = 100
-    }
 
     override fun onReceive(context: Context, intent: Intent) {
         val pendingResult = goAsync()
@@ -54,7 +51,7 @@ class DailyQuoteAlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun createNotificationWorkRequest(): OneTimeWorkRequest {
+    fun createNotificationWorkRequest(): OneTimeWorkRequest {
         return OneTimeWorkRequestBuilder<QuoteNotificationWorker>().build()
     }
 
@@ -101,7 +98,7 @@ class DailyQuoteAlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun getNextAlarmTime(): Long {
+    fun getNextAlarmTime(): Long {
         return try {
             Calendar.getInstance().apply {
                 add(Calendar.DAY_OF_MONTH, 1)

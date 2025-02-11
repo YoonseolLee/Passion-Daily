@@ -29,6 +29,9 @@ import com.example.passionDaily.login.manager.UserProfileManagerImpl
 import com.example.passionDaily.login.stateholder.ConsentStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
+import com.example.passionDaily.notification.manager.FCMNotificationManager
+import com.example.passionDaily.notification.manager.FCMNotificationManagerImpl
+import com.example.passionDaily.notification.service.QuoteNotificationService
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
 import com.example.passionDaily.quote.domain.usecase.QuoteListManagementUseCase
@@ -40,6 +43,7 @@ import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManagerImpl
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.settings.domain.usecase.LoadUserInfoUseCase
 import com.example.passionDaily.settings.domain.usecase.ParseTimeUseCase
 import com.example.passionDaily.settings.domain.usecase.SaveNotificationUseCase
@@ -58,6 +62,7 @@ import com.example.passionDaily.user.data.remote.repository.RemoteUserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -136,6 +141,16 @@ object DataManagerModule {
         loginStateHolder: LoginStateHolder,
     ): AuthenticationManager = AuthenticationManagerImpl(
         getGoogleCredentialUseCase, getFirebaseUserUseCase, loginStateHolder
+    )
+
+    @Provides
+    @Singleton
+    fun provideFCMNotificationManager(
+        fcmService: QuoteNotificationService,
+        stringProvider: StringProvider,
+        context: Context
+    ): FCMNotificationManager = FCMNotificationManagerImpl(
+        fcmService, stringProvider, context
     )
 
     @Provides
