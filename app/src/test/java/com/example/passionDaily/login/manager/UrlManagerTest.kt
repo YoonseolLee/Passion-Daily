@@ -31,7 +31,7 @@ class UrlManagerTest {
     @Before
     fun setup() {
         mockContext = mockk(relaxed = true)
-        urlManager = UrlManager()
+        urlManager = UrlManagerImpl()
     }
 
     @Test

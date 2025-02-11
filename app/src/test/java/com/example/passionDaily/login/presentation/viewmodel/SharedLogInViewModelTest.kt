@@ -7,6 +7,10 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.example.passionDaily.login.domain.model.UserConsent
+import com.example.passionDaily.login.manager.AuthenticationManager
+import com.example.passionDaily.login.manager.UrlManager
+import com.example.passionDaily.login.manager.UserConsentManager
+import com.example.passionDaily.login.manager.UserProfileManager
 import com.example.passionDaily.login.state.AuthState.Unauthenticated
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
@@ -101,6 +105,7 @@ class SharedLogInViewModelTest {
     fun `구글 로그인시 기존 유저면 유저 데이터를 동기화한다`() = mainCoroutineRule.runTest {
         // given
         val userId = "test_user_id"
+        val userProfileJson = "{}"
         val credential = mockk<CustomCredential> {
             every { type } returns GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         }
@@ -110,27 +115,33 @@ class SharedLogInViewModelTest {
         val authResult = mockk<AuthResult>()
         val firebaseUser = mockk<FirebaseUser>()
 
+        coEvery { authManager.startLoading() } just Runs
+        coEvery { authManager.stopLoading() } just Runs
+        coEvery { authManager.clearCredentials() } just Runs
         coEvery { authManager.getGoogleCredential() } returns response
         coEvery { authManager.extractIdToken(any()) } returns "test_token"
         coEvery { authManager.authenticateWithFirebase(any()) } returns authResult
         coEvery { authManager.getFirebaseUser(any()) } returns firebaseUser
         coEvery { authManager.getUserId(any()) } returns userId
-        coEvery {
-            userProfileManager.createInitialProfile(
-                any(),
-                any()
-            )
-        } returns mapOf("key" to "value")
-        coEvery { userProfileMapper.convertMapToJson(any()) } returns "{}"
+        coEvery { userProfileManager.createInitialProfile(any(), any()) } returns mapOf("key" to "value")
+        coEvery { userProfileMapper.convertMapToJson(any()) } returns userProfileJson
         coEvery { authManager.updateUserProfileJson(any()) } just Runs
         coEvery { remoteUserRepository.isUserRegistered(userId) } returns true
-        coEvery { userProfileManager.syncExistingUser(any()) } just Runs
+        coEvery { userProfileManager.syncExistingUser(userId) } just Runs
 
         // when
         viewModel.signInWithGoogle()
 
         // then
-        coVerify { userProfileManager.syncExistingUser(userId) }
+        coVerify {
+            authManager.startLoading()
+            authManager.clearCredentials()
+            authManager.getGoogleCredential()
+            authManager.extractIdToken(any())
+            authManager.authenticateWithFirebase(any())
+            userProfileManager.syncExistingUser(userId)
+            authManager.stopLoading()
+        }
         coVerify(exactly = 0) { authStateHolder.setRequiresConsent(any(), any()) }
     }
 
@@ -148,17 +159,15 @@ class SharedLogInViewModelTest {
         val authResult = mockk<AuthResult>()
         val firebaseUser = mockk<FirebaseUser>()
 
+        coEvery { authManager.startLoading() } just Runs
+        coEvery { authManager.stopLoading() } just Runs
+        coEvery { authManager.clearCredentials() } just Runs
         coEvery { authManager.getGoogleCredential() } returns response
         coEvery { authManager.extractIdToken(any()) } returns "test_token"
         coEvery { authManager.authenticateWithFirebase(any()) } returns authResult
         coEvery { authManager.getFirebaseUser(any()) } returns firebaseUser
         coEvery { authManager.getUserId(any()) } returns userId
-        coEvery {
-            userProfileManager.createInitialProfile(
-                any(),
-                any()
-            )
-        } returns mapOf("key" to "value")
+        coEvery { userProfileManager.createInitialProfile(any(), any()) } returns mapOf("key" to "value")
         coEvery { userProfileMapper.convertMapToJson(any()) } returns userProfileJson
         coEvery { authManager.updateUserProfileJson(any()) } just Runs
         coEvery { remoteUserRepository.isUserRegistered(userId) } returns false
@@ -168,25 +177,39 @@ class SharedLogInViewModelTest {
         viewModel.signInWithGoogle()
 
         // then
-        coVerify { authStateHolder.setRequiresConsent(userId, userProfileJson) }
+        coVerify {
+            authManager.startLoading()
+            authManager.clearCredentials()
+            authStateHolder.setRequiresConsent(userId, userProfileJson)
+            authManager.stopLoading()
+        }
         coVerify(exactly = 0) { userProfileManager.syncExistingUser(any()) }
     }
 
     @Test
     fun `크리덴셜 요청 취소시 토스트를 표시하지 않는다`() = mainCoroutineRule.runTest {
         // given
+        coEvery { authManager.startLoading() } just Runs
+        coEvery { authManager.stopLoading() } just Runs
+        coEvery { authManager.clearCredentials() } just Runs
         coEvery { authManager.getGoogleCredential() } throws GetCredentialCancellationException()
 
         // when
         viewModel.signInWithGoogle()
 
         // then
+        coVerify {
+            authManager.startLoading()
+            authManager.clearCredentials()
+            authManager.stopLoading()
+        }
         coVerify(exactly = 0) {
             toastManager.showNetworkErrorToast()
             toastManager.showCredentialErrorToast()
             toastManager.showGeneralErrorToast()
             toastManager.showFirebaseErrorToast()
         }
+        verify { Log.d(any(), "User cancelled the login process") }
     }
 
     @Test

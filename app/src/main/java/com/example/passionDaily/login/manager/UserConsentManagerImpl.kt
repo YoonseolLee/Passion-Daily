@@ -2,7 +2,6 @@ package com.example.passionDaily.login.manager
 
 import com.example.passionDaily.login.domain.model.UserConsent
 import com.example.passionDaily.login.stateholder.ConsentStateHolder
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 

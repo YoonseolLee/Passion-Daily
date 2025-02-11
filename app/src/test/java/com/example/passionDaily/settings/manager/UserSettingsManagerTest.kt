@@ -24,7 +24,7 @@ class UserSettingsManagerTest {
     private val localQuoteCategoryRepository = mockk<LocalQuoteCategoryRepository>()
     private val loadUserInfoUseCase = mockk<LoadUserInfoUseCase>()
 
-    private val userSettingsManager = UserSettingsManager(
+    private val userSettingsManager = UserSettingsManagerImpl(
         remoteUserRepository,
         localUserRepository,
         localFavoriteRepository,

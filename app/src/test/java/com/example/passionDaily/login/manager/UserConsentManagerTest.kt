@@ -41,7 +41,7 @@ class UserConsentManagerTest {
             }
         }
 
-        userConsentManager = UserConsentManager(consentStateHolder)
+        userConsentManager = UserConsentManagerImpl(consentStateHolder)
     }
 
     @Test
