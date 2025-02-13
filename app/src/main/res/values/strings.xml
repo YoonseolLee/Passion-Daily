@@ -63,6 +63,7 @@
     <string name="daily_quote_notification_setting">데일리 명언 알림 설정</string>
     <string name="notification_time_setting">알림 시간 설정</string>
     <string name="default_notification_time">08:00</string>
+    <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
 
     <!-- 홈 및 설정 관련 -->
     <string name="home">홈</string>

@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -125,7 +126,7 @@ fun FavoritesScreen(
                     )
                     Spacer(modifier = Modifier.height(60.dp))
                     Text(
-                        text = "아직 즐겨찾기한 명언이 없어요.",
+                        text = stringResource(R.string.no_quotes_in_favorites),
                         style = TextStyle(
                             fontSize = 18.sp,
                             fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
