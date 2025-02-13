@@ -23,6 +23,7 @@ import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -113,8 +114,10 @@ class SharedLogInViewModel @Inject constructor(
 
     private suspend fun handleUserRegistrationStatus(userId: String, userProfileJson: String) {
         if (remoteUserRepository.isUserRegistered(userId)) {
+            Log.d("UserRegistration", "User $userId is already registered, syncing existing user")
             syncExistingUser(userId)
         } else {
+            Log.d("UserRegistration", "User $userId is new, redirecting to consent screen. Profile: $userProfileJson")
             authStateHolder.setRequiresConsent(userId, userProfileJson)
         }
     }
@@ -162,6 +165,14 @@ class SharedLogInViewModel @Inject constructor(
                     if (updatedJson != null) {
                         authManager.updateUserProfileJsonV2(updatedJson)
                         saveUserProfile(updatedJson)
+
+                        val currentUser = FirebaseAuth.getInstance().currentUser
+                        val userId = currentUser?.uid ?: run {
+                            Log.e(TAG, "Current Firebase user is null")
+                            toastManager.showLoginErrorToast()
+                            return@launch
+                        }
+                        setAuthenticated(userId)
                         toastManager.showLoginSuccessToast()
                     } else {
                         toastManager.showLoginErrorToast()
@@ -186,6 +197,10 @@ class SharedLogInViewModel @Inject constructor(
 
     override fun openUrl(context: Context, url: String) {
         urlManager.openUrl(context, url)
+    }
+
+    private suspend fun setAuthenticated(userId: String) {
+        userProfileManager.setAuthenticated(userId)
     }
 
     /**

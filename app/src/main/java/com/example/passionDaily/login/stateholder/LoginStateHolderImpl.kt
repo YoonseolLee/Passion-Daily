@@ -35,15 +35,15 @@ class LoginStateHolderImpl @Inject constructor() : LoginStateHolder {
     }
 
     override suspend fun updateUserProfileJson(json: String?) {
-        _userProfileJson.emit(json)
+        _userProfileJson.value = json
     }
 
     override suspend fun updateUserProfileJsonV2(json: String?) {
-        _userProfileJsonV2.emit(json)
+        _userProfileJsonV2.value = json
     }
 
     override suspend fun updateIsLoggedIn(isLoggedIn: Boolean) {
-        _isLoggedIn.emit(isLoggedIn)
+        _isLoggedIn.value = isLoggedIn
     }
 
     override suspend fun updateIsLoading(isLoading: Boolean) {
