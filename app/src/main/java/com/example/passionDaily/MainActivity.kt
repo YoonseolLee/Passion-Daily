@@ -11,12 +11,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.navigation.SetupNavigation
 import com.example.passionDaily.ui.theme.Passion_DailyTheme
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -26,7 +25,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
-import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,6 +36,23 @@ class MainActivity : ComponentActivity() {
     lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
 
     private lateinit var navController: NavHostController
+
+    private object PreferenceUtil {
+        private const val PREF_NAME = "FCMPrefs"
+        private const val KEY_FCM_TOKEN = "fcm_token"
+
+        fun saveFCMToken(context: Context, token: String) {
+            context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_FCM_TOKEN, token)
+                .apply()
+        }
+
+        fun getFCMToken(context: Context): String? {
+            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_FCM_TOKEN, null)
+        }
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,32 +68,14 @@ class MainActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val token = task.result
                     Log.d("FCM", "Current FCM token: $token")
-
-                    updateFCMToken(token)
+//                    updateFCMToken(token)
+                    PreferenceUtil.saveFCMToken(this, token)
                 } else {
                     Log.e("FCM", "FCM 토큰 가져오기 실패", task.exception)
                 }
             }
     }
 
-    private fun updateFCMToken(token: String) {
-        FirebaseAuth.getInstance().currentUser?.uid?.let { uid ->
-            // 토큰을 업데이트할 때 document를 생성하거나 업데이트하도록 수정
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(uid)
-                .set(
-                    mapOf("fcmToken" to token),
-                    SetOptions.merge()  // merge 옵션을 사용하여 다른 필드는 유지
-                )
-                .addOnSuccessListener {
-                    Log.d("FCM", "Token updated in Firestore for user: $uid")
-                }
-                .addOnFailureListener { e ->
-                    Log.e("FCM", "Failed to update token for user: $uid", e)
-                }
-        }
-    }
 
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -102,7 +99,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         checkNotificationPermission()
-        getFCMToken()
         setTheme(R.style.Theme_Passion_Daily)
 
         lifecycleScope.launch {

@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -76,7 +77,32 @@ class GetGoogleCredentialUseCase @Inject constructor(
     suspend fun clearCredentials() = withContext(Dispatchers.IO) {
         try {
             clearCredentialState()
-            signOutFirebase()
+
+            suspendCancellableCoroutine { continuation ->
+                // 리스너를 변수로 선언
+                val listener = object : FirebaseAuth.AuthStateListener {
+                    override fun onAuthStateChanged(auth: FirebaseAuth) {
+                        if (auth.currentUser == null) {
+                            // 로그아웃이 완료되면 리스너 제거 후 코루틴 재개
+                            auth.removeAuthStateListener(this)
+                            if (continuation.isActive) {
+                                continuation.resume(Unit, null)
+                            }
+                        }
+                    }
+                }
+
+                // 리스너 등록 후 signOut 실행
+                auth.addAuthStateListener(listener)
+                auth.signOut()
+
+                // 코루틴이 취소되면 리스너 제거
+                continuation.invokeOnCancellation {
+                    auth.removeAuthStateListener(listener)
+                }
+            }
+
+            Log.d("clearCredentials", "Auth credentials cleared successfully")
         } catch (e: Exception) {
             handleClearCredentialsError(e)
         }
