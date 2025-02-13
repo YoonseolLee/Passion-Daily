@@ -20,20 +20,20 @@ import com.example.passionDaily.user.data.local.entity.UserEntity
         ),
         ForeignKey(
             entity = QuoteEntity::class,
-            parentColumns = ["quote_id", "category_id"],  // 복합 외래 키로 수정
-            childColumns = ["quote_id", "category_id"],   // 복합 외래 키로 수정
-            onDelete = ForeignKey.CASCADE
+            parentColumns = ["quote_id", "category_id"],
+            childColumns = ["quote_id", "category_id"],
+            onDelete = ForeignKey.NO_ACTION
         ),
         ForeignKey(
             entity = QuoteCategoryEntity::class,
             parentColumns = ["category_id"],
             childColumns = ["category_id"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.NO_ACTION
         )
     ],
     indices = [
         Index(value = ["user_id"]),
-        Index(value = ["quote_id", "category_id"]),  // 복합 인덱스로 수정
+        Index(value = ["quote_id", "category_id"]),
         Index(value = ["category_id"])
     ]
 )

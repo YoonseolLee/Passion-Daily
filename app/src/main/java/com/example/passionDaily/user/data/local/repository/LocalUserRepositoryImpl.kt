@@ -12,7 +12,7 @@ class LocalUserRepositoryImpl @Inject constructor(
 ) : LocalUserRepository {
 
     override suspend fun saveUser(userEntity: UserEntity) {
-        userDao.insertUser(userEntity)
+        userDao.upsertUser(userEntity)
     }
 
     override fun convertToUserEntity(firestoreUser: User): UserEntity {
