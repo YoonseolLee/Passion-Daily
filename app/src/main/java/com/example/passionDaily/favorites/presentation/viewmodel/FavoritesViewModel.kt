@@ -15,6 +15,8 @@ import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
+import com.example.passionDaily.login.state.AuthState
+import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.presentation.components.QuoteInteractionHandler
@@ -45,10 +47,9 @@ class FavoritesViewModel @Inject constructor(
     private val favoritesLoadingManager: FavoritesLoadingManager,
     private val favoritesSavingManager: FavoritesSavingManager,
     private val favoritesRemoveManager: FavoritesRemoveManager,
-    private val toastManager: ToastManager
+    private val toastManager: ToastManager,
+    private val authStateHolder: AuthStateHolder
 ) : ViewModel(), QuoteInteractionHandler, FavoritesViewModelActions, FavoritesViewModelState {
-
-    private var userId: String = firebaseAuth.currentUser?.uid ?: ""
 
     override val favoriteQuotes = favoritesStateHolder.favoriteQuotes
     override val isFavoriteLoading: StateFlow<Boolean> = favoritesStateHolder.isFavoriteLoading
@@ -72,19 +73,14 @@ class FavoritesViewModel @Inject constructor(
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
     }
 
-    private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-        viewModelScope.launch {
-            userId = firebaseAuth.currentUser?.uid ?: ""
-            if (firebaseAuth.currentUser != null) {
-                loadFavorites()
-            }
-        }
-    }
-
     init {
-        firebaseAuth.addAuthStateListener(authStateListener)
-        if (firebaseAuth.currentUser != null) {
-            loadFavorites()
+        viewModelScope.launch {
+            authStateHolder.authState.collect { state ->
+                when (state) {
+                    is AuthState.Authenticated -> loadFavorites()
+                    else -> favoritesStateHolder.updateFavoriteQuotes(emptyList())
+                }
+            }
         }
     }
 
@@ -122,30 +118,32 @@ class FavoritesViewModel @Inject constructor(
     }
 
     override fun loadFavorites() {
-        val currentUserId = userId
-        if (currentUserId.isEmpty()) {
-            Log.d(TAG, "Skipping loadFavorites: User not logged in")
-            return
-        }
-
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
-            favoritesLoadingManager.updateIsFavoriteLoading(true)
-
-            try {
-                favoritesLoadingManager.getAllFavorites(currentUserId)
-                    .catch { e ->
+            Log.d("loadFavorites", "authStae: ${authStateHolder.authState.value}")
+            when (val state = authStateHolder.authState.value) {
+                is AuthState.Authenticated -> {
+                    favoritesLoadingManager.updateIsFavoriteLoading(true)
+                    try {
+                        favoritesLoadingManager.getAllFavorites(state.userId)
+                            .catch { e ->
+                                favoritesLoadingManager.updateIsFavoriteLoading(false)
+                                favoritesStateHolder.updateIsFavoriteLoading(false)
+                                throw e
+                            }
+                            .collect { favorites ->
+                                handleFavoritesUpdate(favorites)
+                                favoritesLoadingManager.updateIsFavoriteLoading(false)
+                            }
+                    } catch (e: Exception) {
                         favoritesLoadingManager.updateIsFavoriteLoading(false)
-                        favoritesStateHolder.updateIsFavoriteLoading(false)
-                        throw e
+                        handleError(e)
                     }
-                    .collect { favorites ->
-                        handleFavoritesUpdate(favorites)
-                        favoritesLoadingManager.updateIsFavoriteLoading(false)
-                    }
-            } catch (e: Exception) {
-                favoritesLoadingManager.updateIsFavoriteLoading(false)
-                handleError(e)
+                }
+                else -> {
+                    // 로그아웃 상태에서는 빈 리스트로 업데이트
+                    favoritesStateHolder.updateFavoriteQuotes(emptyList())
+                }
             }
         }
     }
@@ -153,7 +151,6 @@ class FavoritesViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         favoritesJob?.cancel()
-        firebaseAuth.removeAuthStateListener(authStateListener)
     }
 
     private fun handleFavoritesUpdate(favorites: List<QuoteEntity>) {

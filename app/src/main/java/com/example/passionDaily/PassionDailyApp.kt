@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import androidx.work.Configuration
+import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.google.firebase.auth.FirebaseAuth
 
 @HiltAndroidApp
 class PassionDailyApp : Application(), Configuration.Provider {
@@ -21,6 +23,8 @@ class PassionDailyApp : Application(), Configuration.Provider {
     lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+    @Inject
+    lateinit var authStateHolder: AuthStateHolder
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -32,7 +36,15 @@ class PassionDailyApp : Application(), Configuration.Provider {
 
         Log.d("PassionDailyApp", "Application onCreate called")
 
+        // 인증 상태 초기화
+        initializeAuthState()
+
         // 알림 채널 생성
+        setupNotificationChannel()
+        setupAlarmForExistingUsers()
+    }
+
+    private fun setupNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "default"
             val channelName = "기본 알림"
@@ -49,8 +61,22 @@ class PassionDailyApp : Application(), Configuration.Provider {
             notificationManager.createNotificationChannel(channel)
             Log.d("PassionDailyApp", "Notification channel created")
         }
+    }
 
-        setupAlarmForExistingUsers()
+    private fun initializeAuthState() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                FirebaseAuth.getInstance().currentUser?.let { user ->
+                    Log.d("PassionDailyApp", "Initializing auth state for user: ${user.uid}")
+                    authStateHolder.setAuthenticated(user.uid)
+                } ?: run {
+                    Log.d("PassionDailyApp", "No authenticated user found")
+                    authStateHolder.setUnAuthenticated()
+                }
+            } catch (e: Exception) {
+                Log.e("PassionDailyApp", "Error initializing auth state", e)
+            }
+        }
     }
 
     private fun setupAlarmForExistingUsers() {

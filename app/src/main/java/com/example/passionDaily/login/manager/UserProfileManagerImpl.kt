@@ -47,5 +47,6 @@ class UserProfileManagerImpl @Inject constructor(
 
     override suspend fun syncExistingUser(userId: String) {
         saveUserProfileUseCase.syncExistingUser(userId)
+        saveUserProfileUseCase.setAuthenticated(userId)
     }
 }

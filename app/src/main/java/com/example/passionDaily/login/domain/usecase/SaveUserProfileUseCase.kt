@@ -26,6 +26,9 @@ class SaveUserProfileUseCase @Inject constructor(
     suspend fun syncExistingUser(userId: String) {
         remoteUserRepository.updateLastSyncDate(userId)
         remoteUserRepository.syncFirestoreUserToRoom(userId)
+    }
+
+    suspend fun setAuthenticated(userId: String) {
         authStateHolder.setAuthenticated(userId)
     }
 }

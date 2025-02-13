@@ -15,8 +15,8 @@ class AuthStateHolderImpl @Inject constructor() : AuthStateHolder {
     override val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     override suspend fun setAuthenticated(userId: String) {
+        Log.d("AuthDebug", "Setting authenticated state for userId: $userId")
         _authState.emit(AuthState.Authenticated(userId))
-        Log.d("AuthStateHolder", "User authenticated with ID: $userId")
     }
 
     override suspend fun setUnAuthenticated() {
