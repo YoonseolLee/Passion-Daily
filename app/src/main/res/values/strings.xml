@@ -1,81 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- 앱 정보 -->
     <string name="app_name">Passion Daily</string>
-    <string name="header_title_login_screen">간편로그인 후
-이용이 가능합니다.</string>
-    <string name="default_timestamp">"1970-01-01 00:00"</string>
+    <string name="version_info">버전 정보</string>
+
+    <!-- 로그인 및 회원 관리 -->
+    <string name="login">로그인</string>
+    <string name="logout">로그아웃</string>
+    <string name="logout_success">로그아웃에 성공했어요.</string>
+    <string name="success_logout">로그아웃 되었습니다.</string>
+    <string name="logout_confirmation_message">로그아웃하시면 데일리 명언 알림을 받지 못하실 거예요.\n그래도 로그아웃하시겠어요?</string>
+    <string name="withdrawal">회원 탈퇴</string>
+    <string name="withdrawal_confirmation_message">정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.</string>
+    <string name="success_withdrawal">탈퇴되었습니다.</string>
+    <string name="re_login_forwithdrawl">보안을 위해 다시 로그인해주세요.</string>
+
+    <!-- 로그인 화면 -->
+    <string name="header_title_login_screen">간편로그인 후 이용이 가능합니다.</string>
     <string name="header_subtitle1_login_screen">30초</string>
     <string name="header_subtitle2_login_screen">면 가입이 가능해요.</string>
-    <string name="kakao_login">카카오로 로그인</string>
     <string name="google_login">구글로 로그인</string>
     <string name="skip_text">Skip</string>
-    <string name="header_title_select_screen">성별과 연령대를\n알려주세요.</string>
-    <string name="header_subtitle_select_screen">오직 명언 추천을 위해 활용됩니다.</string>
-    <string name="client_id">608527802027-5vecvmhkc7iaf7bkt5fu7fets3i1cb69.apps.googleusercontent.com</string>
+    <string name="login_success">로그인에 성공했어요.</string>
+    <string name="login_error_format">로그인 중 오류가 발생했어요.</string>
+    <string name="login_loading">로그인 중이에요...</string>
+    <string name="login_required">로그인이 필요해요.</string>
+
+    <!-- 명언 관련 -->
+    <string name="daily_quote">오늘의 명언</string>
+    <string name="category">카테고리</string>
+    <string name="select_category">카테고리 선택</string>
+    <string name="category_selection_guide">오늘은 어떤 주제의 명언을 만나볼까요?</string>
+
+    <!-- 즐겨찾기 -->
+    <string name="favorites">즐겨찾기</string>
+    <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
+    <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
+    <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>
+
+    <!-- 설정 화면 -->
+    <string name="home">홈</string>
+    <string name="settings">설정</string>
+    <string name="notification_settings">알림 설정</string>
+    <string name="account_management">계정 관리</string>
+    <string name="customer_support">고객 지원</string>
+    <string name="terms_and_privacy">약관 및 개인정보 처리 동의</string>
+
+    <!-- 알림 설정 -->
+    <string name="notification_permission_needed">알림 권한 필요</string>
+    <string name="notification_permission_message">알림을 받으려면 설정에서 알림 권한을 허용해주세요.</string>
+    <string name="go_to_settings">설정으로 이동</string>
+    <string name="daily_quote_notification_setting">데일리 명언 알림 설정</string>
+    <string name="notification_time_setting">알림 시간 설정</string>
+    <string name="default_notification_time">08:00</string>
+
+    <!-- 약관 및 개인정보 -->
     <string name="terms_consent">이용 약관 동의</string>
     <string name="agree_all">전체 동의하기</string>
     <string name="view">보기</string>
     <string name="privacy_policy_agreement">개인정보 수집 및 이용 동의</string>
     <string name="marketing_consent">(선택) 마케팅 정보 수신 동의</string>
     <string name="next">다음</string>
-    <string name="terms_of_service_url">https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0</string>
-    <string name="privacy_policy_url">https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0</string>
-    <string name="marketing_consent_url">https://sites.google.com/view/passiondaily-1/%EB%A7%88%EC%BC%80%ED%8C%85-%EC%A0%95%EB%B3%B4-%EC%88%98%EC%8B%A0-%EB%8F%99%EC%9D%98?authuser=0</string>
-    <string name="category">카테고리</string>
-    <string name="select_category">카테고리 선택</string>
-    <string name="category_selection_guide">오늘은 어떤 주제의 명언을 만나볼까요?</string>
-    <string name="favorites">즐겨찾기</string>
-    <string name="home">홈</string>
-    <string name="settings">설정</string>
+    <string name="terms_of_service">이용약관</string>
+    <string name="privacy_policy">개인정보 처리방침</string>
+    <string name="terms_of_service_url">https://sites.google.com/view/passiondaily-1/서비스-이용-약관?authuser=0</string>
+    <string name="privacy_policy_url">https://sites.google.com/view/passiondaily-1/개인-정보-처리-방침?authuser=0</string>
+    <string name="marketing_consent_url">https://sites.google.com/view/passiondaily-1/마케팅-정보-수신-동의?authuser=0</string>
 
-    <!--    FavoritesViewModel  -->
-    <string name="quote_number_format">%06d</string>
-    <string name="quote_id_prefix">quote_</string>
-    <string name="datetime_format">yyyy-MM-dd HH:mm:ss</string>
+    <!-- 기타 -->
+    <string name="send_suggestion">제안 보내기</string>
+    <string name="yes">네</string>
+    <string name="no">아니오</string>
+    <string name="unknown">Unknown</string>
 
-    <string name="success_logout">로그아웃 되었습니다.</string>
-    <string name="success_withdrawal">탈퇴되었습니다.</string>
-    <string name="re_login_forwithdrawl">보안을 위해 다시 로그인해주세요.</string>
-
-    <string name="login_success">로그인에 성공했어요.</string>
-    <string name="login_error_format">로그인 중 오류가 발생했어요.</string>
-    <string name="login_loading">로그인 중이에요...</string>
-    <string name="login_required">로그인이 필요해요.</string>
-
-    <string name="logout_success">로그아웃에 성공했어요.</string>
-
-    <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
-    <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
-    <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>
-
+    <!-- 이메일 전송 -->
     <string name="email_address">mailto:thisyoon97@gmail.com</string>
     <string name="choose_email_app">이메일 앱 선택</string>
     <string name="success_send_email">이메일 전송에 성공했습니다.</string>
+
+    <!-- 날짜 및 시간 포맷 -->
+    <string name="default_timestamp">1970-01-01 00:00</string>
+    <string name="datetime_format">yyyy-MM-dd HH:mm:ss</string>
     <string name="hour_pattern">HH:mm</string>
 
-    <string name="notification_settings">알림 설정</string>
-    <string name="account_management">계정 관리</string>
-    <string name="customer_support">고객 지원</string>
-    <string name="terms_and_privacy">약관 및 개인정보 처리 동의</string>
-    <string name="notification_permission_needed">알림 권한 필요</string>
-    <string name="notification_permission_message">알림을 받으려면 설정에서 알림 권한을 허용해주세요.</string>
-    <string name="go_to_settings">설정으로 이동</string>
-    <string name="cancel">취소</string>
-    <string name="daily_quote_notification_setting">데일리 명언 알림 설정</string>
-    <string name="notification_time_setting">알림 시간 설정</string>
-    <string name="default_notification_time">08:00</string>
-    <string name="login">로그인</string>
-    <string name="logout">로그아웃</string>
-    <string name="logout_confirmation_message">로그아웃하시면 데일리 명언 알림을 받지 못하실 거예요.\n그래도 로그아웃하시겠어요?</string>
-    <string name="send_suggestion">제안 보내기</string>
-    <string name="withdrawal">회원 탈퇴</string>
-    <string name="withdrawal_confirmation_message">정말로 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제됩니다.</string>
-    <string name="yes">네</string>
-    <string name="no">아니오</string>
-    <string name="version_info">버전 정보</string>
-    <string name="terms_of_service">이용약관</string>
-    <string name="privacy_policy">개인정보 처리방침</string>
-    <string name="unknown">Unknown</string>
-    <string name="daily_quote">오늘의 명언</string>
+    <!-- ID 및 API 정보 -->
+    <string name="quote_number_format">%06d</string>
+    <string name="quote_id_prefix">quote_</string>
+    <string name="client_id">608527802027-5vecvmhkc7iaf7bkt5fu7fets3i1cb69.apps.googleusercontent.com</string>
     <string name="service_account_json">service-account.json</string>
-    <string name="google_api_url">"https://www.googleapis.com/auth/firebase.messaging"</string>
+    <string name="google_api_url">https://www.googleapis.com/auth/firebase.messaging</string>
 </resources>
