@@ -32,7 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
@@ -42,8 +41,8 @@ import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewMode
 @Composable
 fun TermsConsentScreen(
     userProfileJson: String? = null,
-    sharedLogInViewModel: SharedLogInViewModel = hiltViewModel(),
-    onNavigateToQuoteScreen: () -> Unit
+    sharedLogInViewModel: SharedLogInViewModel,
+    onNavigateToQuoteScreen: () -> Unit,
 ) {
     val isAgreeAllChecked by sharedLogInViewModel.isAgreeAllChecked.collectAsState()
     val consent by sharedLogInViewModel.consent.collectAsState()

@@ -11,4 +11,5 @@ interface UserProfileManager {
     suspend fun extractUserInfo(userProfileJson: String): Pair<Map<String, Any?>, String>
     suspend fun saveUserToRoom(userProfileJson: String): String
     suspend fun syncExistingUser(userId: String)
+    suspend fun setAuthenticated(userId: String)
 }

@@ -48,6 +48,7 @@ fun SetupNavigation(
         )
 
         termsConsentComposable(
+            sharedLogInViewModel = sharedLogInViewModel,
             onNavigateToQuoteScreen = { screens.navigateToQuote(popUpTo = true) }
         )
 

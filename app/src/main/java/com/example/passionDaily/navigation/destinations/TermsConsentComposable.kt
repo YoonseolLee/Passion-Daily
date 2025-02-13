@@ -1,6 +1,5 @@
 package com.example.passionDaily.navigation.destinations
 
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
@@ -9,7 +8,8 @@ import com.example.passionDaily.termsConsent.presentation.screen.TermsConsentScr
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
-    onNavigateToQuoteScreen: () -> Unit
+    sharedLogInViewModel: SharedLogInViewModel,
+    onNavigateToQuoteScreen: () -> Unit,
 ) {
     composable(
         route = "termsConsent/{userProfileJson}",
@@ -18,12 +18,11 @@ fun NavGraphBuilder.termsConsentComposable(
         )
     ) { backStackEntry ->
         val userProfileJson = backStackEntry.arguments?.getString("userProfileJson")
-        val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
 
         TermsConsentScreen(
             userProfileJson = userProfileJson,
             sharedLogInViewModel = sharedLogInViewModel,
-            onNavigateToQuoteScreen = onNavigateToQuoteScreen
+            onNavigateToQuoteScreen = onNavigateToQuoteScreen,
         )
     }
 }
