@@ -52,6 +52,7 @@ fun LoginScreen(
     val isLoading by sharedLogInViewModel.isLoading.collectAsState()
 
     LaunchedEffect(authState) {
+        Log.d("LoginScreen", "Current AuthState: ${authState}")
         when (authState) {
             is AuthState.Authenticated -> {
                 sharedLogInViewModel.signalLoginSuccess()

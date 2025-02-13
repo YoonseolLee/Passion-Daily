@@ -1,5 +1,6 @@
 package com.example.passionDaily.quote.presentation.screen
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
@@ -66,6 +67,8 @@ fun QuoteScreen(
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 
     LaunchedEffect(selectedCategory) {
+        Log.d("LoginScreen", "Current AuthState: ${quoteViewModel.authState.value}")
+
         if (quotes.isEmpty()) {
             quoteViewModel.loadInitialQuotes(selectedCategory)
         }

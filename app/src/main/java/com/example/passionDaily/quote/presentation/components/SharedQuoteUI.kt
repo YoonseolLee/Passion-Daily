@@ -106,7 +106,6 @@ private fun ArrowButton(
     }
 }
 
-// SharedQuoteUI.kt 수정사항
 @Composable
 fun LeftArrow(onClick: () -> Unit) {
     ArrowButton(onClick = onClick) {
@@ -304,10 +303,8 @@ fun AddToFavoritesButton(
     val isFavorite by favoritesViewModel.isFavorite(userId, currentQuoteId, categoryId)
         .collectAsState(initial = false)
 
-    // 애니메이션의 상태를 관리하는 변수입니다
     var isAnimating by remember { mutableStateOf(false) }
 
-    // 크기 애니메이션: 버튼이 눌리면 1.2배로 커졌다가 다시 원래 크기로 돌아옵니다
     val scale by animateFloatAsState(
         targetValue = if (isAnimating) 1.2f else 1f,
         animationSpec = spring(
@@ -317,7 +314,6 @@ fun AddToFavoritesButton(
         finishedListener = { isAnimating = false }
     )
 
-    // 회전 애니메이션: 버튼이 눌리면 20도 회전했다가 다시 원래 위치로 돌아옵니다
     val rotation by animateFloatAsState(
         targetValue = if (isAnimating) 20f else 0f,
         animationSpec = spring(
@@ -367,26 +363,3 @@ fun AddToFavoritesButton(
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewBackgroundImage() {
-    BackgroundImage(imageUrl = "https://example.com/image.jpg")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCategorySelectionButton() {
-    CategorySelectionButton(
-        onCategoryClicked = {},
-        selectedCategory = QuoteCategory.LOVE
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewQuoteAndPerson() {
-    QuoteAndPerson(
-        quote = "This is a sample quote.",
-        author = "Author Name"
-    )
-}

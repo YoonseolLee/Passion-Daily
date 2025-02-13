@@ -28,7 +28,7 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
             firestore.collection("favorites")
                 .document(currentUser.uid)
                 .collection("saved_quotes")
-                .document(documentId)  // 예: "love_quote_000001", "business_quote_000001"
+                .document(documentId)
                 .set(favoriteData)
         } catch (e: Exception) {
             Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)

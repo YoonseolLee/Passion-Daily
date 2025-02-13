@@ -63,7 +63,7 @@ class RemoveFavoritesUseCase @Inject constructor(
         currentUser: FirebaseUser,
         quoteId: String,
         categoryId: Int
-    ) = withContext(Dispatchers.IO) {
+    ) {
         remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
     }
 }

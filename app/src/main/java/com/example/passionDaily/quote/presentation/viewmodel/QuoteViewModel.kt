@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
+import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
 import com.example.passionDaily.toast.manager.ToastManager
@@ -41,7 +42,8 @@ class QuoteViewModel @Inject constructor(
     private val categoryManager: QuoteCategoryManager,
     private val toastManager: ToastManager,
     private val quoteLoadingManager: QuoteLoadingManager,
-    private val shareQuoteManager: ShareQuoteManager
+    private val shareQuoteManager: ShareQuoteManager,
+    private val authStateHolder: AuthStateHolder
 ) : ViewModel(), QuoteViewModelState, QuoteViewModelActions {
     private var lastLoadedQuote: DocumentSnapshot? = null
     override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
@@ -49,6 +51,7 @@ class QuoteViewModel @Inject constructor(
     override val hasReachedEnd: StateFlow<Boolean> = quoteStateHolder.hasQuoteReachedEnd
     override val selectedCategory: StateFlow<QuoteCategory> =
         quoteStateHolder.selectedQuoteCategory
+    override val authState = authStateHolder.authState
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
     override val currentQuoteIndex: StateFlow<Int> = _currentQuoteIndex

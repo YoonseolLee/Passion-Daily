@@ -47,7 +47,7 @@
     <string name="privacy_policy">개인정보 처리방침</string>
 
     <!-- 명언 및 관련 정보 -->
-    <string name="category">카테고리</string>
+    <string name="category">category</string>
     <string name="select_category">카테고리 선택</string>
     <string name="category_selection_guide">오늘은 어떤 주제의 명언을 만나볼까요?</string>
     <string name="quote_number_format">%06d</string>

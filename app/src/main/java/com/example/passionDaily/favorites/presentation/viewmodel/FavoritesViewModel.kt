@@ -120,7 +120,7 @@ class FavoritesViewModel @Inject constructor(
     override fun loadFavorites() {
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
-            Log.d("loadFavorites", "authStae: ${authStateHolder.authState.value}")
+            Log.d("loadFavorites", "authState: ${authStateHolder.authState.value}")
             when (val state = authStateHolder.authState.value) {
                 is AuthState.Authenticated -> {
                     favoritesLoadingManager.updateIsFavoriteLoading(true)
