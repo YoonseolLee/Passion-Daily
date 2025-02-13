@@ -2,27 +2,27 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="72"
-    android:viewportHeight="72">
-  <group android:scaleX="0.44"
-      android:scaleY="0.44"
-      android:translateX="20.16"
-      android:translateY="20.16">
+    android:viewportWidth="96"
+    android:viewportHeight="90">
+  <group android:scaleX="0.45"
+      android:scaleY="0.421875"
+      android:translateX="26.4"
+      android:translateY="26.015625">
     <group>
       <clip-path
-          android:pathData="M0,0h72v72h-72z"/>
+          android:pathData="M0,0h95.512v90h-95.512z"/>
       <path
-          android:pathData="M37.724,47.974C75.085,35.369 54.831,4.558 37.724,4.557C20.619,4.557 4.675,4.557 4.675,4.557V67.582H24.792V25.566H47.783M65.026,40.971C70.774,54.977 65.026,67.582 34.851,67.582"
+          android:pathData="M53.287,59.852C99.897,44.126 74.628,5.686 53.287,5.686C31.945,5.685 12.055,5.686 12.055,5.686V84.315H37.152V31.895H65.836M87.348,51.115C94.519,68.589 87.348,84.314 49.701,84.315"
           android:strokeLineJoin="round"
-          android:strokeWidth="9.375"
+          android:strokeWidth="10.6598"
           android:fillColor="#00000000"
           android:strokeLineCap="round">
         <aapt:attr name="android:strokeColor">
           <gradient 
-              android:startX="4.675"
-              android:startY="4.557"
-              android:endX="57.743"
-              android:endY="64.734"
+              android:startX="12.055"
+              android:startY="5.685"
+              android:endX="78.261"
+              android:endY="80.762"
               android:type="linear">
             <item android:offset="0" android:color="#FF1A3C96"/>
             <item android:offset="1" android:color="#FF8AAAFF"/>
