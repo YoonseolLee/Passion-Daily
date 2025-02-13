@@ -148,9 +148,8 @@ object DataManagerModule {
     fun provideFCMNotificationManager(
         fcmService: QuoteNotificationService,
        context: Context,
-        stringProvider: StringProvider
     ): FCMNotificationManager = FCMNotificationManagerImpl(
-        fcmService, context, stringProvider
+        fcmService, context
     )
 
     @Provides

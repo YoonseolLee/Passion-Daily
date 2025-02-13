@@ -2,13 +2,11 @@ package com.example.passionDaily.notification.manager
 
 import android.content.Context
 import android.util.Log
-import com.example.passionDaily.R
 import com.example.passionDaily.constants.ManagerConstants.FCMNotification.FCM_URL
 import com.example.passionDaily.constants.ManagerConstants.FCMNotification.TAG
 import com.example.passionDaily.notification.model.QuoteNotificationMessageDTO
 import com.example.passionDaily.notification.service.QuoteNotificationService
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
-import com.example.passionDaily.resources.StringProvider
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.firestore.DocumentSnapshot
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,8 +31,7 @@ import javax.inject.Singleton
 @Singleton
 class FCMNotificationManagerImpl @Inject constructor(
     private val fcmService: QuoteNotificationService,
-    @ApplicationContext private val context: Context,
-    private val stringProvider: StringProvider
+    @ApplicationContext private val context: Context
 ) : FCMNotificationManager {
 
     private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -47,18 +44,19 @@ class FCMNotificationManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendQuoteNotification(
-        quote: DailyQuoteDTO,
-        users: List<DocumentSnapshot>
-    ) {
+    override suspend fun sendQuoteNotification(quote: DailyQuoteDTO, users: List<DocumentSnapshot>) {
         Log.d(TAG, "Starting to send notifications to ${users.size} users")
         users.forEachIndexed { index, user ->
-            handleSafely("sending notification to user ${user.id}") {
+            try {
                 user.getString("fcmToken")?.let { token ->
                     Log.d(TAG, "Sending notification to user ${index + 1}/${users.size}")
                     val message = createNotificationMessage(quote)
                     sendNotification(token, message)
                 } ?: Log.w(TAG, "User ${user.id} has no FCM token")
+            } catch (e: IOException) {
+                Log.e(TAG, "Network error sending notification to user ${user.id}: ${e.message}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sending notification to user ${user.id}: ${e.message}")
             }
         }
     }
@@ -70,47 +68,64 @@ class FCMNotificationManagerImpl @Inject constructor(
     }
 
     private suspend fun sendNotification(token: String, message: QuoteNotificationMessageDTO) {
-        handleSafely("sending notification") {
+        try {
             val accessToken = getAccessToken()
             val json = createNotificationJson(token, message)
-
             if (json != null) {
                 sendFcmRequest(json, accessToken)
                 Log.d(TAG, "Successfully sent FCM request")
             } else {
                 Log.e(TAG, "Failed to create notification JSON")
             }
+        } catch (e: FileNotFoundException) {
+            Log.e(TAG, "Service account file not found: ${e.message}")
+        } catch (e: IOException) {
+            Log.e(TAG, "Network error in sendNotification: ${e.message}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in sendNotification: ${e.message}")
+            throw e
         }
     }
 
     private fun getAccessToken(): String {
-        return handleSafely("getting access token") {
+        return try {
             val credentials = loadCredentials()
             credentials.refreshAccessToken().tokenValue
+        } catch (e: FileNotFoundException) {
+            Log.e(TAG, "Service account file not found: ${e.message}")
+            throw e
+        } catch (e: IOException) {
+            Log.e(TAG, "Network error getting access token: ${e.message}")
+            throw e
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting access token: ${e.message}")
+            throw e
         }
     }
 
     private fun loadCredentials(): GoogleCredentials {
-        val asset = context.assets.open(stringProvider.getString(R.string.service_account_json))
+        val asset = context.assets.open("service-account.json")
         return GoogleCredentials.fromStream(asset)
-            .createScoped(listOf(stringProvider.getString(R.string.google_api_url)))
+            .createScoped(listOf("https://www.googleapis.com/auth/firebase.messaging"))
     }
 
     private fun createNotificationJson(
         token: String,
         message: QuoteNotificationMessageDTO
     ): JSONObject? {
-        return handleSafely("creating notification JSON") {
-            val quoteInfo = getQuoteForToday() ?: return@handleSafely null
+        return try {
+            val quoteInfo = getQuoteForToday() ?: return null
             val (category, quoteId, _) = quoteInfo
             buildNotificationJson(token, message, category, quoteId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error creating notification JSON: ${e.message}")
+            null
         }
     }
 
     private fun getQuoteForToday(): Triple<String, String, Int>? {
         val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
         val adjustedDay = (today - 1).coerceIn(0, 30)
-
         return fcmService.monthlyQuotes.value.find { it.third == adjustedDay }
             ?: run {
                 Log.e(TAG, "No quote found for day $today")
@@ -143,15 +158,17 @@ class FCMNotificationManagerImpl @Inject constructor(
     }
 
     private suspend fun sendFcmRequest(json: JSONObject, accessToken: String) {
-        handleSafely("sending FCM request") {
-            val client = OkHttpClient()
-            val request = buildFcmRequest(json, accessToken)
-
+        val client = OkHttpClient()
+        val request = buildFcmRequest(json, accessToken)
+        try {
             withContext(Dispatchers.IO) {
                 client.newCall(request).execute().use { response ->
                     handleFcmResponse(response)
                 }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending FCM request: ${e.message}")
+            throw e
         }
     }
 
@@ -176,20 +193,5 @@ class FCMNotificationManagerImpl @Inject constructor(
 
     override fun cleanup() {
         managerScope.cancel()
-    }
-
-    private inline fun <T> handleSafely(operation: String, block: () -> T): T {
-        return try {
-            block()
-        } catch (e: FileNotFoundException) {
-            Log.e(TAG, "Service account file not found while $operation: ${e.message}")
-            throw e
-        } catch (e: IOException) {
-            Log.e(TAG, "Network error while $operation: ${e.message}")
-            throw e
-        } catch (e: Exception) {
-            Log.e(TAG, "Error while $operation: ${e.message}")
-            throw e
-        }
     }
 }
