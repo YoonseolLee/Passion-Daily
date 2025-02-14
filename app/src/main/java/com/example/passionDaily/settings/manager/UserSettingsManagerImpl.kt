@@ -1,5 +1,6 @@
 package com.example.passionDaily.settings.manager
 
+import android.util.Log
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
 import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
@@ -29,9 +30,14 @@ class UserSettingsManagerImpl @Inject constructor(
     }
 
     private suspend fun deleteUserDataFromRoom(userId: String) {
-        localUserRepository.deleteUser(userId)
+        Log.d("deleteUserDataFromRoom", "Starting to delete favorites for user: $userId")
+        // 1. 해당 사용자의 즐겨찾기만 삭제
         localFavoriteRepository.deleteAllFavoritesByUserId(userId)
-        localQuoteRepository.deleteAllQuotes()
-        localQuoteCategoryRepository.deleteAllCategories()
+        Log.d("deleteUserDataFromRoom", "Successfully deleted favorites")
+
+        Log.d("deleteUserDataFromRoom", "Starting to delete user")
+        // 2. 사용자 정보만 삭제
+        localUserRepository.deleteUser(userId)
+        Log.d("deleteUserDataFromRoom", "Successfully deleted user")
     }
 }

@@ -16,7 +16,7 @@ import com.example.passionDaily.user.data.local.entity.UserEntity
             entity = UserEntity::class,
             parentColumns = ["user_id"],
             childColumns = ["user_id"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.NO_ACTION
         ),
         ForeignKey(
             entity = QuoteEntity::class,
