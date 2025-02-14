@@ -408,7 +408,6 @@ fun SuggestionSettingItem(
             try {
                 context.startActivity(intent)
             } catch (e: Exception) {
-                // Handle the case where email intent cannot be handled
                 e.printStackTrace()
             }
         }
@@ -421,83 +420,64 @@ fun WithdrawalSettingItem(
     onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
     onWithdrawUser: () -> Unit
 ) {
-    WithdrawalConfirmationDialog(
-        showDialog = showWithdrawalDialog,
-        onConfirm = {
-            onWithdrawUser()
-            onUpdateShowWithdrawalDialog(false)
-        },
-        onDismiss = {
-            onUpdateShowWithdrawalDialog(false)
-        }
-    )
-
     WithdrawalButton(
         onClick = {
             onUpdateShowWithdrawalDialog(true)
         }
     )
-}
 
-// The rest of the composables remain unchanged as they don't interact with ViewModel
-@Composable
-private fun WithdrawalConfirmationDialog(
-    showDialog: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    if (!showDialog) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { WithdrawalDialogTitle() },
-        text = { WithdrawalDialogMessage() },
-        confirmButton = { WithdrawalConfirmButton(onClick = onConfirm) },
-        dismissButton = { WithdrawalCancelButton(onClick = onDismiss) },
-        containerColor = Color(0xFF0E1C41),
-        shape = RoundedCornerShape(8.dp)
-    )
-}
-
-@Composable
-private fun WithdrawalDialogTitle() {
-    Text(
-        text = stringResource(R.string.withdrawal),
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFFFFFF)
-        )
-    )
-}
-
-@Composable
-private fun WithdrawalDialogMessage() {
-    Text(
-        text = stringResource(R.string.withdrawal_confirmation_message),
-        style = TextStyle(
-            fontSize = 15.sp,
-            color = Color(0xFFFFFFFF)
-        )
-    )
-}
-
-@Composable
-private fun WithdrawalConfirmButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.yes),
-            color = Color(0xFFFFFFFF)
-        )
-    }
-}
-
-@Composable
-private fun WithdrawalCancelButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.no),
-            color = Color(0xFFFFFFFF)
+    if (showWithdrawalDialog) {
+        AlertDialog(
+            onDismissRequest = { onUpdateShowWithdrawalDialog(false) },
+            title = {
+                Text(
+                    text = stringResource(R.string.withdrawal),
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFFFFF)
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.withdrawal_confirmation_message),
+                    style = TextStyle(
+                        fontSize = 15.sp,
+                        color = Color(0xFFE1E1E1),
+                        lineHeight = 24.sp
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onWithdrawUser()
+                        onUpdateShowWithdrawalDialog(false)
+                    }
+                ) {
+                    Text(
+                        stringResource(R.string.withdrawal),
+                        color = Color(0xFFFF6B6B)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { onUpdateShowWithdrawalDialog(false) }
+                ) {
+                    Text(
+                        stringResource(R.string.no),
+                        color = Color(0xFFCCCCCC)
+                    )
+                }
+            },
+            containerColor = Color(0xFF1A2847),
+            shape = RoundedCornerShape(8.dp),
+            properties = DialogProperties(
+                dismissOnClickOutside = true,
+                dismissOnBackPress = true
+            )
         )
     }
 }
