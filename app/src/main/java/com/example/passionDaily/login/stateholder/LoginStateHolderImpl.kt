@@ -49,4 +49,11 @@ class LoginStateHolderImpl @Inject constructor() : LoginStateHolder {
     override suspend fun updateIsLoading(isLoading: Boolean) {
         _isLoading.emit(isLoading)
     }
+
+    override suspend fun clearLoginState() {
+        _userProfileJson.value = null
+        _userProfileJsonV2.value = null
+        _isLoggedIn.value = false
+        _isLoading.value = false
+    }
 }

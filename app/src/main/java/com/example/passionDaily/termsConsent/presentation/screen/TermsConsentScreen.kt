@@ -37,6 +37,7 @@ import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.PrimaryColor
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
+import com.example.passionDaily.login.state.AuthState
 
 @Composable
 fun TermsConsentScreen(
@@ -47,17 +48,11 @@ fun TermsConsentScreen(
     val isAgreeAllChecked by sharedLogInViewModel.isAgreeAllChecked.collectAsState()
     val consent by sharedLogInViewModel.consent.collectAsState()
     val userProfileJsonV2 by sharedLogInViewModel.userProfileJsonV2.collectAsState()
+    val authState by sharedLogInViewModel.authState.collectAsState()
 
     // 초기 userProfileJson 검증
     LaunchedEffect(userProfileJson) {
         sharedLogInViewModel.verifyUserProfileJson(userProfileJson)
-    }
-
-    // userProfileJsonV2가 업데이트되면 화면 전환
-    LaunchedEffect(userProfileJsonV2) {
-        userProfileJsonV2?.let {
-            onNavigateToQuoteScreen()
-        }
     }
 
     Box(
@@ -116,12 +111,17 @@ fun TermsConsentScreen(
                 .padding(bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            LaunchedEffect(userProfileJsonV2, authState) {
+                if (authState is AuthState.Authenticated && userProfileJsonV2 != null) {
+                    onNavigateToQuoteScreen()
+                }
+            }
+
             NextButton(
                 enabled = consent.termsOfService && consent.privacyPolicy,
                 onNextClicked = {
-                    sharedLogInViewModel.handleNextClick(userProfileJson)
-                    userProfileJsonV2?.let {
-                        onNavigateToQuoteScreen()
+                    if (authState is AuthState.RequiresConsent && userProfileJson != null) {
+                        sharedLogInViewModel.handleNextClick(userProfileJson)
                     }
                 }
             )

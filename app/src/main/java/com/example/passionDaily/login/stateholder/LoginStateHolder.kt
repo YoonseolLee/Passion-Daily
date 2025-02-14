@@ -16,4 +16,5 @@ interface LoginStateHolder {
     suspend fun updateUserProfileJsonV2(json: String?)
     suspend fun updateIsLoggedIn(isLoggedIn: Boolean)
     suspend fun updateIsLoading(isLoading: Boolean)
+    suspend fun clearLoginState()
 }

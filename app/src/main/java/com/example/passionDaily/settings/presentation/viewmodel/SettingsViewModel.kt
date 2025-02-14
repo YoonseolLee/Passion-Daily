@@ -9,6 +9,7 @@ import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.example.passionDaily.settings.base.SettingsViewModelActions
 import com.example.passionDaily.settings.base.SettingsViewModelState
 import com.example.passionDaily.settings.manager.EmailManager
@@ -36,7 +37,8 @@ class SettingsViewModel @Inject constructor(
     private val authStateHolder: AuthStateHolder,
     private val toastManager: ToastManager,
     private val emailManager: EmailManager,
-    private val settingsStateHolder: SettingsStateHolder
+    private val settingsStateHolder: SettingsStateHolder,
+    private val loginStateHolder: LoginStateHolder
 ) : ViewModel(), SettingsViewModelActions, SettingsViewModelState {
 
     override val notificationEnabled = settingsStateHolder.notificationEnabled
@@ -187,6 +189,7 @@ class SettingsViewModel @Inject constructor(
     private suspend fun performLogout() {
         settingsStateHolder.updateIsLoading(true)
         authManager.clearCredentials()
+        loginStateHolder.clearLoginState()
         clearUserSession()
         resetNotificationSettings()
     }
@@ -200,6 +203,8 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
+                authManager.clearCredentials()
+                loginStateHolder.clearLoginState()
                 userSettingsManager.deleteUserData(user.uid)
                 attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
                 clearUserSession()
