@@ -160,6 +160,9 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * onLogoutSuccess -> onNavigateToQuote
+     */
     override fun logOut(onLogoutSuccess: () -> Unit) {
         settingsStateHolder.updateIsLoading(true)
         viewModelScope.launch {
@@ -189,12 +192,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearUserData() {
-        authManager.clearCredentials()
-        userConsentManager.clearConsent()
-        loginStateHolder.clearLoginState()
-    }
-
     override fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
         viewModelScope.launch {
             settingsStateHolder.updateIsLoading(true)
@@ -204,14 +201,12 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
-                // 1. 먼저 Firebase 계정 삭제 시도
-                attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
-
-                // 2. 성공하면 나머지 데이터 정리
-                userSettingsManager.deleteUserData(user.uid)
-                clearUserData()
-                clearUserSession()
-                resetNotificationSettings()
+                val deletionSuccess = attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
+                if (deletionSuccess) {
+                    userSettingsManager.deleteUserData(user.uid)
+                    clearUserData()
+                    resetNotificationSettings()
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error during withdrawal", e)
                 toastManager.showGeneralErrorToast()
@@ -221,34 +216,40 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun clearUserSession() {
+    private suspend fun attemptAccountDeletion(
+        onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit
+    ): Boolean {
+        return Firebase.auth.currentUser?.let { currentUser ->
+            try {
+                currentUser.delete().await()
+                toastManager.showWithDrawlSuccessToast()
+                onWithdrawSuccess()
+                true
+            } catch (e: FirebaseAuthRecentLoginRequiredException) {
+                handleReLoginForWithdrawal(onReLogInRequired)
+                false
+            }
+        } ?: false
+    }
+
+    private suspend fun clearUserData() {
+        authManager.clearCredentials()
+        userConsentManager.clearConsent()
+        loginStateHolder.clearLoginState()
         authStateHolder.setUnAuthenticated()
         scheduleAlarmUseCase.cancelExistingAlarm()
+    }
+
+    private suspend fun handleReLoginForWithdrawal(onReLogInRequired: () -> Unit) {
+        toastManager.showReLoginForWithDrawlToast()
+        clearUserData()
+        Firebase.auth.signOut()
+        onReLogInRequired()
     }
 
     private fun resetNotificationSettings() {
         settingsStateHolder.updateNotificationEnabled(false)
         settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
-    }
-
-    private suspend fun attemptAccountDeletion(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
-        Firebase.auth.currentUser?.let { currentUser ->
-            try {
-                currentUser.delete().await()
-                Log.d("attemptAccountDeletion", "안녕")
-                toastManager.showWithDrawlSuccessToast()
-                Log.d("attemptAccountDeletion", "안녕안녕")
-                onWithdrawSuccess()
-            } catch (e: FirebaseAuthRecentLoginRequiredException) {
-                handleReLoginForWithdrawal(onReLogInRequired)
-            }
-        }
-    }
-
-    private fun handleReLoginForWithdrawal(onReLogInRequired: () -> Unit) {
-        toastManager.showReLoginForWithDrawlToast()
-        Firebase.auth.signOut()
-        onReLogInRequired()
     }
 
     override fun createEmailIntent(): Intent? {
