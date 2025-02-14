@@ -9,4 +9,5 @@ interface ConsentStateHolder {
 
     fun updateConsent(newConsent: UserConsent)
     fun updateAgreeAllChecked(isChecked: Boolean)
+    fun clearConsent()
 }

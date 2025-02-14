@@ -9,4 +9,5 @@ interface UserConsentManager {
 
     fun toggleAgreeAll()
     fun toggleIndividualItem(item: String)
+    suspend fun clearConsent()
 }

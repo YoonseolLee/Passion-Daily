@@ -41,4 +41,8 @@ class UserConsentManagerImpl @Inject constructor(
     private fun updateAgreeAllState() {
         consentStateHolder.updateAgreeAllChecked(consent.value.isAllAgreed)
     }
+
+    override suspend fun clearConsent() {
+        consentStateHolder.clearConsent()
+    }
 }

@@ -26,4 +26,12 @@ class ConsentStateHolderImpl @Inject constructor() : ConsentStateHolder {
     override fun updateAgreeAllChecked(isChecked: Boolean) {
         _isAgreeAllChecked.value = isChecked
     }
+
+    override fun clearConsent() {
+        _consent.value = UserConsent(
+            termsOfService = false,
+            privacyPolicy = false
+        )
+        _isAgreeAllChecked.value = false
+    }
 }

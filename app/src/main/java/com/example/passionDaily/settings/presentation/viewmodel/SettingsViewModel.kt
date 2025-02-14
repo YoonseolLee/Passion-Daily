@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.login.manager.AuthenticationManager
+import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.login.stateholder.AuthStateHolder
@@ -38,7 +39,8 @@ class SettingsViewModel @Inject constructor(
     private val toastManager: ToastManager,
     private val emailManager: EmailManager,
     private val settingsStateHolder: SettingsStateHolder,
-    private val loginStateHolder: LoginStateHolder
+    private val loginStateHolder: LoginStateHolder,
+    private val userConsentManager: UserConsentManager
 ) : ViewModel(), SettingsViewModelActions, SettingsViewModelState {
 
     override val notificationEnabled = settingsStateHolder.notificationEnabled
@@ -159,11 +161,12 @@ class SettingsViewModel @Inject constructor(
     }
 
     override fun logOut(onLogoutSuccess: () -> Unit) {
+        settingsStateHolder.updateIsLoading(true)
         viewModelScope.launch {
             try {
                 if (isUserLoggedOut()) return@launch
 
-                performLogout()
+                clearUserData()
                 toastManager.showLogoutSuccessToast()
                 onLogoutSuccess()
             } catch (e: Exception) {
@@ -186,12 +189,10 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private suspend fun performLogout() {
-        settingsStateHolder.updateIsLoading(true)
+    private suspend fun clearUserData() {
         authManager.clearCredentials()
+        userConsentManager.clearConsent()
         loginStateHolder.clearLoginState()
-        clearUserSession()
-        resetNotificationSettings()
     }
 
     override fun withdrawUser(onWithdrawSuccess: () -> Unit, onReLogInRequired: () -> Unit) {
@@ -203,10 +204,12 @@ class SettingsViewModel @Inject constructor(
                     return@launch
                 }
 
-                authManager.clearCredentials()
-                loginStateHolder.clearLoginState()
-                userSettingsManager.deleteUserData(user.uid)
+                // 1. 먼저 Firebase 계정 삭제 시도
                 attemptAccountDeletion(onWithdrawSuccess, onReLogInRequired)
+
+                // 2. 성공하면 나머지 데이터 정리
+                userSettingsManager.deleteUserData(user.uid)
+                clearUserData()
                 clearUserSession()
                 resetNotificationSettings()
             } catch (e: Exception) {
@@ -232,7 +235,9 @@ class SettingsViewModel @Inject constructor(
         Firebase.auth.currentUser?.let { currentUser ->
             try {
                 currentUser.delete().await()
+                Log.d("attemptAccountDeletion", "안녕")
                 toastManager.showWithDrawlSuccessToast()
+                Log.d("attemptAccountDeletion", "안녕안녕")
                 onWithdrawSuccess()
             } catch (e: FirebaseAuthRecentLoginRequiredException) {
                 handleReLoginForWithdrawal(onReLogInRequired)
