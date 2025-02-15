@@ -74,7 +74,7 @@ class QuoteViewModel @Inject constructor(
             try {
                 quoteStateHolder.updateIsQuoteLoading(true)
 
-                val result = withTimeout(10_000L) {
+                val result = withTimeout(5000L) {
                     quoteLoadingManager.fetchQuotesByCategory(
                         category = category,
                         pageSize = PAGE_SIZE,

@@ -3,6 +3,8 @@ package com.example.passionDaily.quote.data.remote
 import android.util.Log
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.RepositoryConstants.Quote.TAG
+import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepositoryImpl
+import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepositoryImpl.Companion
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.resources.StringProvider
@@ -15,8 +17,13 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 class RemoteQuoteRepositoryImpl @Inject constructor(
@@ -84,16 +91,21 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         lastLoadedQuote: DocumentSnapshot?
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Fetching quotes for category: ${category.name}")
-            val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
-            val result = query.get().await()
-            result.toQuoteResult()
-        } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore error in getQuotesByCategory: ${e.message}", e)
-            throw e
+            withTimeout(3000L) {
+                val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
+                val result = query.get().await()
+                result.toQuoteResult()
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getQuotesByCategory: ${e.message}", e)
-            throw e
+            Log.e(TAG, "Failed to delete favorite from Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+
+                else -> throw e
+            }
         }
     }
 
