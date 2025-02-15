@@ -10,7 +10,13 @@ import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 class RemoteUserRepositoryImpl @Inject constructor(
@@ -45,7 +51,14 @@ class RemoteUserRepositoryImpl @Inject constructor(
 
             Log.d("UserSync", "Successfully updated lastSyncDate and lastLoginDate: $now")
         } catch (e: Exception) {
-            handleError(e)
+            Log.e(TAG, "Failed to update notification time in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
@@ -55,7 +68,14 @@ class RemoteUserRepositoryImpl @Inject constructor(
             val userEntity = localUserRepository.convertToUserEntity(firestoreUser)
             localUserRepository.saveUser(userEntity)
         } catch (e: Exception) {
-            handleError(e)
+            Log.e(TAG, "Failed to update notification time in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
@@ -69,7 +89,14 @@ class RemoteUserRepositoryImpl @Inject constructor(
             userDoc.toObject(User::class.java)
                 ?: throw IllegalStateException()
         } catch (e: Exception) {
-            handleError(e)  // 이 함수는 항상 예외를 던지므로, User를 반환할 필요가 없음
+            Log.e(TAG, "Failed to update notification time in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
@@ -91,7 +118,14 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 Log.d("Firestore", "User profile added successfully: $userId")
             }
         } catch (e: Exception) {
-            handleError(e)
+            Log.e(TAG, "Failed to update notification time in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
@@ -114,42 +148,58 @@ class RemoteUserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean) {
+    override suspend fun updateNotificationSettingsToFirestore(
+        userId: String,
+        enabled: Boolean
+    ): Unit = withContext(Dispatchers.IO) {
         try {
-            firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .update("notificationEnabled", enabled)
+            withTimeout(3000L) {
+                firestore.collection(USERS_COLLECTION)
+                    .document(userId)
+                    .update("notificationEnabled", enabled)
+                    .await()
+
+                Log.d(TAG, "Successfully updated notification settings to Firestore")
+            }
         } catch (e: Exception) {
-            handleError(e)
+            Log.e(TAG, "Failed to update notification settings in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
-    override suspend fun updateNotificationTimeToFirestore(userId: String, newTime: String) {
+    override suspend fun updateNotificationTimeToFirestore(
+        userId: String,
+        newTime: String
+    ): Unit = withContext(Dispatchers.IO) {
         try {
-            firestore.collection(USERS_COLLECTION)
-                .document(userId)
-                .update("notificationTime", newTime)
+            withTimeout(3000L) {
+                firestore.collection(USERS_COLLECTION)
+                    .document(userId)
+                    .update("notificationTime", newTime)
+                    .await()
+
+                Log.d(TAG, "Successfully updated notification time to Firestore")
+            }
         } catch (e: Exception) {
-            handleError(e)
+            Log.e(TAG, "Failed to update notification time in Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
     override suspend fun deleteUserDataFromFirestore(userId: String) {
         firestore.collection(USERS_COLLECTION).document(userId).delete().await()
         firestore.collection(FAVORITES_COLLECTION).document(userId).delete().await()
-    }
-
-    private fun handleError(e: Exception): Nothing {
-        when (e) {
-            is FirebaseFirestoreException -> {
-                Log.e(TAG, "Firestore error", e)
-                throw e
-            }
-
-            else -> {
-                Log.e(TAG, "Unexpected error", e)
-                throw e
-            }
-        }
     }
 }

@@ -13,8 +13,12 @@ class NotificationManagerImpl @Inject constructor(
     private val parseTimeUseCase: ParseTimeUseCase,
     private val saveNotificationUseCase: SaveNotificationUseCase
 ) : NotificationManager {
-    override suspend fun updateNotificationSettings(userId: String, enabled: Boolean) {
-        updateNotificationUseCase.updateNotificationSettings(userId, enabled)
+    override suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean) {
+        updateNotificationUseCase.updateNotificationSettingsToFirestore(userId, enabled)
+    }
+
+    override suspend fun updateNotificationSettingsToRoom(userId: String, enabled: Boolean) {
+        updateNotificationUseCase.updateNotificationSettingsToRoom(userId, enabled)
     }
 
     override fun scheduleNotification(hour: Int, minute: Int) {
@@ -29,7 +33,11 @@ class NotificationManagerImpl @Inject constructor(
         return parseTimeUseCase.parseTime(timeStr)
     }
 
-    override suspend fun updateNotificationTime(userId: String, time: LocalTime) {
-        saveNotificationUseCase.updateNotificationTime(userId, time)
+    override suspend fun updateNotificationTimeToFirestore(userId: String, time: LocalTime) {
+        saveNotificationUseCase.updateNotificationTimeToFirestore(userId, time)
+    }
+
+    override suspend fun updateNotificationTimeToRoom(userId: String, time: LocalTime) {
+        saveNotificationUseCase.updateNotificationTimeToRoom(userId, time)
     }
 }

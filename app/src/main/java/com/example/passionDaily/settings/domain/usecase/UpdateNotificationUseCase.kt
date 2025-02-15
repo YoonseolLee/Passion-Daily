@@ -8,8 +8,11 @@ class UpdateNotificationUseCase @Inject constructor(
     private val remoteUserRepository: RemoteUserRepository,
     private val localUserRepository: LocalUserRepository
 ) {
-    suspend fun updateNotificationSettings(userId: String, enabled: Boolean) {
+    suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean) {
         remoteUserRepository.updateNotificationSettingsToFirestore(userId, enabled)
+    }
+
+    suspend fun updateNotificationSettingsToRoom(userId: String, enabled: Boolean) {
         localUserRepository.updateNotificationSettingsToRoom(userId, enabled)
     }
 }

@@ -74,13 +74,13 @@ class QuoteViewModel @Inject constructor(
             try {
                 quoteStateHolder.updateIsQuoteLoading(true)
 
-                val result = withTimeout(5000L) {
+                val result  =
                     quoteLoadingManager.fetchQuotesByCategory(
                         category = category,
                         pageSize = PAGE_SIZE,
                         lastLoadedQuote = lastLoadedQuote
                     )
-                }
+
 
                 if (result.quotes.isEmpty()) {
                     quoteLoadingManager.setHasQuoteReachedEndTrue()
