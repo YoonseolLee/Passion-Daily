@@ -19,6 +19,7 @@ import com.example.passionDaily.settings.manager.EmailManager
 import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -281,7 +282,7 @@ class SettingsViewModel @Inject constructor(
 
     private fun handleError(e: Exception) {
         when (e) {
-            is IOException -> {
+            is IOException, is FirebaseNetworkException -> {
                 Log.e(Favorites.TAG, "Network error details: ${e.message}", e)
                 toastManager.showNetworkErrorToast()
             }
