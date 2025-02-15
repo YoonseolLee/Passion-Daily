@@ -159,10 +159,10 @@ class FCMNotificationManagerImpl @Inject constructor(
                 })
                 put("android", JSONObject().apply {
                     put("priority", "HIGH")
-                    // 안드로이드 notification 설정
                     put("notification", JSONObject().apply {
                         put("channel_id", "default")
                         put("visibility", "PUBLIC")
+                        put("icon", "notification_icon")
                         put("vibrate_timings", JSONArray().apply {
                             put("1s")
                             put("1s")
