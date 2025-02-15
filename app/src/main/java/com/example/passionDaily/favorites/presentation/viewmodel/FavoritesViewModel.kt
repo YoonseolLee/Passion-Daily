@@ -232,14 +232,22 @@ class FavoritesViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
+                try {
+                    favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
+                } catch (e: IOException) {
+                    // 네트워크 에러 발생 시 처리
+                    handleError(e)
+                    return@launch
+                }
+
                 favoritesRemoveManager.deleteLocalFavorite(
                     currentUser.uid,
                     quoteId,
                     actualCategoryId
                 )
-                favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
                 loadFavorites()
             } catch (e: Exception) {
+                Log.e(TAG, "Error removing favorite", e)
                 handleError(e)
             }
         }

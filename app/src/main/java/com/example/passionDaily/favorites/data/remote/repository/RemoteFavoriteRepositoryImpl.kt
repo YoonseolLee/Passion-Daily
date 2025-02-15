@@ -6,9 +6,15 @@ import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 class RemoteFavoriteRepositoryImpl @Inject constructor(
@@ -53,35 +59,53 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
                         "category: $categoryEnglishName"
             )
 
-            val quotesRef = firestore.collection("favorites")
-                .document(currentUser.uid)
-                .collection("saved_quotes")
-                .whereEqualTo("quoteId", quoteId)
-                .whereEqualTo("category", categoryEnglishName)
-                .get()
-                .await()
+            withTimeout(3000L) {
+                try {
+                    val quotesRef = firestore.collection("favorites")
+                        .document(currentUser.uid)
+                        .collection("saved_quotes")
+                        .whereEqualTo("quoteId", quoteId)
+                        .whereEqualTo("category", categoryEnglishName)
+                        .get()
+                        .await()
 
-            if (quotesRef.isEmpty) {
-                Log.w(TAG, "No document found with quoteId: $quoteId and category: $categoryEnglishName for user: ${currentUser.uid}")
-                return@withContext
+                    if (quotesRef.isEmpty) {
+                        Log.w(
+                            TAG,
+                            "No document found with quoteId: $quoteId and category: $categoryEnglishName for user: ${currentUser.uid}"
+                        )
+                        throw IOException("Unable to find document. This might be due to network issues.")
+                    }
+
+                    // 찾은 문서 삭제
+                    for (document in quotesRef.documents) {
+                        Log.d(TAG, "Deleting document with id: ${document.id}")
+                        firestore.collection("favorites")
+                            .document(currentUser.uid)
+                            .collection("saved_quotes")
+                            .document(document.id)
+                            .delete()
+                            .await()
+                    }
+
+                    Log.d(TAG, "Successfully deleted favorite(s) from Firestore")
+                } catch (e: Exception) {
+                    when (e) {
+                        is UnknownHostException, is IOException ->
+                            throw IOException("Network error while accessing Firestore", e)
+                        else -> throw e
+                    }
+                }
             }
-
-            // 찾은 문서 삭제
-            for (document in quotesRef.documents) {
-                Log.d(TAG, "Deleting document with id: ${document.id}")
-                firestore.collection("favorites")
-                    .document(currentUser.uid)
-                    .collection("saved_quotes")
-                    .document(document.id)
-                    .delete()
-                    .await()
-            }
-
-            Log.d(TAG, "Successfully deleted favorite(s) from Firestore")
-
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete favorite from Firestore", e)
-            throw e
+            when (e) {
+                is TimeoutCancellationException ->
+                    throw IOException("Network timeout while accessing Firestore")
+                is UnknownHostException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
         }
     }
 
