@@ -79,14 +79,22 @@ class QuoteNotificationService @Inject constructor(
     }
 
     private suspend fun fetchQuoteDataFromRemoteConfig() {
-        remoteConfig.fetchAndActivate().await()
-        val quotesJson = remoteConfig.getString("monthly_quotes")
+        try {
+            // 강제로 서버에서 최신 데이터를 가져오도록 설정
+            remoteConfig.fetchAndActivate().await()
 
-        if (quotesJson.isNotEmpty()) {
-            processQuoteData(quotesJson, "Remote Config")
-        } else {
-            Log.w("QuoteNotificationService", "Remote Config returned empty quotes, using default values")
-            useDefaultQuoteData()
+            val quotesJson = remoteConfig.getString("monthly_quotes")
+            Log.d("QuoteNotificationService", "Fetched Remote Config data: $quotesJson")  // 디버깅용 로그 추가
+
+            if (quotesJson.isNotEmpty()) {
+                processQuoteData(quotesJson, "Remote Config")
+            } else {
+                Log.w("QuoteNotificationService", "Remote Config returned empty quotes, using default values")
+                useDefaultQuoteData()
+            }
+        } catch (e: Exception) {
+            Log.e("QuoteNotificationService", "Error fetching from Remote Config: ${e.message}")
+            throw e
         }
     }
 
@@ -108,12 +116,14 @@ class QuoteNotificationService @Inject constructor(
     private suspend fun processQuoteData(jsonString: String, source: String) {
         try {
             val quoteConfigDTOS = json.decodeFromString<List<QuoteConfigDTO>>(jsonString)
+            Log.d("QuoteNotificationService", "Parsed quotes from $source: ${quoteConfigDTOS.map { "${it.day}: ${it.category}/${it.quoteId}" }}")
+
             val quotesTriples = quoteConfigDTOS.map { config ->
-                Triple(config.category.lowercase(), config.quoteId, config.day)
+                Triple(config.category, config.quoteId, config.day)
             }
             _monthlyQuotes.emit(quotesTriples)
             _isInitialized.emit(true)
-            Log.d("QuoteNotificationService", "Loaded ${quotesTriples.size} quotes successfully from $source")
+            Log.d("QuoteNotificationService", "Successfully loaded ${quotesTriples.size} quotes from $source")
         } catch (e: Exception) {
             Log.e("QuoteNotificationService", "Failed to process quotes from $source", e)
             throw e
@@ -155,8 +165,13 @@ class QuoteNotificationService @Inject constructor(
             return null
         }
 
-        val adjustedDay = (day - 1).coerceIn(0, quotes.size - 1)
-        return quotes.find { it.third == adjustedDay }
+        Log.d("QuoteNotificationService", "Finding quote for day: $day")
+        Log.d("QuoteNotificationService", "Available quotes: ${quotes.map { "day=${it.third}, category=${it.first}, quoteId=${it.second}" }}")
+
+        // 직접 day로 찾기
+        return quotes.find { it.third == day }.also {
+            Log.d("QuoteNotificationService", "Found quote: $it")
+        }
     }
 
     private suspend fun fetchQuoteFromFirestore(quoteInfo: Triple<String, String, Int>): DailyQuoteDTO {
@@ -166,12 +181,19 @@ class QuoteNotificationService @Inject constructor(
     }
 
     private suspend fun retrieveQuoteDocument(category: String, quoteId: String): DocumentSnapshot {
-        return db.collection("categories")
+        Log.d("QuoteNotificationService", "Attempting to fetch quote from path: categories/$category/quotes/$quoteId")
+        val docRef = db.collection("categories")
             .document(category)
             .collection("quotes")
             .document(quoteId)
-            .get()
-            .await()
+
+        val snapshot = docRef.get().await()
+        if (!snapshot.exists()) {
+            Log.e("QuoteNotificationService", "Document does not exist at path: categories/$category/quotes/$quoteId")
+        } else {
+            Log.d("QuoteNotificationService", "Document fields: ${snapshot.data}")
+        }
+        return snapshot
     }
 
     private fun parseDailyQuote(document: DocumentSnapshot): DailyQuoteDTO {

@@ -21,6 +21,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -44,7 +45,10 @@ class FCMNotificationManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun sendQuoteNotification(quote: DailyQuoteDTO, users: List<DocumentSnapshot>) {
+    override suspend fun sendQuoteNotification(
+        quote: DailyQuoteDTO,
+        users: List<DocumentSnapshot>
+    ) {
         Log.d(TAG, "Starting to send notifications to ${users.size} users")
         users.forEachIndexed { index, user ->
             try {
@@ -62,6 +66,10 @@ class FCMNotificationManagerImpl @Inject constructor(
     }
 
     private fun createNotificationMessage(quote: DailyQuoteDTO): QuoteNotificationMessageDTO {
+        Log.d(
+            TAG,
+            "Creating notification with quote: text='${quote.text}', person='${quote.person}'"
+        )
         return QuoteNotificationMessageDTO(
             body = "${quote.text} - ${quote.person}"
         )
@@ -125,8 +133,7 @@ class FCMNotificationManagerImpl @Inject constructor(
 
     private fun getQuoteForToday(): Triple<String, String, Int>? {
         val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-        val adjustedDay = (today - 1).coerceIn(0, 30)
-        return fcmService.monthlyQuotes.value.find { it.third == adjustedDay }
+        return fcmService.monthlyQuotes.value.find { it.third == today }
             ?: run {
                 Log.e(TAG, "No quote found for day $today")
                 null
@@ -151,7 +158,18 @@ class FCMNotificationManagerImpl @Inject constructor(
                     put("quoteId", quoteId)
                 })
                 put("android", JSONObject().apply {
-                    put("priority", "high")
+                    put("priority", "HIGH")
+                    // 안드로이드 notification 설정
+                    put("notification", JSONObject().apply {
+                        put("channel_id", "default")
+                        put("visibility", "PUBLIC")
+                        put("vibrate_timings", JSONArray().apply {
+                            put("1s")
+                            put("1s")
+                            put("1s")
+                        })
+                        put("default_vibrate_timings", false)
+                    })
                 })
             })
         }

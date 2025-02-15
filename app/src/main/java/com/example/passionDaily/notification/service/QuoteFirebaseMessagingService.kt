@@ -38,11 +38,13 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
     private fun handleIncomingMessage(remoteMessage: RemoteMessage) {
         Log.d("FCMService", "Message received from: ${remoteMessage.from}")
 
-        val category = remoteMessage.data["category"] ?: return
-        val quoteId = remoteMessage.data["quoteId"] ?: return
+        remoteMessage.notification?.let { notification ->
+            val category = remoteMessage.data["category"] ?: return
+            val quoteId = remoteMessage.data["quoteId"] ?: return
 
-        val pendingIntent = createPendingIntent(category, quoteId)
-        displayNotification(remoteMessage, pendingIntent)
+            val pendingIntent = createPendingIntent(category, quoteId)
+            displayNotification(remoteMessage, pendingIntent)
+        }
     }
 
     private fun createPendingIntent(category: String, quoteId: String): PendingIntent {
@@ -72,9 +74,12 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
             .setContentTitle(remoteMessage.notification?.title)
             .setContentText(remoteMessage.notification?.body)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setContentIntent(pendingIntent)
+            // 헤드업 알림
+            .setFullScreenIntent(pendingIntent, true)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setVibrate(longArrayOf(1000, 1000, 1000, 1000))
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
 
@@ -82,5 +87,7 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
             System.currentTimeMillis().toInt(),
             notificationBuilder.build()
         )
+        Log.d("FCMService", "Notification displayed with title: ${remoteMessage.notification?.title}")
+        Log.d("FCMService", "Channel importance: ${notificationManager.getNotificationChannel(CHANNEL_ID)?.importance}")
     }
 }
