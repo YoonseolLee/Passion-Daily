@@ -229,10 +229,8 @@ class SharedLogInViewModel @Inject constructor(
 
         when (e) {
             is GetCredentialCancellationException -> {
-                // 사용자의 의도적인 취소이므로 에러 메시지를 표시하지 않음
-                Log.d(TAG, "User cancelled the login process")
+                toastManager.showNetworkErrorToast()
             }
-
             is IOException -> toastManager.showNetworkErrorToast()
             is FirebaseAuthInvalidCredentialsException -> toastManager.showCredentialErrorToast()
             is IllegalArgumentException, is JSONException -> toastManager.showGeneralErrorToast()
