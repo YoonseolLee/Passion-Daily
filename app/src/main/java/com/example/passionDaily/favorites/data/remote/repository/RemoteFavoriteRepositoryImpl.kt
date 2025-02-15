@@ -36,9 +36,20 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
                 .collection("saved_quotes")
                 .document(documentId)
                 .set(favoriteData)
+                .await()
+
+            Log.d(TAG, "Successfully added favorite to Firestore")
         } catch (e: Exception) {
-            Log.e("Firestore", "Firestore 즐겨찾기 추가 실패", e)
-            throw e
+            Log.e(TAG, "Failed to add favorite to Firestore", e)
+            when (e) {
+                is FirebaseFirestoreException -> {
+                    if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
+                        throw IOException("Network error while accessing Firestore", e)
+                    }
+                    throw e
+                }
+                else -> throw e
+            }
         }
     }
 

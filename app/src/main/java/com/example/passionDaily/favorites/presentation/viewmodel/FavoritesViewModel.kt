@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -174,14 +175,29 @@ class FavoritesViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // 동시 실행 보장 (둘 중 하나가 실패하면 즉시 취소됨)
-                coroutineScope {
-                    launch { saveToLocalDatabase(currentUser, selectedCategory, currentQuote) }
-                    launch { addFavoriteToFirestore(currentUser, quoteId, selectedCategory) }
+                // Firestore에 먼저 저장 시도
+                favoritesSavingManager.addFavoriteToFirestore(
+                    currentUser,
+                    quoteId,
+                    selectedCategory
+                ).also {
+                    // Firestore 저장 성공 시 로컬에 저장
+                    favoritesSavingManager.saveToLocalDatabase(
+                        currentUser,
+                        selectedCategory,
+                        currentQuote
+                    )
+                    loadFavorites()
                 }
-                loadFavorites()
             } catch (e: Exception) {
-                handleError(e)
+                // 네트워크 에러나 타임아웃 발생 시
+                when (e) {
+                    is IOException, is TimeoutCancellationException -> {
+                        handleError(e)
+                        loadFavorites()
+                    }
+                    else -> handleError(e)
+                }
             }
         }
     }
@@ -200,55 +216,31 @@ class FavoritesViewModel @Inject constructor(
         )
     }
 
-    private suspend fun saveToLocalDatabase(
-        currentUser: FirebaseUser,
-        selectedCategory: QuoteCategory,
-        currentQuote: Quote
-    ) {
-        favoritesSavingManager.saveToLocalDatabase(currentUser, selectedCategory, currentQuote)
-    }
-
-    private fun addFavoriteToFirestore(
-        currentUser: FirebaseUser,
-        quoteId: String,
-        selectedCategory: QuoteCategory
-    ) {
-        viewModelScope.launch {
-            try {
-                favoritesSavingManager.addFavoriteToFirestore(
-                    currentUser,
-                    quoteId,
-                    selectedCategory
-                )
-            } catch (e: Exception) {
-                handleError(e)
-            }
-        }
-    }
-
     override suspend fun removeFavorite(quoteId: String, categoryId: Int) {
         val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
             ?: return
 
         viewModelScope.launch {
             try {
-                try {
-                    favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
-                } catch (e: IOException) {
-                    // 네트워크 에러 발생 시 처리
-                    handleError(e)
-                    return@launch
-                }
-
-                favoritesRemoveManager.deleteLocalFavorite(
-                    currentUser.uid,
-                    quoteId,
-                    actualCategoryId
-                )
-                loadFavorites()
+                favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
+                    .also {
+                        favoritesRemoveManager.deleteLocalFavorite(
+                            currentUser.uid,
+                            quoteId,
+                            actualCategoryId
+                        )
+                        loadFavorites()
+                    }
             } catch (e: Exception) {
-                Log.e(TAG, "Error removing favorite", e)
-                handleError(e)
+                // 네트워크 에러나 타임아웃 발생 시
+                when (e) {
+                    is IOException, is TimeoutCancellationException -> {
+                        handleError(e)
+                        // 즐겨찾기 상태를 원래대로 되돌리기 위해 목록 다시 로드
+                        loadFavorites()
+                    }
+                    else -> handleError(e)
+                }
             }
         }
     }

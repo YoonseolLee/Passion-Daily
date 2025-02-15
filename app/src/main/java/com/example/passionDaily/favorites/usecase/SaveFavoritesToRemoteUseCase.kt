@@ -5,6 +5,12 @@ import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteR
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.time.withTimeout
+import kotlinx.coroutines.withTimeout
+import java.io.IOException
+import java.net.UnknownHostException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -18,14 +24,28 @@ class SaveFavoritesToRemoteUseCase @Inject constructor(
         quoteId: String,
         selectedCategory: QuoteCategory
     ) {
-        val favoriteData = createFavoriteData(quoteId, selectedCategory)
-        val newDocumentId = generateNewDocumentId(currentUser, selectedCategory)
+        withTimeout(3000L) {
+            try {
+                val favoriteData = createFavoriteData(quoteId, selectedCategory)
+                val newDocumentId = generateNewDocumentId(currentUser, selectedCategory)
 
-        remoteFavoriteRepository.addFavoriteToFirestore(
-            currentUser,
-            newDocumentId,
-            favoriteData
-        )
+                remoteFavoriteRepository.addFavoriteToFirestore(
+                    currentUser,
+                    newDocumentId,
+                    favoriteData
+                )
+            } catch (e: Exception) {
+                when (e) {
+                    is TimeoutCancellationException ->
+                        throw IOException("Network timeout while accessing Firestore")
+
+                    is UnknownHostException ->
+                        throw IOException("Network error while accessing Firestore", e)
+
+                    else -> throw e
+                }
+            }
+        }
     }
 
     private fun createFavoriteData(
@@ -49,12 +69,20 @@ class SaveFavoritesToRemoteUseCase @Inject constructor(
         currentUser: FirebaseUser,
         selectedCategory: QuoteCategory
     ): String {
-        val category = selectedCategory.getLowercaseCategoryId()
-        val lastQuoteNumber = remoteFavoriteRepository.getLastQuoteNumber(currentUser, category)
-        val newQuoteNumber = String.format(
-            stringProvider.getString(R.string.quote_number_format),
-            lastQuoteNumber + 1
-        )
-        return stringProvider.getString(R.string.quote_id_prefix) + newQuoteNumber
+        return try {
+            val category = selectedCategory.getLowercaseCategoryId()
+            val lastQuoteNumber = remoteFavoriteRepository.getLastQuoteNumber(currentUser, category)
+            val newQuoteNumber = String.format(
+                stringProvider.getString(R.string.quote_number_format),
+                lastQuoteNumber + 1
+            )
+            stringProvider.getString(R.string.quote_id_prefix) + newQuoteNumber
+        } catch (e: Exception) {
+            when (e) {
+                is IOException -> throw e
+                is FirebaseFirestoreException -> throw e
+                else -> throw IllegalStateException("Failed to generate document ID", e)
+            }
+        }
     }
 }
