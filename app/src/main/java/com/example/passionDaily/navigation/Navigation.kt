@@ -22,6 +22,7 @@ import com.example.passionDaily.quote.presentation.screen.QuoteScreen
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
+import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
 
 @Composable
 fun SetupNavigation(
@@ -34,6 +35,7 @@ fun SetupNavigation(
     val quoteViewModel: QuoteViewModel = hiltViewModel()
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
     val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
+    val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -113,6 +115,7 @@ fun SetupNavigation(
         )
 
         settingsComposable(
+            settingsViewModel = settingsViewModel,
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToLogin = { screens.navigateToLogin() },

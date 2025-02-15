@@ -2,6 +2,7 @@ package com.example.passionDaily.di
 
 import android.content.Context
 import com.example.passionDaily.notification.service.QuoteNotificationService
+import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.Module
@@ -24,8 +25,9 @@ object NotificationModule {
     fun provideQuoteNotificationService(
         remoteConfig: FirebaseRemoteConfig,
         db: FirebaseFirestore,
-        context: Context
+        stringProvider: StringProvider,
+        context: Context,
     ): QuoteNotificationService {
-        return QuoteNotificationService(remoteConfig, db, context)
+        return QuoteNotificationService(remoteConfig, db, stringProvider, context)
     }
 }
