@@ -24,28 +24,14 @@ class SaveFavoritesToRemoteUseCase @Inject constructor(
         quoteId: String,
         selectedCategory: QuoteCategory
     ) {
-        withTimeout(3000L) {
-            try {
-                val favoriteData = createFavoriteData(quoteId, selectedCategory)
-                val newDocumentId = generateNewDocumentId(currentUser, selectedCategory)
+        val favoriteData = createFavoriteData(quoteId, selectedCategory)
+        val newDocumentId = generateNewDocumentId(currentUser, selectedCategory)
 
-                remoteFavoriteRepository.addFavoriteToFirestore(
-                    currentUser,
-                    newDocumentId,
-                    favoriteData
-                )
-            } catch (e: Exception) {
-                when (e) {
-                    is TimeoutCancellationException ->
-                        throw IOException("Network timeout while accessing Firestore")
-
-                    is UnknownHostException ->
-                        throw IOException("Network error while accessing Firestore", e)
-
-                    else -> throw e
-                }
-            }
-        }
+        remoteFavoriteRepository.addFavoriteToFirestore(
+            currentUser,
+            newDocumentId,
+            favoriteData
+        )
     }
 
     private fun createFavoriteData(

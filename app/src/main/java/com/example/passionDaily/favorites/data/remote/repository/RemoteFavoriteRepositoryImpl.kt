@@ -6,11 +6,9 @@ import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
@@ -31,23 +29,32 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
         favoriteData: HashMap<String, String>,
     ): Unit = withContext(Dispatchers.IO) {
         try {
-            firestore.collection("favorites")
-                .document(currentUser.uid)
-                .collection("saved_quotes")
-                .document(documentId)
-                .set(favoriteData)
-                .await()
+            // 먼저 문서 존재 여부 확인
+            withTimeout(3000L) {
+                val docRef = firestore.collection("favorites")
+                    .document(currentUser.uid)
+                    .collection("saved_quotes")
+                    .document(documentId)
+                    .get()
+                    .await()  // 여기서 네트워크 에러가 발생하면 바로 UnknownHostException
 
-            Log.d(TAG, "Successfully added favorite to Firestore")
+                firestore.collection("favorites")
+                    .document(currentUser.uid)
+                    .collection("saved_quotes")
+                    .document(documentId)
+                    .set(favoriteData)
+                    .await()
+
+                Log.d(TAG, "Successfully added favorite to Firestore")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to add favorite to Firestore", e)
-            when (e) {
-                is FirebaseFirestoreException -> {
-                    if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
-                        throw IOException("Network error while accessing Firestore", e)
-                    }
-                    throw e
-                }
+            Log.e(TAG, "Failed to delete favorite from Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+
                 else -> throw e
             }
         }
@@ -71,50 +78,42 @@ class RemoteFavoriteRepositoryImpl @Inject constructor(
             )
 
             withTimeout(3000L) {
-                try {
-                    val quotesRef = firestore.collection("favorites")
+                val quotesRef = firestore.collection("favorites")
+                    .document(currentUser.uid)
+                    .collection("saved_quotes")
+                    .whereEqualTo("quoteId", quoteId)
+                    .whereEqualTo("category", categoryEnglishName)
+                    .get()
+                    .await()
+
+                if (quotesRef.isEmpty) {
+                    Log.w(
+                        TAG,
+                        "No document found with quoteId: $quoteId and category: $categoryEnglishName for user: ${currentUser.uid}"
+                    )
+                    throw IOException("Unable to find document. This might be due to network issues.")
+                }
+
+                // 찾은 문서 삭제
+                for (document in quotesRef.documents) {
+                    Log.d(TAG, "Deleting document with id: ${document.id}")
+                    firestore.collection("favorites")
                         .document(currentUser.uid)
                         .collection("saved_quotes")
-                        .whereEqualTo("quoteId", quoteId)
-                        .whereEqualTo("category", categoryEnglishName)
-                        .get()
+                        .document(document.id)
+                        .delete()
                         .await()
-
-                    if (quotesRef.isEmpty) {
-                        Log.w(
-                            TAG,
-                            "No document found with quoteId: $quoteId and category: $categoryEnglishName for user: ${currentUser.uid}"
-                        )
-                        throw IOException("Unable to find document. This might be due to network issues.")
-                    }
-
-                    // 찾은 문서 삭제
-                    for (document in quotesRef.documents) {
-                        Log.d(TAG, "Deleting document with id: ${document.id}")
-                        firestore.collection("favorites")
-                            .document(currentUser.uid)
-                            .collection("saved_quotes")
-                            .document(document.id)
-                            .delete()
-                            .await()
-                    }
-
-                    Log.d(TAG, "Successfully deleted favorite(s) from Firestore")
-                } catch (e: Exception) {
-                    when (e) {
-                        is UnknownHostException, is IOException ->
-                            throw IOException("Network error while accessing Firestore", e)
-                        else -> throw e
-                    }
                 }
+                Log.d(TAG, "Successfully deleted favorite(s) from Firestore")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete favorite from Firestore", e)
-            when (e) {
-                is TimeoutCancellationException ->
-                    throw IOException("Network timeout while accessing Firestore")
-                is UnknownHostException ->
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
                     throw IOException("Network error while accessing Firestore", e)
+
                 else -> throw e
             }
         }

@@ -194,6 +194,7 @@ class FavoritesViewModel @Inject constructor(
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
+                        Log.d(TAG, "e: ${e.message}")
                         loadFavorites()
                     }
                     else -> handleError(e)

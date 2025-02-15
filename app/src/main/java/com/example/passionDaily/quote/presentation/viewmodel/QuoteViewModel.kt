@@ -70,7 +70,6 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun loadQuotes(category: QuoteCategory) {
-//        if (isLoading.value) return
         viewModelScope.launch {
             try {
                 quoteStateHolder.updateIsQuoteLoading(true)

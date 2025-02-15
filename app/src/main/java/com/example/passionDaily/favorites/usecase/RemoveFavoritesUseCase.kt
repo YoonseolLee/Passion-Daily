@@ -35,10 +35,7 @@ class RemoveFavoritesUseCase @Inject constructor(
         withContext(Dispatchers.IO) {
             deleteFavorite(userId, quoteId, categoryId)
 
-            val remainingFavorites = getRemainingFavorites(quoteId, categoryId)
-//            if (remainingFavorites.isEmpty()) {
-//                deleteQuoteIfNoFavorites(quoteId, categoryId)
-//            }
+            getRemainingFavorites(quoteId, categoryId)
         }
 
     private suspend fun deleteFavorite(userId: String, quoteId: String, categoryId: Int) {
