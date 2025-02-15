@@ -70,35 +70,17 @@ fun QuoteScreen(
         Log.d("LoginScreen", "Current AuthState: ${quoteViewModel.authState.value}")
 
         if (quotes.isEmpty()) {
-            quoteViewModel.loadInitialQuotes(selectedCategory)
+            quoteViewModel.loadQuotes(selectedCategory)
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BackgroundImage(imageUrl = currentQuote?.imageUrl)
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
-        ) {
-            LeftArrow(onClick = {
-                slideDirection = AnimatedContentTransitionScope.SlideDirection.End
-                quoteViewModel.previousQuote()
-            })
+        // 백그라운드 이미지는 현재 명언이 있을 때만 표시
+        currentQuote?.let {
+            BackgroundImage(imageUrl = it.imageUrl)
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 16.dp)
-        ) {
-            RightArrow(onClick = {
-                slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
-                quoteViewModel.nextQuote()
-            })
-        }
-
+        // 로딩 중이거나 명언이 없을 때도 카테고리 선택 버튼 표시
         Row(
             modifier = Modifier
                 .offset(y = 110.dp)
@@ -110,76 +92,109 @@ fun QuoteScreen(
             )
         }
 
-        if (isQuoteLoading || currentQuote == null) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .testTag("LoadingIndicator")
-                    .align(Alignment.Center),
-                color = PrimaryColor
-            )
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
-                AnimatedContent(
-                    targetState = currentQuote,
-                    transitionSpec = {
-                        val direction = slideDirection
-                        (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
-                                fadeIn(animationSpec = FadeAnimationSpec)) with
-                                (slideOutOfContainer(
-                                    direction,
-                                    animationSpec = ContentAnimationSpec
-                                ) +
-                                        fadeOut(animationSpec = FadeAnimationSpec))
+        // 메인 콘텐츠 영역
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 80.dp)  // Navigation Bar 공간 확보
+        ) {
+            if (isQuoteLoading || currentQuote == null) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .testTag("LoadingIndicator")
+                        .align(Alignment.Center),
+                    color = PrimaryColor
+                )
+            } else {
+                // 화살표 버튼
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 16.dp)
+                ) {
+                    LeftArrow(onClick = {
+                        slideDirection = AnimatedContentTransitionScope.SlideDirection.End
+                        quoteViewModel.previousQuote()
+                    })
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 16.dp)
+                ) {
+                    RightArrow(onClick = {
+                        slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
+                        quoteViewModel.nextQuote()
+                    })
+                }
+
+                // 명언 표시
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    AnimatedContent(
+                        targetState = currentQuote,
+                        transitionSpec = {
+                            val direction = slideDirection
+                            (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
+                                    fadeIn(animationSpec = FadeAnimationSpec)) with
+                                    (slideOutOfContainer(
+                                        direction,
+                                        animationSpec = ContentAnimationSpec
+                                    ) +
+                                            fadeOut(animationSpec = FadeAnimationSpec))
+                        }
+                    ) { quote ->
+                        quote?.let {
+                            QuoteAndPerson(
+                                quote = it.text,
+                                author = it.person
+                            )
+                        }
                     }
-                ) { quote ->
-                    quote?.let {
-                        QuoteAndPerson(
-                            quote = it.text,
-                            author = it.person
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                // 버튼들
+                Row(
+                    modifier = Modifier
+                        .offset(y = -172.dp)
+                        .align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    currentQuote?.let { quote ->
+                        Buttons(
+                            quoteViewModel = quoteViewModel,
+                            favoritesViewModel = favoritesViewModel,
+                            currentQuoteId = quote.id,
+                            category = selectedCategory,
+                            onRequireLogin = onNavigateToLogin,
+                            quoteDisplay = quote.toQuoteDisplay()
                         )
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
             }
+        }
 
-            Row(
-                modifier = Modifier
-                    .offset(y = -172.dp)
-                    .align(Alignment.BottomCenter),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                currentQuote?.let { quote ->
-                    Buttons(
-                        quoteViewModel = quoteViewModel,
-                        favoritesViewModel = favoritesViewModel,
-                        currentQuoteId = quote.id,
-                        category = selectedCategory,
-                        onRequireLogin = onNavigateToLogin,
-                        quoteDisplay = quote.toQuoteDisplay()
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-            ) {
-                CommonNavigationBar(
-                    currentScreen = currentScreen,
-                    onNavigateToFavorites = onNavigateToFavorites,
-                    onNavigateToQuote = onNavigateToQuote,
-                    onNavigateToSettings = onNavigateToSettings
-                )
-            }
+        // Navigation Bar는 항상 표시
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+        ) {
+            CommonNavigationBar(
+                currentScreen = currentScreen,
+                onNavigateToFavorites = onNavigateToFavorites,
+                onNavigateToQuote = onNavigateToQuote,
+                onNavigateToSettings = onNavigateToSettings
+            )
         }
     }
 }

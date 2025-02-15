@@ -5,6 +5,5 @@ import com.example.passionDaily.quotecategory.model.QuoteCategory
 
 interface QuoteLoadingActions : QuoteViewModelActions {
     override fun loadQuotes(category: QuoteCategory)
-    override fun loadInitialQuotes(category: QuoteCategory)
     override fun navigateToQuoteWithCategory(quoteId: String, category: String)
 }

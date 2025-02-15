@@ -70,11 +70,10 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun loadQuotes(category: QuoteCategory) {
-        if (isLoading.value) return
-
+//        if (isLoading.value) return
         viewModelScope.launch {
             try {
-                quoteLoadingManager.startQuoteLoading()
+                quoteStateHolder.updateIsQuoteLoading(true)
 
                 val result = withTimeout(10_000L) {
                     quoteLoadingManager.fetchQuotesByCategory(
@@ -170,22 +169,22 @@ class QuoteViewModel @Inject constructor(
         quoteStateHolder.updateIsQuoteLoading(false)
     }
 
-    override fun loadInitialQuotes(category: QuoteCategory) {
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.Main) {
-                    quoteLoadingManager.startQuoteLoading()
-                }
-                category?.let {
-                    loadQuotes(it)
-                }
-            } catch (e: Exception) {
-                handleError(e)
-            } finally {
-                quoteStateHolder.updateIsQuoteLoading(false)
-            }
-        }
-    }
+//    override fun loadInitialQuotes(category: QuoteCategory) {
+//        viewModelScope.launch {
+//            try {
+//                withContext(Dispatchers.Main) {
+//                    quoteLoadingManager.startQuoteLoading()
+//                }
+//                category?.let {
+//                    loadQuotes(it)
+//                }
+//            } catch (e: Exception) {
+//                handleError(e)
+//            } finally {
+//                quoteStateHolder.updateIsQuoteLoading(false)
+//            }
+//        }
+//    }
 
     override fun previousQuote() {
         if (_currentQuoteIndex.value == 0 && hasReachedEnd.value) {
