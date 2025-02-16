@@ -48,7 +48,8 @@ class SaveNotificationUseCaseTest {
         coEvery { localUserRepository.updateNotificationTimeToRoom(any(), any()) } just Runs
 
         // when
-        saveNotificationUseCase.updateNotificationTime("test_id", time)
+        saveNotificationUseCase.updateNotificationTimeToFirestore("test_id", time)
+        saveNotificationUseCase.updateNotificationTimeToRoom("test_id", time)
 
         // then
         coVerifyOrder {

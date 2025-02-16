@@ -2,11 +2,12 @@ package com.example.passionDaily.notification.manager
 
 import android.content.Context
 import android.util.Log
-import com.example.passionDaily.constants.ManagerConstants.FCMNotification.FCM_URL
+import com.example.passionDaily.R
 import com.example.passionDaily.constants.ManagerConstants.FCMNotification.TAG
 import com.example.passionDaily.notification.model.QuoteNotificationMessageDTO
 import com.example.passionDaily.notification.service.QuoteNotificationService
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
+import com.example.passionDaily.resources.StringProvider
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.firestore.DocumentSnapshot
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,7 +33,8 @@ import javax.inject.Singleton
 @Singleton
 class FCMNotificationManagerImpl @Inject constructor(
     private val fcmService: QuoteNotificationService,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val stringProvider: StringProvider,
 ) : FCMNotificationManager {
 
     private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -192,7 +194,7 @@ class FCMNotificationManagerImpl @Inject constructor(
 
     private fun buildFcmRequest(json: JSONObject, accessToken: String): Request {
         return Request.Builder()
-            .url(FCM_URL)
+            .url(stringProvider.getString(R.string.FCM_URL))
             .addHeader("Authorization", "Bearer $accessToken")
             .addHeader("Content-Type", "application/json")
             .post(json.toString().toRequestBody("application/json".toMediaType()))

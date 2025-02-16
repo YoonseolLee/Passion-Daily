@@ -13,11 +13,6 @@ class SaveNotificationUseCase @Inject constructor(
     private val localUserRepository: LocalUserRepository,
     private val stringProvider: StringProvider
 ) {
-    suspend fun updateNotificationTime(userId: String, time: LocalTime) {
-        val timeString = time.format(DateTimeFormatter.ofPattern(stringProvider.getString(R.string.hour_pattern)))
-        remoteUserRepository.updateNotificationTimeToFirestore(userId, timeString)
-        localUserRepository.updateNotificationTimeToRoom(userId, timeString)
-    }
 
     suspend fun updateNotificationTimeToFirestore(userId: String, time: LocalTime) {
         val timeString = parseTime(time)

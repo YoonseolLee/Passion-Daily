@@ -26,7 +26,6 @@ class RemoteFavoriteRepositoryImplTest {
     private lateinit var querySnapshot: QuerySnapshot
     private lateinit var documentSnapshot: DocumentSnapshot
 
-    // mockTask 헬퍼 함수
     private inline fun <reified T> mockTask(result: T?, exception: Exception? = null): Task<T> {
         val task: Task<T> = mockk(relaxed = true)
         every { task.isComplete } returns true
@@ -48,72 +47,6 @@ class RemoteFavoriteRepositoryImplTest {
         repository = spyk(RemoteFavoriteRepositoryImpl(firestore))
 
         every { currentUser.uid } returns "testUserId"
-    }
-
-    @Test
-    fun `즐겨찾기를 Firestore에 추가한다`() = mainCoroutineRule.runTest {
-        // Given
-        val documentId = "love_quote_000001"
-        val favoriteData = hashMapOf(
-            "quoteId" to "123",
-            "category" to "love"
-        )
-
-        every {
-            firestore.collection("favorites")
-                .document("testUserId")
-                .collection("saved_quotes")
-                .document(documentId)
-        } returns documentReference
-
-        every { documentReference.set(favoriteData) } returns mockTask(null)
-
-        // When
-        repository.addFavoriteToFirestore(currentUser, documentId, favoriteData)
-
-        // Then
-        verify {
-            firestore.collection("favorites")
-            documentReference.set(favoriteData)
-        }
-    }
-
-    @Test
-    fun `Firestore에서 즐겨찾기를 삭제한다`() = mainCoroutineRule.runTest {
-        // Given
-        val quoteId = "quote1"
-        val categoryId = 1
-        val documents = listOf(mockk<QueryDocumentSnapshot>(relaxed = true))
-
-        every {
-            firestore.collection(any())
-                .document(any())
-                .collection(any())
-                .whereEqualTo(any<String>(), any())
-                .whereEqualTo(any<String>(), any())
-                .get()
-        } returns mockTask(querySnapshot)
-
-        every { querySnapshot.isEmpty } returns false
-        every { querySnapshot.documents } returns documents
-        every { documents[0].id } returns "documentId"
-
-        every {
-            firestore.collection(any())
-                .document(any())
-                .collection(any())
-                .document(any())
-                .delete()
-        } returns mockTask(null)
-
-        // When
-        repository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
-
-        // Then
-        verify {
-            firestore.collection(any())
-            querySnapshot.documents
-        }
     }
 
     @Test

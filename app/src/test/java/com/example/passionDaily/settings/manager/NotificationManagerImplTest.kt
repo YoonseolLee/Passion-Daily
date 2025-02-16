@@ -5,7 +5,6 @@ import com.example.passionDaily.settings.domain.usecase.ParseTimeUseCase
 import com.example.passionDaily.settings.domain.usecase.SaveNotificationUseCase
 import com.example.passionDaily.settings.domain.usecase.UpdateNotificationUseCase
 import com.example.passionDaily.util.MainCoroutineRule
-import com.google.common.base.Verify.verify
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coVerify
 import io.mockk.every
@@ -41,10 +40,13 @@ class NotificationManagerImplTest {
         val enabled = true
 
         // when
-        notificationManager.updateNotificationSettings(userId, enabled)
+        notificationManager.updateNotificationSettingsToFirestore(userId, enabled)
+        notificationManager.updateNotificationSettingsToRoom(userId, enabled)
+
 
         // then
-        coVerify { updateNotificationUseCase.updateNotificationSettings(userId, enabled) }
+        coVerify { updateNotificationUseCase.updateNotificationSettingsToFirestore(userId, enabled) }
+        coVerify { updateNotificationUseCase.updateNotificationSettingsToRoom(userId, enabled) }
     }
 
     @Test
@@ -92,9 +94,11 @@ class NotificationManagerImplTest {
         val time = LocalTime.of(9, 0)
 
         // when
-        notificationManager.updateNotificationTime(userId, time)
+        notificationManager.updateNotificationTimeToFirestore(userId, time)
+        notificationManager.updateNotificationTimeToRoom(userId, time)
 
         // then
-        coVerify { saveNotificationUseCase.updateNotificationTime(userId, time) }
+        coVerify { saveNotificationUseCase.updateNotificationTimeToFirestore(userId, time) }
+        coVerify { saveNotificationUseCase.updateNotificationTimeToFirestore(userId, time) }
     }
 }

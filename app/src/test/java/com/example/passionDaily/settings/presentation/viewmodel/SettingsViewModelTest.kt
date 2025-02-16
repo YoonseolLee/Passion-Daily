@@ -7,6 +7,8 @@ import com.example.passionDaily.util.MainCoroutineRule
 import com.google.firebase.auth.FirebaseUser
 import android.content.Intent
 import com.example.passionDaily.login.manager.AuthenticationManager
+import com.example.passionDaily.login.manager.UserConsentManager
+import com.example.passionDaily.login.stateholder.LoginStateHolder
 import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.settings.manager.EmailManager
@@ -48,6 +50,8 @@ class SettingsViewModelTest {
     private val toastManager = mockk<ToastManager>()
     private val emailManager = mockk<EmailManager>()
     private val settingsStateHolder = mockk<SettingsStateHolder>()
+    private val loginStateHolder = mockk<LoginStateHolder>()
+    private val userConsentManager = mockk<UserConsentManager>()
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -89,7 +93,9 @@ class SettingsViewModelTest {
             authStateHolder,
             toastManager,
             emailManager,
-            settingsStateHolder
+            settingsStateHolder,
+            loginStateHolder,
+            userConsentManager
         )
     }
 
@@ -104,7 +110,8 @@ class SettingsViewModelTest {
         val currentTime = LocalTime.of(8, 0)
         every { settingsStateHolder.notificationTime.value } returns currentTime
 
-        coEvery { notificationManager.updateNotificationSettings(any(), true) } just Runs
+        coEvery { notificationManager.updateNotificationSettingsToFirestore(any(), true) } just Runs
+        coEvery { notificationManager.updateNotificationSettingsToRoom(any(), true) } just Runs
         every { notificationManager.scheduleNotification(any(), any()) } just Runs
 
         // When
@@ -113,7 +120,8 @@ class SettingsViewModelTest {
 
         // Then
         coVerify {
-            notificationManager.updateNotificationSettings("test_uid", true)
+            notificationManager.updateNotificationSettingsToFirestore("test_uid", true)
+            notificationManager.updateNotificationSettingsToRoom("test_uid", true)
             notificationManager.scheduleNotification(8, 0)  // 8시로 수정
             settingsStateHolder.updateNotificationEnabled(true)
         }
@@ -127,7 +135,8 @@ class SettingsViewModelTest {
         }
         every { Firebase.auth.currentUser } returns mockUser
 
-        coEvery { notificationManager.updateNotificationSettings(any(), false) } just Runs
+        coEvery { notificationManager.updateNotificationSettingsToFirestore(any(), false) } just Runs
+        coEvery { notificationManager.updateNotificationSettingsToRoom(any(), false) } just Runs
         every { notificationManager.cancelExistingAlarm() } just Runs
 
         // When
@@ -204,7 +213,8 @@ class SettingsViewModelTest {
         every { Firebase.auth.currentUser } returns mockUser
 
         coEvery {
-            notificationManager.updateNotificationSettings(any(), any())
+            notificationManager.updateNotificationSettingsToFirestore(any(), any())
+            notificationManager.updateNotificationSettingsToRoom(any(), any())
         } throws Exception("Network error")
 
         coEvery { toastManager.showGeneralErrorToast() } just Runs

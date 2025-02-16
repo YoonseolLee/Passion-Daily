@@ -20,6 +20,7 @@ import com.google.auth.oauth2.GoogleCredentials
 import okhttp3.OkHttpClient
 import okhttp3.Response
 import java.io.InputStream
+import java.util.Calendar
 
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
@@ -77,6 +78,12 @@ class FCMNotificationManagerImplTest {
             person = "Test Person"
         )
 
+        // 현재 날짜에 맞는 quote 설정
+        val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+        every { fcmService.monthlyQuotes } returns MutableStateFlow(
+            listOf(Triple("test_category", "test_quote_id", today))
+        )
+
         val mockResponse = mockk<Response> {
             every { isSuccessful } returns true
             every { body } returns mockk {
@@ -84,6 +91,9 @@ class FCMNotificationManagerImplTest {
             }
             every { close() } just Runs
         }
+
+        every { stringProvider.getString(any()) } returns
+                "https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send"
 
         mockkConstructor(OkHttpClient::class)
         every { anyConstructed<OkHttpClient>().newCall(any()).execute() } returns mockResponse

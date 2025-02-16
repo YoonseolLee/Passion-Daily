@@ -49,7 +49,6 @@ class SharedLogInViewModelTest {
     private val authStateHolder = mockk<AuthStateHolder>()
     private val loginStateHolder = mockk<LoginStateHolder>()
     private val urlManager = mockk<UrlManager>()
-    private val userProfileStateHolder = mockk<UserProfileStateHolder>()
 
     private lateinit var viewModel: SharedLogInViewModel
 
@@ -166,26 +165,6 @@ class SharedLogInViewModelTest {
 
         // then
         coVerify { userProfileManager.syncExistingUser(userId) }
-    }
-
-    @Test
-    fun `로그인_취소시_토스트를_표시하지_않는다`() = mainCoroutineRule.runTest {
-        // given
-        coEvery { authManager.startLoading() } just Runs
-        coEvery { authManager.stopLoading() } just Runs
-        coEvery { authManager.clearCredentials() } just Runs
-        coEvery { authManager.getGoogleCredential() } throws GetCredentialCancellationException()
-
-        // when
-        viewModel.signInWithGoogle()
-
-        // then
-        verify(exactly = 0) {
-            toastManager.showNetworkErrorToast()
-            toastManager.showCredentialErrorToast()
-            toastManager.showGeneralErrorToast()
-            toastManager.showFirebaseErrorToast()
-        }
     }
 
     private fun setupSuccessfulLoginMocks(

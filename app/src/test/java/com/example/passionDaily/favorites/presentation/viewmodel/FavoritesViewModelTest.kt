@@ -17,8 +17,12 @@ import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
 import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
+import com.example.passionDaily.login.state.AuthState
+import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 
 @ExperimentalCoroutinesApi
 class FavoritesViewModelTest {
@@ -36,10 +40,13 @@ class FavoritesViewModelTest {
     private lateinit var favoritesRemoveManager: FavoritesRemoveManager
     private lateinit var toastManager: ToastManager
     private lateinit var mockUser: FirebaseUser
+    private lateinit var authStateHolder: AuthStateHolder
+
 
     @Before
     fun setUp() {
         quoteStateHolder = mockk(relaxed = true)
+        authStateHolder = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle()
         firebaseAuth = mockk(relaxed = true)
         favoritesStateHolder = FavoritesStateHolderImpl()
@@ -51,6 +58,7 @@ class FavoritesViewModelTest {
 
         every { firebaseAuth.currentUser } returns mockUser
         every { mockUser.uid } returns "testUserId"
+        every { authStateHolder.authState } returns MutableStateFlow(AuthState.Authenticated("testUserId"))
 
         viewModel = FavoritesViewModel(
             quoteStateHolder = quoteStateHolder,
@@ -60,7 +68,8 @@ class FavoritesViewModelTest {
             favoritesLoadingManager = favoritesLoadingManager,
             favoritesSavingManager = favoritesSavingManager,
             favoritesRemoveManager = favoritesRemoveManager,
-            toastManager = toastManager
+            toastManager = toastManager,
+            authStateHolder = authStateHolder,
         )
     }
 
@@ -146,8 +155,8 @@ class FavoritesViewModelTest {
         // then
         coVerifySequence {
             favoritesRemoveManager.getRequiredDataForRemove(firebaseAuth, categoryId)
-            favoritesRemoveManager.deleteLocalFavorite(eq(userId), eq(quoteId), eq(categoryId))
             favoritesRemoveManager.deleteFavoriteFromFirestore(mockUser, quoteId, categoryId)
+            favoritesRemoveManager.deleteLocalFavorite(eq(userId), eq(quoteId), eq(categoryId))
         }
     }
 

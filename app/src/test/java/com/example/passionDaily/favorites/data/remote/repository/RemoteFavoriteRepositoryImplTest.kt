@@ -7,7 +7,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -60,12 +59,17 @@ class RemoteFavoriteRepositoryImplTest {
             "category" to "love"
         )
 
+        val mockDocument = mockk<DocumentSnapshot>()
+        every { mockDocument.exists() } returns false
+
         every {
             firestore.collection("favorites")
                 .document("testUserId")
                 .collection("saved_quotes")
                 .document(documentId)
         } returns documentReference
+
+        every { documentReference.get() } returns mockTask(mockDocument)
 
         every { documentReference.set(favoriteData) } returns mockTask(null)
 
@@ -74,7 +78,7 @@ class RemoteFavoriteRepositoryImplTest {
 
         // Then
         verify {
-            firestore.collection("favorites")
+            documentReference.get()
             documentReference.set(favoriteData)
         }
     }

@@ -41,7 +41,8 @@ class UpdateNotificationUseCaseTest {
         coEvery { localUserRepository.updateNotificationSettingsToRoom(any(), any()) } just Runs
 
         // when
-        updateNotificationUseCase.updateNotificationSettings("test_id", true)
+        updateNotificationUseCase.updateNotificationSettingsToFirestore("test_id", true)
+        updateNotificationUseCase.updateNotificationSettingsToRoom("test_id", true)
 
         // then
         coVerifyOrder {

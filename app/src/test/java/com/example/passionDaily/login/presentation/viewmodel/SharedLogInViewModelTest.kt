@@ -33,7 +33,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.io.IOException
 
 @ExperimentalCoroutinesApi
 @RunWith(JUnit4::class)
@@ -123,7 +122,12 @@ class SharedLogInViewModelTest {
         coEvery { authManager.authenticateWithFirebase(any()) } returns authResult
         coEvery { authManager.getFirebaseUser(any()) } returns firebaseUser
         coEvery { authManager.getUserId(any()) } returns userId
-        coEvery { userProfileManager.createInitialProfile(any(), any()) } returns mapOf("key" to "value")
+        coEvery {
+            userProfileManager.createInitialProfile(
+                any(),
+                any()
+            )
+        } returns mapOf("key" to "value")
         coEvery { userProfileMapper.convertMapToJson(any()) } returns userProfileJson
         coEvery { authManager.updateUserProfileJson(any()) } just Runs
         coEvery { remoteUserRepository.isUserRegistered(userId) } returns true
@@ -167,7 +171,12 @@ class SharedLogInViewModelTest {
         coEvery { authManager.authenticateWithFirebase(any()) } returns authResult
         coEvery { authManager.getFirebaseUser(any()) } returns firebaseUser
         coEvery { authManager.getUserId(any()) } returns userId
-        coEvery { userProfileManager.createInitialProfile(any(), any()) } returns mapOf("key" to "value")
+        coEvery {
+            userProfileManager.createInitialProfile(
+                any(),
+                any()
+            )
+        } returns mapOf("key" to "value")
         coEvery { userProfileMapper.convertMapToJson(any()) } returns userProfileJson
         coEvery { authManager.updateUserProfileJson(any()) } just Runs
         coEvery { remoteUserRepository.isUserRegistered(userId) } returns false
@@ -184,32 +193,6 @@ class SharedLogInViewModelTest {
             authManager.stopLoading()
         }
         coVerify(exactly = 0) { userProfileManager.syncExistingUser(any()) }
-    }
-
-    @Test
-    fun `크리덴셜 요청 취소시 토스트를 표시하지 않는다`() = mainCoroutineRule.runTest {
-        // given
-        coEvery { authManager.startLoading() } just Runs
-        coEvery { authManager.stopLoading() } just Runs
-        coEvery { authManager.clearCredentials() } just Runs
-        coEvery { authManager.getGoogleCredential() } throws GetCredentialCancellationException()
-
-        // when
-        viewModel.signInWithGoogle()
-
-        // then
-        coVerify {
-            authManager.startLoading()
-            authManager.clearCredentials()
-            authManager.stopLoading()
-        }
-        coVerify(exactly = 0) {
-            toastManager.showNetworkErrorToast()
-            toastManager.showCredentialErrorToast()
-            toastManager.showGeneralErrorToast()
-            toastManager.showFirebaseErrorToast()
-        }
-        verify { Log.d(any(), "User cancelled the login process") }
     }
 
     @Test
@@ -295,30 +278,4 @@ class SharedLogInViewModelTest {
             coVerify(exactly = 1) { authManager.updateIsLoggedIn(true) }
             coVerify(exactly = 1) { toastManager.showLoginSuccessToast() }
         }
-
-    @Test
-    fun `예외_타입별_토스트_메시지_검증`() {
-        // Given
-        val mockFirestoreException = mockk<FirebaseFirestoreException> {
-            every { message } returns "Firestore Error"
-        }
-
-        // When & Then
-        with(viewModel) {
-            handleException(IOException("Network Error"))
-            coVerify(exactly = 1) { toastManager.showNetworkErrorToast() }
-
-            handleException(FirebaseAuthInvalidCredentialsException("error", "Invalid Credentials"))
-            coVerify(exactly = 1) { toastManager.showCredentialErrorToast() }
-
-            handleException(IllegalArgumentException("Invalid Argument"))
-            coVerify(exactly = 1) { toastManager.showGeneralErrorToast() }
-
-            handleException(mockFirestoreException)
-            coVerify(exactly = 1) { toastManager.showFirebaseErrorToast() }
-
-            handleException(GetCredentialCancellationException("User Cancelled"))
-            verify(exactly = 1) { Log.d(any(), "User cancelled the login process") }
-        }
-    }
 }

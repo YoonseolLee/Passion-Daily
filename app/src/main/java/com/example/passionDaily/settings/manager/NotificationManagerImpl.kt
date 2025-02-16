@@ -21,6 +21,14 @@ class NotificationManagerImpl @Inject constructor(
         updateNotificationUseCase.updateNotificationSettingsToRoom(userId, enabled)
     }
 
+    override suspend fun updateNotificationTimeToFirestore(userId: String, time: LocalTime) {
+        saveNotificationUseCase.updateNotificationTimeToFirestore(userId, time)
+    }
+
+    override suspend fun updateNotificationTimeToRoom(userId: String, time: LocalTime) {
+        saveNotificationUseCase.updateNotificationTimeToRoom(userId, time)
+    }
+
     override fun scheduleNotification(hour: Int, minute: Int) {
         scheduleAlarmUseCase.scheduleNotification(hour, minute)
     }
@@ -31,13 +39,5 @@ class NotificationManagerImpl @Inject constructor(
 
     override fun parseTime(timeStr: String): LocalTime {
         return parseTimeUseCase.parseTime(timeStr)
-    }
-
-    override suspend fun updateNotificationTimeToFirestore(userId: String, time: LocalTime) {
-        saveNotificationUseCase.updateNotificationTimeToFirestore(userId, time)
-    }
-
-    override suspend fun updateNotificationTimeToRoom(userId: String, time: LocalTime) {
-        saveNotificationUseCase.updateNotificationTimeToRoom(userId, time)
     }
 }

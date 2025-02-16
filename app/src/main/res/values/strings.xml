@@ -54,6 +54,9 @@
     <string name="quote_id_prefix">quote_</string>
     <string name="datetime_format">yyyy-MM-dd HH:mm:ss</string>
     <string name="daily_quote">오늘의 명언</string>
+    <string name="text">text</string>
+    <string name="person">person</string>
+
 
     <!-- 즐겨찾기 및 알림 관련 -->
     <string name="favorites">즐겨찾기</string>
@@ -64,6 +67,8 @@
     <string name="notification_time_setting">알림 시간 설정</string>
     <string name="default_notification_time">08:00</string>
     <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
+    <string name="todays_quote">오늘의 명언</string>
+    <string name="FCM_URL">https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send</string>
 
     <!-- 홈 및 설정 관련 -->
     <string name="home">홈</string>
@@ -78,6 +83,7 @@
     <string name="notification_permission_message">알림을 받으려면 설정에서 알림 권한을 허용해주세요.</string>
     <string name="go_to_settings">설정으로 이동</string>
     <string name="cancel">취소</string>
+    <string name="monthly_quotes">monthly_quotes</string>
 
     <!-- 회원 관리 추가 UI -->
     <string name="send_suggestion">제안 보내기</string>
@@ -98,6 +104,9 @@
 
     <!-- API 및 기타 -->
     <string name="service_account_json">service-account.json</string>
+    <string name="default_quotes.json">default_quotes.json</string>
+    <string name="remote_config">Remote Config</string>
+    <string name="default_string">Default</string>
     <string name="google_api_url">https://www.googleapis.com/auth/firebase.messaging</string>
 
     <!-- 기타 -->

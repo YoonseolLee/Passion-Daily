@@ -69,10 +69,8 @@ class UserSettingsManagerTest {
         // Given
         val userId = "testUserId"
         coEvery { remoteUserRepository.deleteUserDataFromFirestore(userId) } just Runs
-        coEvery { localUserRepository.deleteUser(userId) } just Runs
         coEvery { localFavoriteRepository.deleteAllFavoritesByUserId(userId) } just Runs
-        coEvery { localQuoteRepository.deleteAllQuotes() } just Runs
-        coEvery { localQuoteCategoryRepository.deleteAllCategories() } just Runs
+        coEvery { localUserRepository.deleteUser(userId) } just Runs
 
         // When
         userSettingsManager.deleteUserData(userId)
@@ -80,10 +78,8 @@ class UserSettingsManagerTest {
         // Then
         coVerifySequence {
             remoteUserRepository.deleteUserDataFromFirestore(userId)
-            localUserRepository.deleteUser(userId)
             localFavoriteRepository.deleteAllFavoritesByUserId(userId)
-            localQuoteRepository.deleteAllQuotes()
-            localQuoteCategoryRepository.deleteAllCategories()
+            localUserRepository.deleteUser(userId)
         }
     }
 }

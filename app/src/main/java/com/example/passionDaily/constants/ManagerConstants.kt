@@ -6,22 +6,14 @@ object ManagerConstants {
         const val PAGE_SIZE = 20
     }
 
-    object UserProfile {
-        const val TAG = "UserProfileManager"
-    }
-
     object UserConsent {
         const val TAG = "UserConsentManager"
     }
 
-    object UserSettings {
-        const val TAG = "UserSettingsManager"
-    }
-
     object FCMNotification {
         const val TAG = "FCMNotificationManager"
-        const val FCM_URL =
-            "https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send"
+//        const val FCM_URL =
+//            "https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send"
     }
 
     object DailyQuoteAlarmReceive {

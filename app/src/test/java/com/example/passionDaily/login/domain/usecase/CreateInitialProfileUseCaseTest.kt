@@ -2,6 +2,7 @@ package com.example.passionDaily.login.domain.usecase
 
 import com.example.passionDaily.constants.UseCaseConstants
 import com.example.passionDaily.login.domain.model.UserProfileKey
+import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.every
@@ -9,8 +10,12 @@ import io.mockk.mockk
 import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertThrows
+import org.junit.Rule
 
 class CreateInitialProfileUseCaseTest {
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
+
     private lateinit var createInitialProfileUseCase: CreateInitialProfileUseCase
     private val firebaseUser: FirebaseUser = mockk()
 
@@ -22,7 +27,7 @@ class CreateInitialProfileUseCaseTest {
     }
 
     @Test
-    fun `유효한 FirebaseUser와 userId를 제공하면 프로필 맵이 올바르게 생성된다`() {
+    fun `유효한 FirebaseUser와 userId를 제공하면 프로필 맵이 올바르게 생성된다`() = mainCoroutineRule.runTest{
         val userId = "testUserId"
         val profileMap = createInitialProfileUseCase.createInitialProfile(firebaseUser, userId)
 
@@ -33,7 +38,7 @@ class CreateInitialProfileUseCaseTest {
     }
 
     @Test
-    fun `userId가 비어있으면 IllegalArgumentException을 던진다`() {
+    fun `userId가 비어있으면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest{
         val exception = assertThrows(IllegalArgumentException::class.java) {
             createInitialProfileUseCase.createInitialProfile(firebaseUser, "")
         }
@@ -41,7 +46,7 @@ class CreateInitialProfileUseCaseTest {
     }
 
     @Test
-    fun `FirebaseUser의 UID가 비어있으면 IllegalArgumentException을 던진다`() {
+    fun `FirebaseUser의 UID가 비어있으면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest{
         every { firebaseUser.uid } returns ""
         val exception = assertThrows(IllegalArgumentException::class.java) {
             createInitialProfileUseCase.createInitialProfile(firebaseUser, "testUserId")
@@ -50,7 +55,7 @@ class CreateInitialProfileUseCaseTest {
     }
 
     @Test
-    fun `FirebaseUser의 이메일이 null이면 IllegalArgumentException을 던진다`() {
+    fun `FirebaseUser의 이메일이 null이면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest {
         every { firebaseUser.email } returns null
         val exception = assertThrows(IllegalArgumentException::class.java) {
             createInitialProfileUseCase.createInitialProfile(firebaseUser, "testUserId")
@@ -59,7 +64,7 @@ class CreateInitialProfileUseCaseTest {
     }
 
     @Test
-    fun `FirebaseUser의 UID와 userId가 다르면 IllegalArgumentException을 던진다`() {
+    fun `FirebaseUser의 UID와 userId가 다르면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest{
         val exception = assertThrows(IllegalArgumentException::class.java) {
             createInitialProfileUseCase.createInitialProfile(firebaseUser, "wrongUserId")
         }
