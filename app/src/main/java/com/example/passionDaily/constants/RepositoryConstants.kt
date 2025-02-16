@@ -7,7 +7,5 @@ object RepositoryConstants {
 
     object RemoteUser {
         const val TAG = "RemoteUserRepository"
-        const val USERS_COLLECTION = "users"
-        const val FAVORITES_COLLECTION = "favorites"
     }
 }

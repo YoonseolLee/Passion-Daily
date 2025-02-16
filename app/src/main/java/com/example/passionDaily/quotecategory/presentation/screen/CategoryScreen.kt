@@ -128,7 +128,7 @@ private fun TopBar(onBack: () -> Unit) {
         }
 
         Text(
-            text = stringResource(id = R.string.category),
+            text = stringResource(id = R.string.category_kor),
             style = TextStyle(
                 fontSize = headlineTextSize,
                 fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),

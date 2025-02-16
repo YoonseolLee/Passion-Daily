@@ -24,9 +24,6 @@
       <SelectionState runConfigName="Tests in 'com.example.passionDaily'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="QuoteDaoInjectionTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="카테고리_화면이_올바르게_표시된다()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>

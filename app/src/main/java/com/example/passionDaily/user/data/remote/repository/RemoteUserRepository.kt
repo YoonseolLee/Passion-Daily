@@ -12,4 +12,5 @@ interface RemoteUserRepository {
     suspend fun updateNotificationSettingsToFirestore(userId: String, enabled: Boolean)
     suspend fun updateNotificationTimeToFirestore(userId: String, newTime: String)
     suspend fun deleteUserDataFromFirestore(userId: String)
+    suspend fun deleteFavoritesFromFirestore(userId: String)
 }

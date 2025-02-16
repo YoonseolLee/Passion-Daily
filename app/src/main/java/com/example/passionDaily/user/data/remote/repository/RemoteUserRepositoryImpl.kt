@@ -1,14 +1,13 @@
 package com.example.passionDaily.user.data.remote.repository
 
 import android.util.Log
+import com.example.passionDaily.R
 import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.TAG
-import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.FAVORITES_COLLECTION
-import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.USERS_COLLECTION
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.user.data.remote.model.User
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.util.TimeUtil
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
@@ -22,7 +21,8 @@ import javax.inject.Inject
 class RemoteUserRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val localUserRepository: LocalUserRepository,
-    private val timeUtil: TimeUtil
+    private val timeUtil: TimeUtil,
+    private val stringProvider: StringProvider
 ) : RemoteUserRepository {
 
     override suspend fun isUserRegistered(userId: String): Boolean {
@@ -154,7 +154,7 @@ class RemoteUserRepositoryImpl @Inject constructor(
     ): Unit = withContext(Dispatchers.IO) {
         try {
             withTimeout(3000L) {
-                firestore.collection(USERS_COLLECTION)
+                firestore.collection(stringProvider.getString(R.string.users))
                     .document(userId)
                     .update("notificationEnabled", enabled)
                     .await()
@@ -179,7 +179,7 @@ class RemoteUserRepositoryImpl @Inject constructor(
     ): Unit = withContext(Dispatchers.IO) {
         try {
             withTimeout(3000L) {
-                firestore.collection(USERS_COLLECTION)
+                firestore.collection(stringProvider.getString(R.string.users))
                     .document(userId)
                     .update("notificationTime", newTime)
                     .await()
@@ -198,8 +198,69 @@ class RemoteUserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteUserDataFromFirestore(userId: String) {
-        firestore.collection(USERS_COLLECTION).document(userId).delete().await()
-        firestore.collection(FAVORITES_COLLECTION).document(userId).delete().await()
+    override suspend fun deleteUserDataFromFirestore(userId: String): Unit = withContext(Dispatchers.IO) {
+        try {
+            withTimeout(3000L) {
+                firestore.collection(stringProvider.getString(R.string.users))
+                    .document(userId)
+                    .delete()
+                    .await()
+
+                Log.d(TAG, "Successfully deleted user from Firestore")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete user from Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException ->
+                    throw IOException("Network error while accessing Firestore", e)
+                else -> throw e
+            }
+        }
+    }
+
+    override suspend fun deleteFavoritesFromFirestore(userId: String): Unit = withContext(Dispatchers.IO) {
+        try {
+            withTimeout(3000L) {
+                val savedQuotesRef = firestore
+                    .collection(stringProvider.getString(R.string.favorites_eng))
+                    .document(userId)
+                    .collection("saved_quotes")
+
+                val savedQuotes = savedQuotesRef.get().await()
+
+                Log.d(TAG, "Found ${savedQuotes.size()} documents in saved_quotes")
+
+                savedQuotes.documents.forEachIndexed { index, document ->
+                    Log.d(TAG, "Attempting to delete document ${index + 1}/${savedQuotes.size()}: ${document.id}")
+                    try {
+                        savedQuotesRef.document(document.id).delete().await()
+                        Log.d(TAG, "Successfully deleted document: ${document.id}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to delete document: ${document.id}", e)
+                    }
+                }
+
+                firestore.collection(stringProvider.getString(R.string.favorites_eng))
+                    .document(userId)
+                    .delete()
+                    .await()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete favorites from Firestore", e)
+            when {
+                e is UnknownHostException ||
+                        e.cause is UnknownHostException ||
+                        e is TimeoutCancellationException -> {
+                    Log.e(TAG, "Network or timeout error occurred", e)
+                    throw IOException("Network error while accessing Firestore", e)
+                }
+                else -> {
+                    Log.e(TAG, "Unexpected error occurred", e)
+                    throw e
+                }
+            }
+        }
     }
 }

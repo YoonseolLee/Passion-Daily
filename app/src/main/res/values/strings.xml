@@ -47,7 +47,9 @@
     <string name="privacy_policy">개인정보 처리방침</string>
 
     <!-- 명언 및 관련 정보 -->
-    <string name="category">카테고리</string>
+
+    <string name="category">category</string>
+    <string name="category_kor">카테고리</string>
     <string name="select_category">카테고리 선택</string>
     <string name="category_selection_guide">오늘은 어떤 주제의 명언을 만나볼까요?</string>
     <string name="quote_number_format">%06d</string>
@@ -56,10 +58,11 @@
     <string name="daily_quote">오늘의 명언</string>
     <string name="text">text</string>
     <string name="person">person</string>
-
+    <string name="users">users</string>
 
     <!-- 즐겨찾기 및 알림 관련 -->
     <string name="favorites">즐겨찾기</string>
+    <string name="favorites_eng">favorites</string>
     <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
     <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
     <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>
