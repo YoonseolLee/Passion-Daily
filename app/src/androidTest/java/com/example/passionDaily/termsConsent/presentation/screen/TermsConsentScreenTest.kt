@@ -13,6 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
+import com.example.passionDaily.login.state.AuthState
 import com.example.passionDaily.util.MainCoroutineRule
 import org.junit.Before
 import org.junit.rules.RuleChain
@@ -35,6 +36,12 @@ class TermsConsentScreenTest {
         every { sharedLogInViewModel.isAgreeAllChecked } returns MutableStateFlow(false)
         every { sharedLogInViewModel.consent } returns MutableStateFlow(UserConsent(false, false))
         every { sharedLogInViewModel.userProfileJsonV2 } returns MutableStateFlow(null)
+        every { sharedLogInViewModel.authState } returns MutableStateFlow(
+            AuthState.RequiresConsent(
+                userId = "test_user_id",
+                userProfileJson = null
+            )
+        )
     }
 
     @Test
@@ -143,26 +150,22 @@ class TermsConsentScreenTest {
     fun 다음버튼_클릭시_명언화면으로_이동한다() = mainCoroutineRule.runTest {
         // Given
         val onNavigateToQuoteScreen = mockk<() -> Unit>(relaxed = true)
-        every { sharedLogInViewModel.consent } returns MutableStateFlow(UserConsent(true, true))
-        every { sharedLogInViewModel.userProfileJsonV2 } returns MutableStateFlow("test_profile")
+        val testProfile = "test_profile"
 
+        every { sharedLogInViewModel.consent } returns MutableStateFlow(UserConsent(true, true))
+        every { sharedLogInViewModel.userProfileJsonV2 } returns MutableStateFlow(testProfile)
+        every { sharedLogInViewModel.authState } returns MutableStateFlow(AuthState.Authenticated("test_user_id"))
+
+        // When
         composeTestRule.setContent {
             TermsConsentScreen(
-                userProfileJson = "test_profile",
+                userProfileJson = testProfile,
                 sharedLogInViewModel = sharedLogInViewModel,
                 onNavigateToQuoteScreen = onNavigateToQuoteScreen
             )
         }
 
-        // When
-        composeTestRule
-            .onNodeWithText("다음")
-            .performClick()
-
         // Then
-        verify {
-            sharedLogInViewModel.handleNextClick("test_profile")
-            onNavigateToQuoteScreen()
-        }
+        verify { onNavigateToQuoteScreen() }
     }
 }

@@ -48,7 +48,7 @@ class CategoryScreenTest {
 
     @Test
     fun 카테고리_화면이_올바르게_표시된다() = mainCoroutineRule.runTest {
-        // Given & When
+        // When
         composeTestRule.setContent {
             CategoryScreen(
                 quoteViewModel = quoteViewModel,
@@ -61,15 +61,13 @@ class CategoryScreenTest {
         // Then
         composeTestRule.waitForIdle()
 
-        // 제목 확인
         composeTestRule
-            .onNodeWithText("카테고리", useUnmergedTree = true)
+            .onNodeWithText("카테고리")
             .assertExists()
             .assertIsDisplayed()
 
-        // 가이드 텍스트 확인
         composeTestRule
-            .onNodeWithText("오늘은 어떤 주제의 명언을 만나볼까요?", useUnmergedTree = true)
+            .onNode(hasText("오늘은 어떤 주제의 명언을 만나볼까요?"))
             .assertExists()
             .assertIsDisplayed()
     }

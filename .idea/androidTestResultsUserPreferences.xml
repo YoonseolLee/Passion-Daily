@@ -146,6 +146,19 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+        <entry key="-27518758">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                  <entry key="samsung SM-T733" value="120" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
         <entry key="52373146">
           <value>
             <AndroidTestResultsTableState>
@@ -181,6 +194,7 @@
                   <entry key="Duration" value="90" />
                   <entry key="Tests" value="360" />
                   <entry key="samsung SM-A536N" value="120" />
+                  <entry key="samsung SM-T733" value="120" />
                 </map>
               </option>
             </AndroidTestResultsTableState>
@@ -220,6 +234,7 @@
                   <entry key="Duration" value="90" />
                   <entry key="Tests" value="360" />
                   <entry key="samsung SM-A536N" value="120" />
+                  <entry key="samsung SM-T733" value="120" />
                 </map>
               </option>
             </AndroidTestResultsTableState>
@@ -304,6 +319,19 @@
           </value>
         </entry>
         <entry key="1953735896">
+          <value>
+            <AndroidTestResultsTableState>
+              <option name="preferredColumnWidths">
+                <map>
+                  <entry key="Duration" value="90" />
+                  <entry key="Tests" value="360" />
+                  <entry key="samsung SM-T733" value="120" />
+                </map>
+              </option>
+            </AndroidTestResultsTableState>
+          </value>
+        </entry>
+        <entry key="1987585955">
           <value>
             <AndroidTestResultsTableState>
               <option name="preferredColumnWidths">
