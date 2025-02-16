@@ -30,9 +30,6 @@
       <SelectionState runConfigName="TermsConsentScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="다음버튼_클릭시_명언화면으로_이동한다()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
     </selectionStates>
   </component>
 </project>

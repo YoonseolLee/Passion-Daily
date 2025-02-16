@@ -15,6 +15,7 @@ import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
 import com.example.passionDaily.login.state.AuthState
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -163,6 +165,9 @@ class FavoritesViewModel @Inject constructor(
 
     fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
         return favoritesLoadingManager.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
+            .map { isFavoriteInDb ->
+                isFavoriteInDb || favoritesStateHolder.isOptimisticallyFavorite(quoteId)
+            }
     }
 
     override fun addFavorite(quoteId: String) {
@@ -173,15 +178,16 @@ class FavoritesViewModel @Inject constructor(
             quoteId
         ) ?: return
 
+        // Optimistic 업데이트
+        (favoritesStateHolder as FavoritesStateHolderImpl).addOptimisticFavorite(quoteId)
+
         viewModelScope.launch {
             try {
-                // Firestore에 먼저 저장 시도
                 favoritesSavingManager.addFavoriteToFirestore(
                     currentUser,
                     quoteId,
                     selectedCategory
                 ).also {
-                    // Firestore 저장 성공 시 로컬에 저장
                     favoritesSavingManager.saveToLocalDatabase(
                         currentUser,
                         selectedCategory,
@@ -190,11 +196,11 @@ class FavoritesViewModel @Inject constructor(
                     loadFavorites()
                 }
             } catch (e: Exception) {
-                // 네트워크 에러나 타임아웃 발생 시
+                // 실패 시 Optimistic 상태 롤백
+                (favoritesStateHolder as FavoritesStateHolderImpl).removeOptimisticFavorite(quoteId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
-                        Log.d(TAG, "e: ${e.message}")
                         loadFavorites()
                     }
                     else -> handleError(e)
@@ -221,6 +227,9 @@ class FavoritesViewModel @Inject constructor(
         val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
             ?: return
 
+        // Optimistic 업데이트
+        (favoritesStateHolder as FavoritesStateHolderImpl).removeOptimisticFavorite(quoteId)
+
         viewModelScope.launch {
             try {
                 favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
@@ -233,11 +242,11 @@ class FavoritesViewModel @Inject constructor(
                         loadFavorites()
                     }
             } catch (e: Exception) {
-                // 네트워크 에러나 타임아웃 발생 시
+                // 실패 시 Optimistic 상태 롤백
+                (favoritesStateHolder as FavoritesStateHolderImpl).addOptimisticFavorite(quoteId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
-                        // 즐겨찾기 상태를 원래대로 되돌리기 위해 목록 다시 로드
                         loadFavorites()
                     }
                     else -> handleError(e)

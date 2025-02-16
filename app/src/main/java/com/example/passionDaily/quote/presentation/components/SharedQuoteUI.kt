@@ -294,9 +294,7 @@ fun AddToFavoritesButton(
     onRequireLogin: () -> Unit,
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
-
     val coroutineScope = rememberCoroutineScope()
-
     val categoryId = category?.categoryId ?: return
     val userId = currentUser?.uid ?: ""
 
@@ -304,6 +302,11 @@ fun AddToFavoritesButton(
         .collectAsState(initial = false)
 
     var isAnimating by remember { mutableStateOf(false) }
+    var localIsFavorite by remember { mutableStateOf(isFavorite) }
+
+    LaunchedEffect(isFavorite) {
+        localIsFavorite = isFavorite
+    }
 
     val scale by animateFloatAsState(
         targetValue = if (isAnimating) 1.2f else 1f,
@@ -347,16 +350,21 @@ fun AddToFavoritesButton(
                 } else {
                     isAnimating = true
 
-                    if (isFavorite) {
-                        Log.d(
-                            "AddToFavoritesButton",
-                            "Removing favorite - quoteId: $currentQuoteId, categoryId: $categoryId"
-                        )
-                        coroutineScope.launch {
-                            favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                    localIsFavorite = !localIsFavorite
+
+                    coroutineScope.launch {
+                        try {
+                            if (!localIsFavorite) {
+                                favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                            } else {
+                                favoritesViewModel.addFavorite(currentQuoteId)
+                            }
+                        } catch (e: Exception) {
+                            // 실패 시 UI 상태를 원래대로 복구
+                            localIsFavorite = !localIsFavorite
+                            // 에러 처리 (토스트 메시지 등)
+                            Log.e("AddToFavoritesButton", "Failed to update favorite", e)
                         }
-                    } else {
-                        favoritesViewModel.addFavorite(currentQuoteId)
                     }
                 }
             }
