@@ -1,7 +1,6 @@
 package com.example.passionDaily.user.data.remote.repository
 
-import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.FAVORITES_COLLECTION
-import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.USERS_COLLECTION
+import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.user.data.remote.model.User
@@ -28,6 +27,7 @@ class RemoteUserRepositoryImplTest {
     private lateinit var repository: RemoteUserRepositoryImpl
     private lateinit var documentReference: DocumentReference
     private lateinit var documentSnapshot: DocumentSnapshot
+    private lateinit var stringProvider: StringProvider
 
     // mockTask 헬퍼 함수
     private inline fun <reified T> mockTask(result: T?, exception: Exception? = null): Task<T> {
@@ -46,7 +46,8 @@ class RemoteUserRepositoryImplTest {
         timeUtil = mockk(relaxed = true)
         documentReference = mockk(relaxed = true)
         documentSnapshot = mockk(relaxed = true)
-        repository = RemoteUserRepositoryImpl(firestore, localUserRepository, timeUtil)
+        stringProvider = mockk(relaxed = true)
+        repository = RemoteUserRepositoryImpl(firestore, localUserRepository, timeUtil, stringProvider)
     }
 
     @Test
@@ -168,13 +169,13 @@ class RemoteUserRepositoryImplTest {
     }
 
     @Test
-    fun `알림 설정을 Firestore에 업데이트한다`() = mainCoroutineRule.runTest {
+    fun 알림_설정을_Firestore에_업데이트한다() = mainCoroutineRule.runTest {
         // Given
         val userId = "testUserId"
         val enabled = true
-
+        every { stringProvider.getString(any()) } returns "users"
         every {
-            firestore.collection(USERS_COLLECTION)
+            firestore.collection("users")
                 .document(userId)
         } returns documentReference
         every {
@@ -186,18 +187,19 @@ class RemoteUserRepositoryImplTest {
 
         // Then
         verify {
+            firestore.collection("users")
             documentReference.update("notificationEnabled", enabled)
         }
     }
 
     @Test
-    fun `알림 시간을 Firestore에 업데이트한다`() = mainCoroutineRule.runTest {
+    fun 알림_시간을_Firestore에_업데이트한다() = mainCoroutineRule.runTest {
         // Given
         val userId = "testUserId"
         val newTime = "09:00"
-
+        every { stringProvider.getString(any()) } returns "users"
         every {
-            firestore.collection(USERS_COLLECTION)
+            firestore.collection("users")
                 .document(userId)
         } returns documentReference
         every {
@@ -209,33 +211,29 @@ class RemoteUserRepositoryImplTest {
 
         // Then
         verify {
+            firestore.collection("users")
             documentReference.update("notificationTime", newTime)
         }
     }
 
     @Test
-    fun `Firestore에서 사용자 데이터를 삭제한다`() = mainCoroutineRule.runTest {
+    fun Firestore에서_사용자_데이터를_삭제한다() = mainCoroutineRule.runTest {
         // Given
         val userId = "testUserId"
-        val usersDocRef = mockk<DocumentReference>(relaxed = true)
-        val favoritesDocRef = mockk<DocumentReference>(relaxed = true)
-
+        every { stringProvider.getString(any()) } returns "users"
         every {
-            firestore.collection(USERS_COLLECTION).document(userId)
-        } returns usersDocRef
-        every {
-            firestore.collection(FAVORITES_COLLECTION).document(userId)
-        } returns favoritesDocRef
-        every { usersDocRef.delete() } returns mockTask(null)
-        every { favoritesDocRef.delete() } returns mockTask(null)
+            firestore.collection("users")
+                .document(userId)
+        } returns documentReference
+        every { documentReference.delete() } returns mockTask(null)
 
         // When
         repository.deleteUserDataFromFirestore(userId)
 
         // Then
         verify {
-            usersDocRef.delete()
-            favoritesDocRef.delete()
+            firestore.collection("users")
+            documentReference.delete()
         }
     }
 }

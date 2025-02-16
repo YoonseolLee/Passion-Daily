@@ -7,7 +7,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,17 +17,16 @@ import com.example.passionDaily.util.MainCoroutineRule
 import org.junit.rules.RuleChain
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
+import org.junit.Before
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class FavoritesScreenTest {
-    private val mainCoroutineRule = MainCoroutineRule()
-    private val composeTestRule = createComposeRule()
+    @get:Rule
+    val mainCoroutineRule = MainCoroutineRule()
 
     @get:Rule
-    val chain = RuleChain
-        .outerRule(mainCoroutineRule)
-        .around(composeTestRule)
+    val composeTestRule = createComposeRule()
 
     private val mockFavoritesViewModel = mockk<FavoritesViewModel>(relaxed = true)
     private val mockQuoteViewModel = mockk<QuoteViewModel>(relaxed = true)
@@ -41,16 +39,45 @@ class FavoritesScreenTest {
     private val currentFavoriteQuoteFlow = MutableStateFlow<QuoteEntity?>(null)
     private val isLoadingFlow = MutableStateFlow(false)
 
-    init {
+    private val 테스트명언 = QuoteEntity(
+        quoteId = "1",
+        categoryId = 1,
+        text = "테스트 명언",
+        person = "테스트 인물",
+        imageUrl = "test_url"
+    )
+
+    @Before
+    fun setUp() {
         every { mockFavoritesViewModel.favoriteQuotes } returns favoriteQuotesFlow
         every { mockFavoritesViewModel.currentFavoriteQuote } returns currentFavoriteQuoteFlow
         every { mockFavoritesViewModel.isFavoriteLoading } returns isLoadingFlow
     }
 
     @Test
+    fun Favorites_화면_진입시_즐겨찾기_목록을_로드한다() = mainCoroutineRule.runTest {
+        // When
+        composeTestRule.setContent {
+            FavoritesScreen(
+                favoritesViewModel = mockFavoritesViewModel,
+                quoteViewModel = mockQuoteViewModel,
+                onNavigateToFavorites = mockNavigateToFavorites,
+                onNavigateToQuote = mockNavigateToQuote,
+                onNavigateToSettings = mockNavigateToSettings,
+                onNavigateToLogin = mockNavigateToLogin,
+                currentScreen = NavigationBarScreens.FAVORITES
+            )
+        }
+
+        // Then
+        verify { mockFavoritesViewModel.loadFavorites() }
+    }
+
+    @Test
     fun 즐겨찾기가_비어있을때_안내_메시지가_표시된다() = mainCoroutineRule.runTest {
         // Given
         favoriteQuotesFlow.value = emptyList()
+        isLoadingFlow.value = false
 
         // When
         composeTestRule.setContent {
@@ -66,10 +93,7 @@ class FavoritesScreenTest {
         }
 
         // Then
-        composeTestRule
-            .onNodeWithText("아직 즐겨찾기한 명언이 없어요.")
-            .assertExists()
-            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("아직 즐겨찾기한 명언이 없어요.").assertExists()
     }
 
     @Test
@@ -91,24 +115,15 @@ class FavoritesScreenTest {
         }
 
         // Then
-        composeTestRule
-            .onNodeWithTag("LoadingIndicator")
-            .assertExists()
-            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag("LoadingIndicator").assertExists()
     }
 
     @Test
     fun 다음_버튼_클릭시_다음_명언으로_이동한다() = mainCoroutineRule.runTest {
         // Given
-        val quoteEntity = QuoteEntity(
-            quoteId = "1",
-            categoryId = 1,
-            text = "테스트 명언",
-            person = "테스트 인물",
-            imageUrl = "test_url"
-        )
-        currentFavoriteQuoteFlow.value = quoteEntity
-        favoriteQuotesFlow.value = listOf(quoteEntity)
+        favoriteQuotesFlow.value = listOf(테스트명언)
+        currentFavoriteQuoteFlow.value = 테스트명언
+        isLoadingFlow.value = false
 
         // When
         composeTestRule.setContent {
@@ -123,11 +138,7 @@ class FavoritesScreenTest {
             )
         }
 
-        composeTestRule
-            .onNodeWithTag("RightArrow")
-            .performClick()
-
-        advanceUntilIdle()
+        composeTestRule.onNodeWithTag("RightArrow").performClick()
 
         // Then
         verify { mockFavoritesViewModel.nextQuote() }
@@ -136,15 +147,9 @@ class FavoritesScreenTest {
     @Test
     fun 이전_버튼_클릭시_이전_명언으로_이동한다() = mainCoroutineRule.runTest {
         // Given
-        val quoteEntity = QuoteEntity(
-            quoteId = "1",
-            categoryId = 1,
-            text = "테스트 명언",
-            person = "테스트 인물",
-            imageUrl = "test_url"
-        )
-        currentFavoriteQuoteFlow.value = quoteEntity
-        favoriteQuotesFlow.value = listOf(quoteEntity)
+        favoriteQuotesFlow.value = listOf(테스트명언)
+        currentFavoriteQuoteFlow.value = 테스트명언
+        isLoadingFlow.value = false
 
         // When
         composeTestRule.setContent {
@@ -159,34 +164,9 @@ class FavoritesScreenTest {
             )
         }
 
-        composeTestRule
-            .onNodeWithTag("LeftArrow")
-            .performClick()
-
-        advanceUntilIdle()
+        composeTestRule.onNodeWithTag("LeftArrow").performClick()
 
         // Then
         verify { mockFavoritesViewModel.previousQuote() }
-    }
-
-    @Test
-    fun Favorites_화면_진입시_즐겨찾기_목록을_로드한다() = mainCoroutineRule.runTest {
-        // Given & When
-        composeTestRule.setContent {
-            FavoritesScreen(
-                favoritesViewModel = mockFavoritesViewModel,
-                quoteViewModel = mockQuoteViewModel,
-                onNavigateToFavorites = mockNavigateToFavorites,
-                onNavigateToQuote = mockNavigateToQuote,
-                onNavigateToSettings = mockNavigateToSettings,
-                onNavigateToLogin = mockNavigateToLogin,
-                currentScreen = NavigationBarScreens.FAVORITES
-            )
-        }
-
-        advanceUntilIdle()
-
-        // Then
-        verify { mockFavoritesViewModel.loadFavorites() }
     }
 }

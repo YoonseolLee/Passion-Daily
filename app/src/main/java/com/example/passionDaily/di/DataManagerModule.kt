@@ -121,15 +121,11 @@ object DataManagerModule {
         remoteUserRepository: RemoteUserRepository,
         localUserRepository: LocalUserRepository,
         localFavoriteRepository: LocalFavoriteRepository,
-        localQuoteRepository: LocalQuoteRepository,
-        localQuoteCategoryRepository: LocalQuoteCategoryRepository,
         loadUserInfoUseCase: LoadUserInfoUseCase
     ): UserSettingsManager = UserSettingsManagerImpl(
         remoteUserRepository,
         localUserRepository,
         localFavoriteRepository,
-        localQuoteRepository,
-        localQuoteCategoryRepository,
         loadUserInfoUseCase
     )
 

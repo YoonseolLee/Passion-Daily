@@ -20,16 +20,12 @@ class UserSettingsManagerTest {
     private val remoteUserRepository = mockk<RemoteUserRepository>()
     private val localUserRepository = mockk<LocalUserRepository>()
     private val localFavoriteRepository = mockk<LocalFavoriteRepository>()
-    private val localQuoteRepository = mockk<LocalQuoteRepository>()
-    private val localQuoteCategoryRepository = mockk<LocalQuoteCategoryRepository>()
     private val loadUserInfoUseCase = mockk<LoadUserInfoUseCase>()
 
     private val userSettingsManager = UserSettingsManagerImpl(
         remoteUserRepository,
         localUserRepository,
         localFavoriteRepository,
-        localQuoteRepository,
-        localQuoteCategoryRepository,
         loadUserInfoUseCase
     )
 
@@ -69,6 +65,7 @@ class UserSettingsManagerTest {
         // Given
         val userId = "testUserId"
         coEvery { remoteUserRepository.deleteUserDataFromFirestore(userId) } just Runs
+        coEvery { remoteUserRepository.deleteFavoritesFromFirestore(userId) } just Runs
         coEvery { localFavoriteRepository.deleteAllFavoritesByUserId(userId) } just Runs
         coEvery { localUserRepository.deleteUser(userId) } just Runs
 
@@ -77,6 +74,7 @@ class UserSettingsManagerTest {
 
         // Then
         coVerifySequence {
+            remoteUserRepository.deleteFavoritesFromFirestore(userId)
             remoteUserRepository.deleteUserDataFromFirestore(userId)
             localFavoriteRepository.deleteAllFavoritesByUserId(userId)
             localUserRepository.deleteUser(userId)

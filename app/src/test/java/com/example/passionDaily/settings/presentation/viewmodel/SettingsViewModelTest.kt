@@ -81,9 +81,11 @@ class SettingsViewModelTest {
         coEvery { settingsStateHolder.updateShowWithdrawalDialog(any()) } just Runs
 
         // Firebase Auth 모킹
-        val mockAuth = mockk<FirebaseAuth>()
+        val mockAuth = mockk<FirebaseAuth>(relaxed = true)
         every { Firebase.auth } returns mockAuth
         every { mockAuth.currentUser } returns null
+        every { mockAuth.addAuthStateListener(any()) } just Runs
+        every { mockAuth.removeAuthStateListener(any()) } just Runs
 
         viewModel = SettingsViewModel(
             userSettingsManager,
