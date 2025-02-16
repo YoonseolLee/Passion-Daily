@@ -81,7 +81,10 @@ class FavoritesViewModel @Inject constructor(
             authStateHolder.authState.collect { state ->
                 when (state) {
                     is AuthState.Authenticated -> loadFavorites()
-                    else -> favoritesStateHolder.updateFavoriteQuotes(emptyList())
+                    else -> {
+                        favoritesStateHolder.updateFavoriteQuotes(emptyList())
+                        favoritesStateHolder.clearOptimisticFavorites()
+                    }
                 }
             }
         }
@@ -166,7 +169,7 @@ class FavoritesViewModel @Inject constructor(
     fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
         return favoritesLoadingManager.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
             .map { isFavoriteInDb ->
-                isFavoriteInDb || favoritesStateHolder.isOptimisticallyFavorite(quoteId)
+                isFavoriteInDb || favoritesStateHolder.isOptimisticallyFavorite(quoteId, categoryId)
             }
     }
 
@@ -178,8 +181,7 @@ class FavoritesViewModel @Inject constructor(
             quoteId
         ) ?: return
 
-        // Optimistic 업데이트
-        (favoritesStateHolder as FavoritesStateHolderImpl).addOptimisticFavorite(quoteId)
+        favoritesStateHolder.addOptimisticFavorite(quoteId, selectedCategory.categoryId)
 
         viewModelScope.launch {
             try {
@@ -196,8 +198,7 @@ class FavoritesViewModel @Inject constructor(
                     loadFavorites()
                 }
             } catch (e: Exception) {
-                // 실패 시 Optimistic 상태 롤백
-                (favoritesStateHolder as FavoritesStateHolderImpl).removeOptimisticFavorite(quoteId)
+                favoritesStateHolder.removeOptimisticFavorite(quoteId, selectedCategory.categoryId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
@@ -227,8 +228,7 @@ class FavoritesViewModel @Inject constructor(
         val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
             ?: return
 
-        // Optimistic 업데이트
-        (favoritesStateHolder as FavoritesStateHolderImpl).removeOptimisticFavorite(quoteId)
+        favoritesStateHolder.removeOptimisticFavorite(quoteId, categoryId)
 
         viewModelScope.launch {
             try {
@@ -242,8 +242,8 @@ class FavoritesViewModel @Inject constructor(
                         loadFavorites()
                     }
             } catch (e: Exception) {
-                // 실패 시 Optimistic 상태 롤백
-                (favoritesStateHolder as FavoritesStateHolderImpl).addOptimisticFavorite(quoteId)
+                // 실패 시 롤백할 때도 categoryId 함께 사용
+                favoritesStateHolder.addOptimisticFavorite(quoteId, categoryId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)

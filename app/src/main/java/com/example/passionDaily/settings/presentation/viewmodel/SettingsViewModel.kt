@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Favorites
 import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.settings.manager.UserSettingsManager
@@ -46,7 +47,8 @@ class SettingsViewModel @Inject constructor(
     private val emailManager: EmailManager,
     private val settingsStateHolder: SettingsStateHolder,
     private val loginStateHolder: LoginStateHolder,
-    private val userConsentManager: UserConsentManager
+    private val userConsentManager: UserConsentManager,
+    private val favoritesStateHolder: FavoritesStateHolder
 ) : ViewModel(), SettingsViewModelActions, SettingsViewModelState {
 
     override val notificationEnabled = settingsStateHolder.notificationEnabled
@@ -257,6 +259,7 @@ class SettingsViewModel @Inject constructor(
         loginStateHolder.clearLoginState()
         authStateHolder.setUnAuthenticated()
         scheduleAlarmUseCase.cancelExistingAlarm()
+        favoritesStateHolder.clearOptimisticFavorites()
     }
 
     private suspend fun handleReLoginForWithdrawal(onReLogInRequired: () -> Unit) {

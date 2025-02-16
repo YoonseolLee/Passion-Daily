@@ -15,8 +15,7 @@ class FavoritesStateHolderImpl() : FavoritesStateHolder {
     private val _error = MutableStateFlow<String?>(null)
     override val error: StateFlow<String?> = _error.asStateFlow()
 
-    // 단순한 Set으로 optimistic 상태 관리
-    private val optimisticFavorites = mutableSetOf<String>()
+    private val optimisticFavorites = mutableSetOf<Pair<String, Int>>()
 
     override fun updateFavoriteQuotes(quotes: List<QuoteEntity>) {
         _favoriteQuotes.value = quotes
@@ -30,15 +29,19 @@ class FavoritesStateHolderImpl() : FavoritesStateHolder {
         _error.value = errorMessage
     }
 
-    override fun addOptimisticFavorite(quoteId: String) {
-        optimisticFavorites.add(quoteId)
+    override fun addOptimisticFavorite(quoteId: String, categoryId: Int) {
+        optimisticFavorites.add(quoteId to categoryId)
     }
 
-    override fun removeOptimisticFavorite(quoteId: String) {
-        optimisticFavorites.remove(quoteId)
+    override fun removeOptimisticFavorite(quoteId: String, categoryId: Int) {
+        optimisticFavorites.remove(quoteId to categoryId)
     }
 
-    override fun isOptimisticallyFavorite(quoteId: String): Boolean {
-        return optimisticFavorites.contains(quoteId)
+    override fun isOptimisticallyFavorite(quoteId: String, categoryId: Int): Boolean {
+        return optimisticFavorites.contains(quoteId to categoryId)
+    }
+
+    override fun clearOptimisticFavorites() {
+        optimisticFavorites.clear()
     }
 }
