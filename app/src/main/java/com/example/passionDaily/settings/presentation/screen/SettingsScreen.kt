@@ -56,6 +56,9 @@ import java.time.LocalTime
 import android.provider.Settings
 import android.Manifest
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
@@ -328,9 +331,8 @@ fun NotificationTimeSettingItem(
     currentUser: FirebaseUser?
 ) {
     val context = LocalContext.current
-    var showTimePickerDialog by remember { mutableStateOf(false) }
+    var showTimePickerDialog by rememberSaveable { mutableStateOf(false) }
 
-    // 비로그인 상태면 항상 default 시간
     val displayTime = if (currentUser == null) {
         stringResource(R.string.default_notification_time)
     } else {
@@ -341,27 +343,21 @@ fun NotificationTimeSettingItem(
         title = stringResource(R.string.notification_time_setting),
         value = displayTime,
         onClick = {
-            // 로그인 상태일 때만 클릭 가능
             if (currentUser != null) {
-                showTimePickerDialog = true
+                // Dialog를 직접 생성하고 show
+                TimePickerDialog(
+                    context,
+                    { _, selectedHour, selectedMinute ->
+                        val selectedTime = LocalTime.of(selectedHour, selectedMinute)
+                        onUpdateNotificationTime(selectedTime)
+                    },
+                    notificationTime?.hour ?: 8,
+                    notificationTime?.minute ?: 0,
+                    true
+                ).show()
             }
         }
     )
-
-    // 로그인 상태일 때만 시간 선택 다이얼로그 표시
-    if (showTimePickerDialog && currentUser != null) {
-        TimePickerDialog(
-            context,
-            { _, selectedHour, selectedMinute ->
-                val selectedTime = LocalTime.of(selectedHour, selectedMinute)
-                onUpdateNotificationTime(selectedTime)
-                showTimePickerDialog = false
-            },
-            notificationTime?.hour ?: 8,
-            notificationTime?.minute ?: 0,
-            true
-        ).show()
-    }
 }
 
 @Composable

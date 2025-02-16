@@ -56,8 +56,19 @@ class SettingsViewModel @Inject constructor(
     override val isLoading = settingsStateHolder.isLoading
 
     init {
-        initializeCurrentUser()
-        loadUserSettings()
+        // Firebase Auth 상태 변경을 감지하여 currentUser 업데이트
+        Firebase.auth.addAuthStateListener { auth ->
+            settingsStateHolder.updateCurrentUser(auth.currentUser)
+
+            // 로그인된 경우 사용자 설정 로드
+            auth.currentUser?.let { user ->
+                loadUserSettings()
+            } ?: run {
+                // 로그아웃된 경우 설정 초기화
+                settingsStateHolder.updateNotificationEnabled(false)
+                settingsStateHolder.updateNotificationTime(null)
+            }
+        }
     }
 
     private fun initializeCurrentUser() {
