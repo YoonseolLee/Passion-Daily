@@ -1,15 +1,12 @@
 package com.example.passionDaily.quote.presentation.screen
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -45,8 +42,12 @@ import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.ui.component.CommonNavigationBar
+import android.app.Activity
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun QuoteScreen(
     favoritesViewModel: FavoritesViewModel,
@@ -66,9 +67,22 @@ fun QuoteScreen(
 
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 
-    LaunchedEffect(selectedCategory) {
-        Log.d("LoginScreen", "Current AuthState: ${quoteViewModel.authState.value}")
+    // 시스템 네비게이션 바 색상 설정
+    val context = LocalContext.current
+    DisposableEffect(Unit) {
+        val window = (context as? Activity)?.window
+        if (window != null) {
+            // WindowCompat 사용
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightNavigationBars = false
+            }
+            window.navigationBarColor = android.graphics.Color.BLACK
+        }
 
+        onDispose {}
+    }
+
+    LaunchedEffect(selectedCategory) {
         if (quotes.isEmpty()) {
             quoteViewModel.loadQuotes(selectedCategory)
         }
@@ -143,12 +157,13 @@ fun QuoteScreen(
                         transitionSpec = {
                             val direction = slideDirection
                             (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
-                                    fadeIn(animationSpec = FadeAnimationSpec)) with
-                                    (slideOutOfContainer(
-                                        direction,
-                                        animationSpec = ContentAnimationSpec
-                                    ) +
-                                            fadeOut(animationSpec = FadeAnimationSpec))
+                                    fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
+                                slideOutOfContainer(
+                                    direction,
+                                    animationSpec = ContentAnimationSpec
+                                ) +
+                                        fadeOut(animationSpec = FadeAnimationSpec)
+                            )
                         }
                     ) { quote ->
                         quote?.let {

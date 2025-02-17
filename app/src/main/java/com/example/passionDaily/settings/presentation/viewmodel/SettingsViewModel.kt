@@ -2,11 +2,9 @@ package com.example.passionDaily.settings.presentation.viewmodel
 
 import android.content.Intent
 import android.database.sqlite.SQLiteException
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Favorites
-import com.example.passionDaily.constants.ViewModelConstants.Settings.TAG
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.manager.UserConsentManager
@@ -73,10 +71,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun initializeCurrentUser() {
-        settingsStateHolder.updateCurrentUser(getCurrentUser())
-    }
-
     override fun loadUserSettings() {
         viewModelScope.launch {
             getCurrentUser()?.uid?.let { userId ->
@@ -86,7 +80,6 @@ class SettingsViewModel @Inject constructor(
                         setNotificationTime(timeStr)
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error loading user settings", e)
                     handleError(e)
                 }
             }
@@ -101,7 +94,6 @@ class SettingsViewModel @Inject constructor(
                 val time = notificationManager.parseTime(timeStr)
                 settingsStateHolder.updateNotificationTime(time)
             } catch (e: Exception) {
-                Log.e(TAG, "Error parsing notification time", e)
                 handleError(e)
             }
         }
@@ -127,10 +119,9 @@ class SettingsViewModel @Inject constructor(
                         notificationManager.cancelExistingAlarm()
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error updating notification settings", e)
                     handleError(e)
                 }
-            } ?: Log.e(TAG, "Failed to update notification settings: User not logged in")
+            } ?: run { /* User not logged in */ }
         }
     }
 
@@ -152,14 +143,11 @@ class SettingsViewModel @Inject constructor(
                     // 알림이 활성화된 상태에서만 알람 재설정
                     if (notificationEnabled.value) {
                         notificationManager.scheduleNotification(newTime.hour, newTime.minute)
-                    } else {
-                        Log.d(TAG, "Notifications are disabled, skipping alarm scheduling")
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error updating notification time", e)
                     handleError(e)
                 }
-            } ?: Log.e(TAG, "Failed to update notification time: User not logged in")
+            } ?: run { /* User not logged in */ }
         }
     }
 
@@ -173,7 +161,6 @@ class SettingsViewModel @Inject constructor(
                 }
                 onLogInSuccess()
             } catch (e: Exception) {
-                Log.e(TAG, "Error during login", e)
                 handleError(e)
             } finally {
                 settingsStateHolder.updateIsLoading(false)
@@ -194,7 +181,6 @@ class SettingsViewModel @Inject constructor(
                 toastManager.showLogoutSuccessToast()
                 onLogoutSuccess()
             } catch (e: Exception) {
-                Log.e(TAG, "Error during logout", e)
                 handleError(e)
             } finally {
                 settingsStateHolder.updateIsLoading(false)
@@ -229,7 +215,6 @@ class SettingsViewModel @Inject constructor(
                     resetNotificationSettings()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error during withdrawal", e)
                 handleError(e)
             } finally {
                 settingsStateHolder.updateIsLoading(false)
@@ -278,11 +263,9 @@ class SettingsViewModel @Inject constructor(
         return try {
             emailManager.createEmailIntent()
         } catch (e: URISyntaxException) {
-            Log.e(TAG, "Invalid URI syntax", e)
             toastManager.showURISyntaxException()
             null
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating email intent", e)
             handleError(e)
             null
         }
@@ -297,27 +280,22 @@ class SettingsViewModel @Inject constructor(
     private fun handleError(e: Exception) {
         when (e) {
             is IOException, is FirebaseNetworkException -> {
-                Log.e(Favorites.TAG, "Network error details: ${e.message}", e)
                 toastManager.showNetworkErrorToast()
             }
 
             is FirebaseFirestoreException -> {
-                Log.e(Favorites.TAG, "FirebaseFirestore error details: ${e.message}", e)
                 toastManager.showFirebaseErrorToast()
             }
 
             is SQLiteException -> {
-                Log.e(Favorites.TAG, "Room database error details: ${e.message}", e)
                 toastManager.showRoomDatabaseErrorToast()
             }
 
             is IllegalStateException -> {
-                Log.e(Favorites.TAG, "Illegal state error details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             }
 
             else -> {
-                Log.e(Favorites.TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             }
         }

@@ -1,6 +1,5 @@
 package com.example.passionDaily.quote.presentation.components
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,8 +56,7 @@ fun BackgroundImage(imageUrl: String?) {
             model = it,
             contentDescription = "Background Image",
             modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer { alpha = 0.5f },
+                .fillMaxSize(),
             contentScale = ContentScale.Crop
         )
     }
@@ -223,7 +221,7 @@ fun QuoteAndPerson(
                         lineHeight = 39.6.sp,
                         fontFamily = FontFamily(Font(R.font.yeonsung_regular)),
                         fontWeight = FontWeight(400),
-                        color = Color(0xFF8E8E8E),
+                        color = Color(0xFFFFFFFF),
                         textAlign = TextAlign.Center,
                     ),
                 )
@@ -273,7 +271,6 @@ fun ShareButton(
             indication = null,
             interactionSource = remember { MutableInteractionSource() }
         ) {
-            Log.d("ShareButton", "Share button clicked")
 
             quoteViewModel.shareQuote(
                 context = context,
@@ -362,8 +359,6 @@ fun AddToFavoritesButton(
                         } catch (e: Exception) {
                             // 실패 시 UI 상태를 원래대로 복구
                             localIsFavorite = !localIsFavorite
-                            // 에러 처리 (토스트 메시지 등)
-                            Log.e("AddToFavoritesButton", "Failed to update favorite", e)
                         }
                     }
                 }

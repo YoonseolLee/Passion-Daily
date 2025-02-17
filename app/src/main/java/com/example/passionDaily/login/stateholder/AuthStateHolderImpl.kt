@@ -15,17 +15,14 @@ class AuthStateHolderImpl @Inject constructor() : AuthStateHolder {
     override val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     override suspend fun setAuthenticated(userId: String) {
-        Log.d("AuthDebug", "Setting authenticated state for userId: $userId")
         _authState.emit(AuthState.Authenticated(userId))
     }
 
     override suspend fun setUnAuthenticated() {
         _authState.emit(AuthState.Unauthenticated)
-        Log.d("AuthStateHolder", "User unauthenticated")
     }
 
     override suspend fun setRequiresConsent(userId: String, userProfileJson: String?) {
         _authState.emit(AuthState.RequiresConsent(userId, userProfileJson))
-        Log.d("AuthStateHolder", "User requires consent with ID: $userId")
     }
 }

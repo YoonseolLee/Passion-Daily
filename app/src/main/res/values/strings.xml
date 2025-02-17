@@ -7,6 +7,7 @@
     <!-- 로그인 및 회원 관리 -->
     <string name="header_title_login_screen">간편로그인 후
 이용이 가능합니다.</string>
+    <string name="look">보기</string>
     <string name="header_subtitle1_login_screen">10초</string>
     <string name="header_subtitle2_login_screen">면 가입이 가능해요.</string>
     <string name="kakao_login">카카오로 로그인</string>
@@ -72,6 +73,8 @@
     <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
     <string name="todays_quote">오늘의 명언</string>
     <string name="FCM_URL">https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send</string>
+    <string name="fcmToken">fcmToken</string>
+    <string name="firebase_messaging_url">https://www.googleapis.com/auth/firebase.messaging</string>
 
     <!-- 홈 및 설정 관련 -->
     <string name="home">홈</string>

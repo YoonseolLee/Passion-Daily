@@ -1,15 +1,15 @@
 package com.example.passionDaily.notification.worker
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.example.passionDaily.constants.WorkerConstants.QuoteNotification.TAG
+import com.example.passionDaily.R
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
 import com.example.passionDaily.notification.data.repository.remote.UserNotificationRepository
 import com.example.passionDaily.notification.manager.FCMNotificationManager
 import com.example.passionDaily.notification.service.QuoteNotificationService
+import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.QuerySnapshot
 import dagger.assisted.Assisted
@@ -25,7 +25,8 @@ class QuoteNotificationWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val fcmService: QuoteNotificationService,
     private val fcmManager: FCMNotificationManager,
-    private val userRepository: UserNotificationRepository
+    private val userRepository: UserNotificationRepository,
+    private val stringProvider: StringProvider
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -40,13 +41,12 @@ class QuoteNotificationWorker @AssistedInject constructor(
 
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send notifications", e)
             Result.failure()
         }
     }
 
     private fun getCurrentTime(): String {
-        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+        return LocalTime.now().format(DateTimeFormatter.ofPattern(stringProvider.getString(R.string.hour_pattern)))
     }
 
     private suspend fun getTodayQuote(): DailyQuoteDTO? {

@@ -14,7 +14,7 @@ class SaveUserProfileUseCase @Inject constructor(
 ) {
     suspend fun saveToRoom(profileMap: Map<String, Any?>, userId: String): String {
         val userEntity = userProfileMapper.mapToUserEntity(profileMap)
-        localUserRepository.saveUser(userEntity)  // Room 저장 실패시 예외는 자동으로 전파됨
+        localUserRepository.saveUser(userEntity)
         return userId
     }
 

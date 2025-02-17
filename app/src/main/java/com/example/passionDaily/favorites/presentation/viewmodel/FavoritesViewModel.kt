@@ -1,12 +1,10 @@
 package com.example.passionDaily.favorites.presentation.viewmodel
 
 import android.database.sqlite.SQLiteException
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
-import com.example.passionDaily.constants.ViewModelConstants.Favorites.TAG
 import com.example.passionDaily.favorites.base.FavoritesViewModelActions
 import com.example.passionDaily.favorites.base.FavoritesViewModelState
 import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
@@ -15,7 +13,6 @@ import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
-import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
 import com.example.passionDaily.login.state.AuthState
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
@@ -126,7 +123,6 @@ class FavoritesViewModel @Inject constructor(
     override fun loadFavorites() {
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
-            Log.d("loadFavorites", "authState: ${authStateHolder.authState.value}")
             when (val state = authStateHolder.authState.value) {
                 is AuthState.Authenticated -> {
                     favoritesLoadingManager.updateIsFavoriteLoading(true)
@@ -266,27 +262,22 @@ class FavoritesViewModel @Inject constructor(
         when (e) {
             is CancellationException -> throw e
             is IOException -> {
-                Log.e(TAG, "Network error details: ${e.message}", e)
                 toastManager.showNetworkErrorToast()
             }
 
             is FirebaseFirestoreException -> {
-                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
                 toastManager.showFirebaseErrorToast()
             }
 
             is SQLiteException -> {
-                Log.e(TAG, "Room database error details: ${e.message}", e)
                 toastManager.showRoomDatabaseErrorToast()
             }
 
             is IllegalStateException -> {
-                Log.e(TAG, "Illegal state error details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             }
 
             else -> {
-                Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             }
         }

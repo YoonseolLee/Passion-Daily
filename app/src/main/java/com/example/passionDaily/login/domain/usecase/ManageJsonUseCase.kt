@@ -1,6 +1,5 @@
 package com.example.passionDaily.login.domain.usecase
 
-import android.util.Log
 import com.example.passionDaily.login.domain.model.UserProfileKey
 import com.example.passionDaily.login.domain.model.UserConsent
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
@@ -17,7 +16,6 @@ class ManageJsonUseCase @Inject constructor(
 ) {
     suspend fun verifyJson(json: String?): Boolean = withContext(Dispatchers.IO) {
         if (json.isNullOrEmpty()) {
-            Log.e("UserProfileJsonManager", "Invalid JSON: null or empty")
             userProfileStateHolder.updateIsJsonValid(false)
             return@withContext false
         }
@@ -26,11 +24,9 @@ class ManageJsonUseCase @Inject constructor(
             JSONObject(json)
             val isValid = isJsonValidFormat(json)
 
-            Log.d("UserProfileJsonManager", "Valid JSON: $json")
             userProfileStateHolder.updateIsJsonValid(isValid)
             isValid
         } catch (e: JSONException) {
-            Log.e("UserProfileJsonManager", "Invalid JSON format: $json", e)
             userProfileStateHolder.updateIsJsonValid(false)
             false
         }
@@ -53,7 +49,6 @@ class ManageJsonUseCase @Inject constructor(
 
     private fun validateUserProfile(userProfileJson: String) {
         if (!userProfileStateHolder.isJsonValid.value || userProfileJson == null) {
-            Log.e("ManageJsonUseCase", "Cannot update invalid JSON")
             throw IllegalArgumentException("Invalid JSON")
         }
     }

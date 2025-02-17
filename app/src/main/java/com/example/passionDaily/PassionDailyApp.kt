@@ -21,8 +21,10 @@ import com.google.firebase.auth.FirebaseAuth
 class PassionDailyApp : Application(), Configuration.Provider {
     @Inject
     lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
+
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
     @Inject
     lateinit var authStateHolder: AuthStateHolder
 
@@ -33,8 +35,6 @@ class PassionDailyApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-
-        Log.d("PassionDailyApp", "Application onCreate called")
 
         // 인증 상태 초기화
         initializeAuthState()
@@ -48,7 +48,8 @@ class PassionDailyApp : Application(), Configuration.Provider {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "default"
             val channelName = "기본 알림"
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
             val channel = android.app.NotificationChannel(
                 channelId,
                 channelName,
@@ -59,51 +60,37 @@ class PassionDailyApp : Application(), Configuration.Provider {
                 enableVibration(true)
             }
             notificationManager.createNotificationChannel(channel)
-            Log.d("PassionDailyApp", "Notification channel created")
         }
     }
 
     private fun initializeAuthState() {
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                FirebaseAuth.getInstance().currentUser?.let { user ->
-                    Log.d("PassionDailyApp", "Initializing auth state for user: ${user.uid}")
-                    authStateHolder.setAuthenticated(user.uid)
-                } ?: run {
-                    Log.d("PassionDailyApp", "No authenticated user found")
-                    authStateHolder.setUnAuthenticated()
-                }
-            } catch (e: Exception) {
-                Log.e("PassionDailyApp", "Error initializing auth state", e)
+            FirebaseAuth.getInstance().currentUser?.let { user ->
+                authStateHolder.setAuthenticated(user.uid)
+            } ?: run {
+                authStateHolder.setUnAuthenticated()
             }
         }
     }
 
     private fun setupAlarmForExistingUsers() {
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                Log.d("PassionDailyApp", "Setting up alarms for existing users")
 
-                // 먼저 모든 기존 알람 취소
-                alarmScheduler.cancelExistingAlarm()
+            // 먼저 모든 기존 알람 취소
+            alarmScheduler.cancelExistingAlarm()
 
-                val users = FirebaseFirestore.getInstance()
-                    .collection("users")
-                    .whereEqualTo("notificationEnabled", true)
-                    .get()
-                    .await()
+            val users = FirebaseFirestore.getInstance()
+                .collection("users")
+                .whereEqualTo("notificationEnabled", true)
+                .get()
+                .await()
 
-                Log.d("PassionDailyApp", "Found ${users.size()} users with notifications enabled")
 
-                users.documents.forEach { user ->
-                    user.getString("notificationTime")?.let { timeString ->
-                        Log.d("PassionDailyApp", "Setting up alarm for time: $timeString")
-                        val (hour, minute) = timeString.split(":").map { it.toInt() }
-                        alarmScheduler.scheduleNotification(hour, minute)
-                    }
+            users.documents.forEach { user ->
+                user.getString("notificationTime")?.let { timeString ->
+                    val (hour, minute) = timeString.split(":").map { it.toInt() }
+                    alarmScheduler.scheduleNotification(hour, minute)
                 }
-            } catch (e: Exception) {
-                Log.e("PassionDailyApp", "Error setting up notifications", e)
             }
         }
     }

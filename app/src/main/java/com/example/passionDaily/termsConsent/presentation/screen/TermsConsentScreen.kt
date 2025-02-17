@@ -145,7 +145,6 @@ fun CheckboxItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // 체크박스와 텍스트를 포함하는 영역
         Row(
             modifier = Modifier
                 .weight(1f)
@@ -176,7 +175,7 @@ fun CheckboxItem(
         // "보기" 텍스트
         if (url != null && !isAgreeAll) {
             Text(
-                text = "보기",
+                text = stringResource(id = R.string.look),
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .clickable {

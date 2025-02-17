@@ -33,4 +33,9 @@
     <string name="error_email_send">메일 전송에 실패하였습니다.</string>
     <string name="error_uri_syntax">잘못된 URI 형식입니다.</string>
 
+<!--  ImageShare  -->
+    <string name="error_share_img">이미지 공유 중 오류가 발생했습니다</string>
+    <string name="share_quote">명언 공유하기</string>
+
+
 </resources>

@@ -2,9 +2,6 @@ package com.example.passionDaily.quote.data.remote
 
 import android.util.Log
 import com.example.passionDaily.R
-import com.example.passionDaily.constants.RepositoryConstants.Quote.TAG
-import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepositoryImpl
-import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepositoryImpl.Companion
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.resources.StringProvider
@@ -19,7 +16,6 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.time.withTimeout
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
@@ -49,10 +45,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
 
             query.documents.map { it.toQuote() }
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore error in getQuotesBeforeId: ${e.message}", e)
             emptyList()
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getQuotesBeforeId: ${e.message}", e)
             emptyList()
         }
     }
@@ -77,10 +71,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 lastDocument = query.documents.lastOrNull()
             )
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore error in getQuotesAfterId: ${e.message}", e)
             QuoteResult(emptyList(), null)
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getQuotesAfterId: ${e.message}", e)
             QuoteResult(emptyList(), null)
         }
     }
@@ -97,7 +89,6 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 result.toQuoteResult()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete favorite from Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -121,14 +112,13 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 .document(categoryStr)
                 .collection("quotes")
 
-            val orderedQuery = baseQuery.orderBy("createdAt")
+            val orderedQuery = baseQuery.orderBy(FieldPath.documentId())
             val paginatedQuery = lastLoadedQuote?.let {
                 orderedQuery.startAfter(it)
             } ?: orderedQuery
 
             paginatedQuery.limit(pageSize.toLong())
         } catch (e: Exception) {
-            Log.e(TAG, "Error in buildCategoryQuery: ${e.message}", e)
             throw e
         }
     }
@@ -144,12 +134,9 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 .document(quoteId)
                 .update("shareCount", FieldValue.increment(1))
                 .await()
-            Log.d(TAG, "Share count incremented for quote: $quoteId")
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore error in incrementShareCount: ${e.message}", e)
             throw e
         } catch (e: Exception) {
-            Log.e(TAG, "Error in incrementShareCount: ${e.message}", e)
             throw e
         }
     }
@@ -167,10 +154,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 .await()
                 .toQuote()
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Firestore error in getQuoteById: ${e.message}", e)
             null
         } catch (e: Exception) {
-            Log.e(TAG, "Error in getQuoteById: ${e.message}", e)
             null
         }
     }

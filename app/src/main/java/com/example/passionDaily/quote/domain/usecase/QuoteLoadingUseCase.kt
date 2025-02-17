@@ -1,7 +1,5 @@
 package com.example.passionDaily.quote.domain.usecase
 
-import android.util.Log
-import com.example.passionDaily.constants.UseCaseConstants.QuoteLoading.TAG
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.quote.domain.model.QuoteResult
@@ -41,13 +39,10 @@ class QuoteLoadingUseCase @Inject constructor(
                 targetQuoteId = quoteId,
                 limit = limit
             ).also { quotes ->
-                Log.d(TAG, "Quotes before target: ${quotes.map { it.id }}")
             }
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Failed to load quotes before target", e)
             emptyList()
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while loading quotes before target", e)
             emptyList()
         }
     }
@@ -59,16 +54,12 @@ class QuoteLoadingUseCase @Inject constructor(
         try {
             remoteQuoteRepository.getQuoteById(quoteId, category)
                 ?.also { quote ->
-                    Log.d(TAG, "Target quote: ${quote.id}")
                 } ?: run {
-                Log.w(TAG, "Target quote not found: $quoteId")
                 null
             }
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Failed to load target quote", e)
             null
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while loading target quote", e)
             null
         }
     }
@@ -85,10 +76,8 @@ class QuoteLoadingUseCase @Inject constructor(
                 limit = limit
             )
         } catch (e: FirebaseFirestoreException) {
-            Log.e(TAG, "Failed to load quotes after target", e)
             QuoteResult(emptyList(), null)
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error while loading quotes after target", e)
             QuoteResult(emptyList(), null)
         }
     }

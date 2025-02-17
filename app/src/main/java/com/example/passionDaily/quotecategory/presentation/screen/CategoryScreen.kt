@@ -273,24 +273,3 @@ fun SingleCategoryBox(
         )
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun CategoryScreenContentPreview() {
-    CategoryScreenContent(
-        categories = listOf(
-            QuoteCategory.EFFORT.koreanName,
-            QuoteCategory.WEALTH.koreanName,
-            QuoteCategory.BUSINESS.koreanName,
-            QuoteCategory.LOVE.koreanName,
-            QuoteCategory.EXERCISE.koreanName,
-            QuoteCategory.CONFIDENCE.koreanName,
-            QuoteCategory.CREATIVITY.koreanName,
-            QuoteCategory.HAPPINESS.koreanName,
-            QuoteCategory.OTHER.koreanName
-        ),
-        selectedCategory = null,
-        onCategoryClicked = {},
-        onBack = {}
-    )
-}

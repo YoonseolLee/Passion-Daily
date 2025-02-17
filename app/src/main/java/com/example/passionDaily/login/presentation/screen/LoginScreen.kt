@@ -1,6 +1,5 @@
 package com.example.passionDaily.login.presentation.screen
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,7 +51,6 @@ fun LoginScreen(
     val isLoading by sharedLogInViewModel.isLoading.collectAsState()
 
     LaunchedEffect(authState) {
-        Log.d("LoginScreen", "Current AuthState: ${authState}")
         when (authState) {
             is AuthState.Authenticated -> {
                 sharedLogInViewModel.signalLoginSuccess()
@@ -66,7 +64,6 @@ fun LoginScreen(
             }
 
             is AuthState.Unauthenticated -> {
-                Log.d("LoginScreen", "User is not authenticated")
             }
         }
     }

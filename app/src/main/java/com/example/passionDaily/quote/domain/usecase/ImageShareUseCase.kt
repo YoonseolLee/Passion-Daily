@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -19,7 +18,9 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.example.passionDaily.R
 import com.example.passionDaily.quote.presentation.screen.ShareableQuoteImage
+import com.example.passionDaily.resources.StringProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -29,7 +30,8 @@ import java.io.FileOutputStream
 import javax.inject.Inject
 
 class ImageShareUseCase @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val stringProvider: StringProvider
 ) {
     suspend fun shareQuoteImage(
         context: Context,
@@ -68,24 +70,16 @@ class ImageShareUseCase @Inject constructor(
                     rootView.removeView(composeView)
                 }
             }
-        } catch (e: IllegalStateException) {
+        }  catch (e: Exception) {
             withContext(Dispatchers.Main) {
-                handleError(context, e, "유효하지 않은 Context입니다")
-            }
-        } catch (e: SecurityException) {
-            withContext(Dispatchers.Main) {
-                handleError(context, e, "파일 접근 권한이 없습니다")
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                handleError(context, e, "이미지 공유를 실패하였습니다.")
+                handleError(context, e, stringProvider.getString(R.string.error_share_img))
             }
         }
     }
 
     private fun getRootView(context: Context): ViewGroup {
         val activity = context as? Activity
-            ?: throw IllegalStateException("Context is not an Activity")
+            ?: throw IllegalStateException()
         return activity.window.decorView as ViewGroup
     }
 
@@ -165,14 +159,13 @@ class ImageShareUseCase @Inject constructor(
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "명언 공유하기"))
+        context.startActivity(Intent.createChooser(intent, stringProvider.getString(R.string.share_quote)))
     }
 
     private fun handleError(context: Context, e: Exception, message: String) {
-        Log.e("ImageShareManager", "Error sharing image", e)
         Toast.makeText(
             context,
-            "이미지 공유 중 오류가 발생했습니다: ${message}",
+            stringProvider.getString(R.string.error_share_img),
             Toast.LENGTH_LONG
         ).show()
     }

@@ -1,8 +1,6 @@
 package com.example.passionDaily.user.data.remote.repository
 
-import android.util.Log
 import com.example.passionDaily.R
-import com.example.passionDaily.constants.RepositoryConstants.RemoteUser.TAG
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.user.data.remote.model.User
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
@@ -49,9 +47,7 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     )
                 ).await()
 
-            Log.d("UserSync", "Successfully updated lastSyncDate and lastLoginDate: $now")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification time in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -68,7 +64,6 @@ class RemoteUserRepositoryImpl @Inject constructor(
             val userEntity = localUserRepository.convertToUserEntity(firestoreUser)
             localUserRepository.saveUser(userEntity)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification time in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -89,7 +84,6 @@ class RemoteUserRepositoryImpl @Inject constructor(
             userDoc.toObject(User::class.java)
                 ?: throw IllegalStateException()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification time in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -115,10 +109,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
 
                 updateFCMToken(userId)
 
-                Log.d("Firestore", "User profile added successfully: $userId")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification time in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -137,13 +129,9 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .document(userId)
                     .update("fcmToken", token)
                     .addOnSuccessListener {
-                        Log.d("Firestore", "FCM Token updated successfully")
                     }
                     .addOnFailureListener { e ->
-                        Log.e("Firestore", "Error updating FCM token", e)
                     }
-            } else {
-                Log.e("Firestore", "Failed to get FCM token", task.exception)
             }
         }
     }
@@ -159,10 +147,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .update("notificationEnabled", enabled)
                     .await()
 
-                Log.d(TAG, "Successfully updated notification settings to Firestore")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification settings in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -184,10 +170,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .update("notificationTime", newTime)
                     .await()
 
-                Log.d(TAG, "Successfully updated notification time to Firestore")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to update notification time in Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -205,11 +189,8 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .document(userId)
                     .delete()
                     .await()
-
-                Log.d(TAG, "Successfully deleted user from Firestore")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete user from Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
@@ -230,16 +211,9 @@ class RemoteUserRepositoryImpl @Inject constructor(
 
                 val savedQuotes = savedQuotesRef.get().await()
 
-                Log.d(TAG, "Found ${savedQuotes.size()} documents in saved_quotes")
 
                 savedQuotes.documents.forEachIndexed { index, document ->
-                    Log.d(TAG, "Attempting to delete document ${index + 1}/${savedQuotes.size()}: ${document.id}")
-                    try {
                         savedQuotesRef.document(document.id).delete().await()
-                        Log.d(TAG, "Successfully deleted document: ${document.id}")
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to delete document: ${document.id}", e)
-                    }
                 }
 
                 firestore.collection(stringProvider.getString(R.string.favorites_eng))
@@ -248,16 +222,13 @@ class RemoteUserRepositoryImpl @Inject constructor(
                     .await()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to delete favorites from Firestore", e)
             when {
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
                         e is TimeoutCancellationException -> {
-                    Log.e(TAG, "Network or timeout error occurred", e)
                     throw IOException("Network error while accessing Firestore", e)
                 }
                 else -> {
-                    Log.e(TAG, "Unexpected error occurred", e)
                     throw e
                 }
             }

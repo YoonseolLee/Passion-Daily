@@ -8,7 +8,6 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
-import com.example.passionDaily.constants.ViewModelConstants.SharedLogin.TAG
 import com.example.passionDaily.login.base.SharedLogInActions
 import com.example.passionDaily.login.base.SharedLogInState
 import com.example.passionDaily.login.manager.AuthenticationManager
@@ -42,7 +41,6 @@ class SharedLogInViewModel @Inject constructor(
     private val remoteUserRepository: RemoteUserRepository,
     private val toastManager: ToastManager,
     private val userProfileMapper: UserProfileMapper,
-    private val stringProvider: StringProvider,
     private val authStateHolder: AuthStateHolder,
     private val loginStateHolder: LoginStateHolder
 ) : ViewModel(), SharedLogInActions, SharedLogInState {
@@ -59,17 +57,53 @@ class SharedLogInViewModel @Inject constructor(
      * LoginScreen
      */
 
+//    override fun signInWithGoogle() {
+//        viewModelScope.launch {
+//            authManager.startLoading()
+//            try {
+//                // 기존 크리덴셜 클리어: 로그아웃 직후 재로그인 시, 자동 로그인 방지
+//                authManager.clearCredentials()
+//
+//                // 새로운 크리덴셜 요청
+//                val result = authManager.getGoogleCredential()
+//                processSignInResult(result)
+//            } catch (e: Exception) {
+//                handleException(e)
+//            } finally {
+//                authManager.stopLoading()
+//            }
+//        }
+//    }
+//
+//    private suspend fun processSignInResult(result: GetCredentialResponse) {
+//        val credential = result.credential
+//        if (credential is CustomCredential &&
+//            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+//        ) {
+//            try {
+//                val idToken = authManager.extractIdToken(credential)
+//                val authResult = authManager.authenticateWithFirebase(idToken)
+//                handleAuthResult(authResult)
+//            } catch (e: Exception) {
+//                handleException(e)
+//            }
+//        }
+//    }
+
     override fun signInWithGoogle() {
         viewModelScope.launch {
+            Log.d("GoogleSignIn", "Starting Google Sign In process")
             authManager.startLoading()
             try {
-                // 기존 크리덴셜 클리어: 로그아웃 직후 재로그인 시, 자동 로그인 방지
+                Log.d("GoogleSignIn", "Clearing existing credentials")
                 authManager.clearCredentials()
 
-                // 새로운 크리덴셜 요청
+                Log.d("GoogleSignIn", "Requesting new Google credential")
                 val result = authManager.getGoogleCredential()
+                Log.d("GoogleSignIn", "Got credential result: ${result.credential?.type}")
                 processSignInResult(result)
             } catch (e: Exception) {
+                Log.e("GoogleSignIn", "Error in signInWithGoogle", e)
                 handleException(e)
             } finally {
                 authManager.stopLoading()
@@ -79,16 +113,27 @@ class SharedLogInViewModel @Inject constructor(
 
     private suspend fun processSignInResult(result: GetCredentialResponse) {
         val credential = result.credential
+        Log.d("GoogleSignIn", "Processing sign in result with credential type: ${credential?.type}")
+
         if (credential is CustomCredential &&
             credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
             try {
+                Log.d("GoogleSignIn", "Extracting ID token")
                 val idToken = authManager.extractIdToken(credential)
+                Log.d("GoogleSignIn", "ID token extracted successfully")
+
+                Log.d("GoogleSignIn", "Authenticating with Firebase")
                 val authResult = authManager.authenticateWithFirebase(idToken)
+                Log.d("GoogleSignIn", "Firebase authentication successful")
+
                 handleAuthResult(authResult)
             } catch (e: Exception) {
+                Log.e("GoogleSignIn", "Error in processSignInResult", e)
                 handleException(e)
             }
+        } else {
+            Log.w("GoogleSignIn", "Invalid credential type received: ${credential?.type}")
         }
     }
 
@@ -114,10 +159,8 @@ class SharedLogInViewModel @Inject constructor(
 
     private suspend fun handleUserRegistrationStatus(userId: String, userProfileJson: String) {
         if (remoteUserRepository.isUserRegistered(userId)) {
-            Log.d("UserRegistration", "User $userId is already registered, syncing existing user")
             syncExistingUser(userId)
         } else {
-            Log.d("UserRegistration", "User $userId is new, redirecting to consent screen. Profile: $userProfileJson")
             authStateHolder.setRequiresConsent(userId, userProfileJson)
         }
     }
@@ -150,7 +193,6 @@ class SharedLogInViewModel @Inject constructor(
 
     override fun handleNextClick(userProfileJson: String?) {
         if (!consent.value.isAllAgreed) {
-            Log.e(TAG, "User did not agree to required terms")
             return
         }
 
@@ -168,7 +210,6 @@ class SharedLogInViewModel @Inject constructor(
 
                         val currentUser = FirebaseAuth.getInstance().currentUser
                         val userId = currentUser?.uid ?: run {
-                            Log.e(TAG, "Current Firebase user is null")
                             toastManager.showLoginErrorToast()
                             return@launch
                         }
@@ -224,9 +265,6 @@ class SharedLogInViewModel @Inject constructor(
     }
 
     private fun showToastForException(e: Exception) {
-        val errorMessage = e.message ?: stringProvider.getString(R.string.error_general)
-        Log.e(TAG, errorMessage, e)
-
         when (e) {
             is GetCredentialCancellationException -> {
                 toastManager.showNetworkErrorToast()

@@ -2,7 +2,6 @@ package com.example.passionDaily.constants
 
 object UseCaseConstants {
     object QuoteLoading {
-        const val TAG = "QuoteLoadingUseCase"
     }
 
     object UserProfileConstants {
@@ -12,7 +11,6 @@ object UseCaseConstants {
     }
 
     object ScheduleDailyQuoteAlarm {
-        const val TAG = "ScheduleDailyQuoteAlarm"
         const val ALARM_REQUEST_CODE = 100
     }
 }

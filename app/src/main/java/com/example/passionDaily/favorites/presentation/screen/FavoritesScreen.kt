@@ -1,6 +1,5 @@
 package com.example.passionDaily.favorites.presentation.screen
 
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -80,7 +79,6 @@ fun FavoritesScreen(
         if (currentScreen == NavigationBarScreens.FAVORITES) {
             favoritesViewModel.loadFavorites()
         }
-        Log.d("FavoritesScreen", "currentFavoriteQuote changed: $currentFavoriteQuote")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

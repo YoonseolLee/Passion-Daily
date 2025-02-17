@@ -1,7 +1,6 @@
 package com.example.passionDaily.notification.service
 
 import android.content.Context
-import android.util.Log
 import com.example.passionDaily.R
 import com.example.passionDaily.quote.data.local.model.QuoteConfigDTO
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
@@ -90,14 +89,9 @@ class QuoteNotificationService @Inject constructor(
             if (quotesJson.isNotEmpty()) {
                 processQuoteData(quotesJson, stringProvider.getString(R.string.remote_config))
             } else {
-                Log.w(
-                    "QuoteNotificationService",
-                    "Remote Config returned empty quotes, using default values"
-                )
                 useDefaultQuoteData()
             }
         } catch (e: Exception) {
-            Log.e("QuoteNotificationService", "Error fetching from Remote Config: ${e.message}")
             throw e
         }
     }
@@ -108,7 +102,6 @@ class QuoteNotificationService @Inject constructor(
                 readAssetFile(stringProvider.getString(R.string.default_quotes_json))
             processQuoteData(defaultQuotes, stringProvider.getString(R.string.default_string))
         } catch (e: Exception) {
-            Log.e("QuoteNotificationService", "Failed to load default quotes", e)
             _monthlyQuotes.emit(emptyList())
             _isInitialized.emit(true)
         }
@@ -121,23 +114,13 @@ class QuoteNotificationService @Inject constructor(
     private suspend fun processQuoteData(jsonString: String, source: String) {
         try {
             val quoteConfigDTOS = json.decodeFromString<List<QuoteConfigDTO>>(jsonString)
-            Log.d(
-                "QuoteNotificationService",
-                "Parsed quotes from $source: ${quoteConfigDTOS.map { 
-                    "${it.day}: ${it.category}/${it.quoteId}" }}"
-            )
 
             val quotesTriples = quoteConfigDTOS.map { config ->
                 Triple(config.category, config.quoteId, config.day)
             }
             _monthlyQuotes.emit(quotesTriples)
             _isInitialized.emit(true)
-            Log.d(
-                "QuoteNotificationService",
-                "Successfully loaded ${quotesTriples.size} quotes from $source"
-            )
         } catch (e: Exception) {
-            Log.e("QuoteNotificationService", "Failed to process quotes from $source", e)
             throw e
         }
     }
@@ -147,17 +130,14 @@ class QuoteNotificationService @Inject constructor(
             waitUntilInitializationComplete()
 
             val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-            Log.d("QuoteNotificationService", "Fetching quote for day $today")
 
             val quoteInfo = findQuoteForDay(today)
             if (quoteInfo != null) {
                 fetchQuoteFromFirestore(quoteInfo)
             } else {
-                Log.w("QuoteNotificationService", "No quote found for day $today")
                 null
             }
         } catch (e: Exception) {
-            Log.e("QuoteNotificationService", "Failed to fetch quote for today", e)
             null
         }
     }
@@ -173,19 +153,11 @@ class QuoteNotificationService @Inject constructor(
     private fun findQuoteForDay(day: Int): Triple<String, String, Int>? {
         val quotes = monthlyQuotes.value
         if (quotes.isEmpty()) {
-            Log.w("QuoteNotificationService", "No quotes available")
             return null
         }
 
-        Log.d("QuoteNotificationService", "Finding quote for day: $day")
-        Log.d(
-            "QuoteNotificationService",
-            "Available quotes: ${quotes.map { "day=${it.third}, category=${it.first}, quoteId=${it.second}" }}"
-        )
-
         // 직접 day로 찾기
         return quotes.find { it.third == day }.also {
-            Log.d("QuoteNotificationService", "Found quote: $it")
         }
     }
 
@@ -202,14 +174,6 @@ class QuoteNotificationService @Inject constructor(
             .document(quoteId)
 
         val snapshot = docRef.get().await()
-        if (!snapshot.exists()) {
-            Log.e(
-                "QuoteNotificationService",
-                "Document does not exist at path: categories/$category/quotes/$quoteId"
-            )
-        } else {
-            Log.d("QuoteNotificationService", "Document fields: ${snapshot.data}")
-        }
         return snapshot
     }
 

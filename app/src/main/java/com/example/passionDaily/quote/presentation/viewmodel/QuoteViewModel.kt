@@ -1,13 +1,11 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
-import com.example.passionDaily.constants.ViewModelConstants.Quote.TAG
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
@@ -60,14 +58,6 @@ class QuoteViewModel @Inject constructor(
         combine(quotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
-
-    init {
-        viewModelScope.launch {
-            selectedCategory.value?.let { category ->
-                loadQuotes(category)
-            }
-        }
-    }
 
     override fun loadQuotes(category: QuoteCategory) {
         viewModelScope.launch {
@@ -167,23 +157,6 @@ class QuoteViewModel @Inject constructor(
     private suspend fun stopIsQuoteLoading() {
         quoteStateHolder.updateIsQuoteLoading(false)
     }
-
-//    override fun loadInitialQuotes(category: QuoteCategory) {
-//        viewModelScope.launch {
-//            try {
-//                withContext(Dispatchers.Main) {
-//                    quoteLoadingManager.startQuoteLoading()
-//                }
-//                category?.let {
-//                    loadQuotes(it)
-//                }
-//            } catch (e: Exception) {
-//                handleError(e)
-//            } finally {
-//                quoteStateHolder.updateIsQuoteLoading(false)
-//            }
-//        }
-//    }
 
     override fun previousQuote() {
         if (_currentQuoteIndex.value == 0 && hasReachedEnd.value) {
@@ -338,15 +311,12 @@ class QuoteViewModel @Inject constructor(
         when (e) {
             is CancellationException -> throw e
             is IOException -> {
-                Log.e(TAG, "Network error details: ${e.message}", e)
                 toastManager.showNetworkErrorToast()
             }
             is FirebaseFirestoreException -> {
-                Log.e(TAG, "FirebaseFirestore error details: ${e.message}", e)
                 toastManager.showFirebaseErrorToast()
             }
             else -> {
-                Log.e(TAG, "Exception details: ${e.message}", e)
                 toastManager.showGeneralErrorToast()
             }
         }

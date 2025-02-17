@@ -48,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.passionDaily.R
 import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
 import com.example.passionDaily.ui.component.CommonNavigationBar
@@ -56,8 +55,6 @@ import java.time.LocalTime
 import android.provider.Settings
 import android.Manifest
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
