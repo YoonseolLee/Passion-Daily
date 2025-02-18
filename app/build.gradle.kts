@@ -25,6 +25,15 @@ android {
     namespace = "com.example.passionDaily"
     compileSdk = 34
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore/release-key.jks")
+            storePassword = getLocalProperty("STORE_PASSWORD")
+            keyAlias = getLocalProperty("KEY_ALIAS")
+            keyPassword = getLocalProperty("KEY_PASSWORD")
+        }
+    }
+
     defaultConfig {
         applicationId = "com.example.passionDaily"
         minSdk = 26
@@ -43,6 +52,8 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
+
             isDebuggable = false
             // 코드 난독화 활성화
             isMinifyEnabled = true
