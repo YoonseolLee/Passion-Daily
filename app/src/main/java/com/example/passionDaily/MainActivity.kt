@@ -32,6 +32,13 @@ import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private var _navController: NavHostController? = null
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _navController = null
+    }
+
     @Inject
     lateinit var alarmScheduler: ScheduleDailyQuoteAlarmUseCase
 

@@ -19,12 +19,14 @@ import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -55,20 +57,29 @@ class SettingsViewModel @Inject constructor(
     override val currentUser = settingsStateHolder.currentUser
     override val isLoading = settingsStateHolder.isLoading
 
+    private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+        settingsStateHolder.updateCurrentUser(auth.currentUser)
+
+        // 로그인된 경우 사용자 설정 로드
+        auth.currentUser?.let { user ->
+            loadUserSettings()
+        } ?: run {
+            // 로그아웃된 경우 설정 초기화
+            settingsStateHolder.updateNotificationEnabled(false)
+            settingsStateHolder.updateNotificationTime(null)
+        }
+
+    }
+
     init {
         // Firebase Auth 상태 변경을 감지하여 currentUser 업데이트
-        Firebase.auth.addAuthStateListener { auth ->
-            settingsStateHolder.updateCurrentUser(auth.currentUser)
+        Firebase.auth.addAuthStateListener(authStateListener)
+    }
 
-            // 로그인된 경우 사용자 설정 로드
-            auth.currentUser?.let { user ->
-                loadUserSettings()
-            } ?: run {
-                // 로그아웃된 경우 설정 초기화
-                settingsStateHolder.updateNotificationEnabled(false)
-                settingsStateHolder.updateNotificationTime(null)
-            }
-        }
+    override fun onCleared() {
+        super.onCleared()
+        Firebase.auth.removeAuthStateListener(authStateListener)
+        viewModelScope.cancel() // 모든 코루틴 작업 취소
     }
 
     override fun loadUserSettings() {
