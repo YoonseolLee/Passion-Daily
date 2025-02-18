@@ -22,7 +22,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.Calendar
 import javax.inject.Inject
@@ -161,7 +160,7 @@ class FCMNotificationManagerImpl @Inject constructor(
 
     private fun buildFcmRequest(json: JSONObject, accessToken: String): Request {
         return Request.Builder()
-            .url(stringProvider.getString(R.string.FCM_URL))
+            .url(stringProvider.getString(R.string.fcm_url))
             .addHeader("Authorization", "Bearer $accessToken")
             .addHeader("Content-Type", "application/json")
             .post(json.toString().toRequestBody("application/json".toMediaType()))

@@ -17,7 +17,6 @@
     <string name="re_login_forwithdrawl">보안을 위해 다시 로그인해주세요.</string>
     <string name="login_success">로그인에 성공했어요.</string>
     <string name="login_error_format">로그인 중 오류가 발생했어요.</string>
-    <string name="login_loading">로그인 중이에요...</string>
     <string name="login_required">로그인이 필요해요.</string>
     <string name="logout_success">로그아웃에 성공했어요.</string>
     <string name="login">로그인</string>
@@ -68,9 +67,7 @@
     <string name="default_notification_time">08:00</string>
     <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
     <string name="todays_quote">오늘의 명언</string>
-    <string name="FCM_URL">https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send</string>
     <string name="fcmToken">fcmToken</string>
-    <string name="firebase_messaging_url">https://www.googleapis.com/auth/firebase.messaging</string>
     <string name="backgoround_photo_favorites">https://github.com/YoonseolLee/Passion-Daily-Photos/blob/main/pictures/background_photo_favorites.png?raw=true</string>
 
     <!-- 홈 및 설정 관련 -->
@@ -110,7 +107,6 @@
     <string name="default_quotes.json">default_quotes.json</string>
     <string name="remote_config">Remote Config</string>
     <string name="default_string">Default</string>
-    <string name="google_api_url">https://www.googleapis.com/auth/firebase.messaging</string>
 
     <!-- 기타 -->
     <string name="unknown">Unknown</string>

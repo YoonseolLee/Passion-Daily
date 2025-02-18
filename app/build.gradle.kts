@@ -37,6 +37,8 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["GOOGLE_CLIENT_ID"] = getLocalProperty("GOOGLE_CLIENT_ID")
+        manifestPlaceholders["FCM_URL"] = getLocalProperty("FCM_URL")
+        manifestPlaceholders["FIREBASE_MESSAGING_URL"] = getLocalProperty("FIREBASE_MESSAGING_URL")
     }
 
     buildTypes {
@@ -47,9 +49,13 @@ android {
                 "proguard-rules.pro",
             )
             resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
+            resValue("string", "fcm_url", getLocalProperty("FCM_URL"))
+            resValue("string", "firebase_messaging_url", getLocalProperty("FIREBASE_MESSAGING_URL"))
         }
         debug {
             resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
+            resValue("string", "fcm_url", getLocalProperty("FCM_URL"))
+            resValue("string", "firebase_messaging_url", getLocalProperty("FIREBASE_MESSAGING_URL"))
         }
     }
     compileOptions {
