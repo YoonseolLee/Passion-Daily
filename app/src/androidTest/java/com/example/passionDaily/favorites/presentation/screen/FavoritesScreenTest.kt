@@ -17,6 +17,9 @@ import com.example.passionDaily.util.MainCoroutineRule
 import org.junit.rules.RuleChain
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.just
 import org.junit.Before
 
 @ExperimentalCoroutinesApi
@@ -30,10 +33,10 @@ class FavoritesScreenTest {
 
     private val mockFavoritesViewModel = mockk<FavoritesViewModel>(relaxed = true)
     private val mockQuoteViewModel = mockk<QuoteViewModel>(relaxed = true)
-    private val mockNavigateToFavorites = mockk<() -> Unit>()
-    private val mockNavigateToQuote = mockk<() -> Unit>()
-    private val mockNavigateToSettings = mockk<() -> Unit>()
-    private val mockNavigateToLogin = mockk<() -> Unit>()
+    private val mockNavigateToFavorites = mockk<() -> Unit>(relaxed = true)
+    private val mockNavigateToQuote = mockk<() -> Unit>(relaxed = true)
+    private val mockNavigateToSettings = mockk<() -> Unit>(relaxed = true)
+    private val mockNavigateToLogin = mockk<() -> Unit>(relaxed = true)
 
     private val favoriteQuotesFlow = MutableStateFlow<List<QuoteEntity>>(emptyList())
     private val currentFavoriteQuoteFlow = MutableStateFlow<QuoteEntity?>(null)
@@ -52,6 +55,7 @@ class FavoritesScreenTest {
         every { mockFavoritesViewModel.favoriteQuotes } returns favoriteQuotesFlow
         every { mockFavoritesViewModel.currentFavoriteQuote } returns currentFavoriteQuoteFlow
         every { mockFavoritesViewModel.isFavoriteLoading } returns isLoadingFlow
+        coEvery { mockFavoritesViewModel.loadFavorites() } just Runs
     }
 
     @Test
@@ -93,6 +97,7 @@ class FavoritesScreenTest {
         }
 
         // Then
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("아직 즐겨찾기한 명언이 없어요.").assertExists()
     }
 

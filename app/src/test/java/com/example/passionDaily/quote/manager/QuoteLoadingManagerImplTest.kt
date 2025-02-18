@@ -1,6 +1,5 @@
 package com.example.passionDaily.quote.manager
 
-import com.example.passionDaily.constants.ManagerConstants.QuoteLoading.PAGE_SIZE
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.domain.usecase.QuoteListManagementUseCase
@@ -97,21 +96,5 @@ class QuoteLoadingManagerImplTest {
 
         // then
         coVerify { stateManagementUseCase.addQuotes(quotes, isNewCategory) }
-    }
-
-    @Test
-    fun `특정 명언 이전 명언 불러오기`() = mainCoroutineRule.runTest {
-        // given
-        val quoteId = "test_quote"
-        val category = QuoteCategory.CONFIDENCE
-        val expectedQuotes: List<Quote> = listOf(mockk())
-        coEvery { loadingUseCase.loadQuotesBeforeTarget(quoteId, category, PAGE_SIZE) } returns expectedQuotes
-
-        // when
-        val result = manager.loadQuotesBeforeTarget(quoteId, category)
-
-        // then
-        assertThat(result).isEqualTo(expectedQuotes)
-        coVerify { loadingUseCase.loadQuotesBeforeTarget(quoteId, category, PAGE_SIZE) }
     }
 }

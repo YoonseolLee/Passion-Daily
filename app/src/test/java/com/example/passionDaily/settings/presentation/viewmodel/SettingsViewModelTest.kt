@@ -6,6 +6,7 @@ import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.firebase.auth.FirebaseUser
 import android.content.Intent
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.stateholder.LoginStateHolder
@@ -52,6 +53,7 @@ class SettingsViewModelTest {
     private val settingsStateHolder = mockk<SettingsStateHolder>()
     private val loginStateHolder = mockk<LoginStateHolder>()
     private val userConsentManager = mockk<UserConsentManager>()
+    private val favoritesStateHolder = mockk<FavoritesStateHolder>()
 
     private lateinit var viewModel: SettingsViewModel
 
@@ -62,10 +64,6 @@ class SettingsViewModelTest {
         mockkStatic(Log::class)
         mockkStatic(Firebase::class)
         mockkStatic(FirebaseAuth::class)
-
-        every { Log.e(any(), any(), any()) } returns 0
-        every { Log.e(any(), any()) } returns 0
-        every { Log.d(any(), any()) } returns 0
 
         // StateFlow 모킹
         every { settingsStateHolder.notificationEnabled } returns MutableStateFlow(false)
@@ -87,6 +85,19 @@ class SettingsViewModelTest {
         every { mockAuth.addAuthStateListener(any()) } just Runs
         every { mockAuth.removeAuthStateListener(any()) } just Runs
 
+        // FavoritesStateHolder 모킹
+        every { favoritesStateHolder.favoriteQuotes } returns MutableStateFlow(emptyList())
+        every { favoritesStateHolder.isFavoriteLoading } returns MutableStateFlow(false)
+        every { favoritesStateHolder.error } returns MutableStateFlow(null)
+
+        coEvery { favoritesStateHolder.updateFavoriteQuotes(any()) } just Runs
+        coEvery { favoritesStateHolder.updateIsFavoriteLoading(any()) } just Runs
+        coEvery { favoritesStateHolder.updateError(any()) } just Runs
+        coEvery { favoritesStateHolder.addOptimisticFavorite(any(), any()) } just Runs
+        coEvery { favoritesStateHolder.removeOptimisticFavorite(any(), any()) } just Runs
+        every { favoritesStateHolder.isOptimisticallyFavorite(any(), any()) } returns false
+        coEvery { favoritesStateHolder.clearOptimisticFavorites() } just Runs
+
         viewModel = SettingsViewModel(
             userSettingsManager,
             scheduleAlarmUseCase,
@@ -97,7 +108,8 @@ class SettingsViewModelTest {
             emailManager,
             settingsStateHolder,
             loginStateHolder,
-            userConsentManager
+            userConsentManager,
+            favoritesStateHolder
         )
     }
 

@@ -89,7 +89,7 @@ class ManageJsonUseCaseTest {
         val testJsonString = """
     {
         "${UserProfileKey.ID.key}": "test-id",
-        "${UserProfileKey.EMAIL.key}": "test@example.com",
+        "${UserProfileKey.NAME.key}": "hello",
         "${UserProfileKey.PRIVACY_POLICY_ENABLED.key}": null,
         "${UserProfileKey.TERMS_OF_SERVICE_ENABLED.key}": null
     }
@@ -112,7 +112,7 @@ class ManageJsonUseCaseTest {
         val validUserProfileJson = """
         {
             "${UserProfileKey.ID.key}": "test-user-id",
-            "${UserProfileKey.EMAIL.key}": "test@example.com",
+            "${UserProfileKey.NAME.key}": "hello",
             "${UserProfileKey.PRIVACY_POLICY_ENABLED.key}": true,
             "${UserProfileKey.TERMS_OF_SERVICE_ENABLED.key}": false
         }
@@ -120,7 +120,7 @@ class ManageJsonUseCaseTest {
 
         val expectedMap = mapOf(
             UserProfileKey.ID.key to "test-user-id",
-            UserProfileKey.EMAIL.key to "test@example.com",
+            UserProfileKey.NAME.key to "hello",
             UserProfileKey.PRIVACY_POLICY_ENABLED.key to true,
             UserProfileKey.TERMS_OF_SERVICE_ENABLED.key to false
         )
@@ -163,13 +163,13 @@ class ManageJsonUseCaseTest {
         val json = """
         {
             "${UserProfileKey.ID.key}": "test-id",
-            "${UserProfileKey.EMAIL.key}": "test@example.com"
+            "${UserProfileKey.NAME.key}": "hello"
         }
     """.trimIndent()
 
         val profileMap = mapOf(
             UserProfileKey.ID.key to "test-id",
-            UserProfileKey.EMAIL.key to "test@example.com"
+            UserProfileKey.NAME.key to "hello"
         )
 
         coEvery { mapper.mapFromJson(any()) } returns profileMap
@@ -189,12 +189,12 @@ class ManageJsonUseCaseTest {
         // given
         val json = """
         {
-            "${UserProfileKey.EMAIL.key}": "test@example.com"
+            "${UserProfileKey.NAME.key}": "hello"
         }
     """.trimIndent()
 
         val profileMap = mapOf(
-            UserProfileKey.EMAIL.key to "test@example.com"
+            UserProfileKey.NAME.key to "hello"
         )
 
         coEvery { mapper.mapFromJson(any()) } returns profileMap

@@ -39,8 +39,15 @@ class UserConsentManagerTest {
             override fun updateAgreeAllChecked(checked: Boolean) {
                 _isAgreeAllChecked.value = checked
             }
-        }
 
+            override fun clearConsent() {
+                _consent.value = UserConsent(
+                    termsOfService = false,
+                    privacyPolicy = false
+                )
+                _isAgreeAllChecked.value = false
+            }
+        }
         userConsentManager = UserConsentManagerImpl(consentStateHolder)
     }
 

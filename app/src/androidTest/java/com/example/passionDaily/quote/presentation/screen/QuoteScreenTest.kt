@@ -107,7 +107,14 @@ class QuoteScreenTest {
     @Test
     fun 로딩중일때_프로그레스_인디케이터가_표시된다() {
         // Given
-        every { quoteStateHolder.isQuoteLoading } returns MutableStateFlow(true)
+        val isLoadingFlow = MutableStateFlow(true)
+        val quotesFlow = MutableStateFlow(emptyList<Quote>())
+        val currentQuoteFlow = MutableStateFlow<Quote?>(null)
+
+        every { quoteStateHolder.isQuoteLoading } returns isLoadingFlow
+        every { quoteStateHolder.quotes } returns quotesFlow
+        every { quoteViewModel.currentQuote } returns currentQuoteFlow
+        every { quoteViewModel.isLoading } returns isLoadingFlow
 
         // When
         composeTestRule.setContent {
@@ -125,6 +132,7 @@ class QuoteScreenTest {
         }
 
         // Then
+        composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithTag("LoadingIndicator")
             .assertExists()

@@ -41,7 +41,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -53,7 +53,7 @@ class UserDaoTest {
         // Then
         val retrieved = userDao.getUserByUserId("user1")
         assertThat(retrieved).isNotNull()
-        assertThat(retrieved?.email).isEqualTo("test@example.com")
+        assertThat(retrieved?.name).isEqualTo("hello")
     }
 
     @Test
@@ -61,7 +61,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -69,12 +69,12 @@ class UserDaoTest {
         userDao.insertUser(user)
 
         // When
-        val updated = user.copy(email = "updated@example.com")
+        val updated = user.copy(name = "updated")
         userDao.updateUser(updated)
 
         // Then
         val retrieved = userDao.getUserByUserId("user1")
-        assertThat(retrieved?.email).isEqualTo("updated@example.com")
+        assertThat(retrieved?.name).isEqualTo("updated")
     }
 
     @Test
@@ -82,7 +82,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -119,7 +119,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -127,7 +127,7 @@ class UserDaoTest {
         userDao.insertUser(user)
 
         // When
-        val retrieved = userDao.getUserByEmail("test@example.com")
+        val retrieved = userDao.getUserByName("hello")
 
         // Then
         assertThat(retrieved).isNotNull()
@@ -159,7 +159,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -179,7 +179,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()
@@ -199,7 +199,7 @@ class UserDaoTest {
         // Given
         val user = UserEntity(
             userId = "user1",
-            email = "test@example.com",
+            name = "hello",
             notificationEnabled = true,
             notificationTime = "09:00",
             lastSyncDate = System.currentTimeMillis()

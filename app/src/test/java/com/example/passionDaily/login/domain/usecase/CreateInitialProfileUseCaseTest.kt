@@ -23,7 +23,7 @@ class CreateInitialProfileUseCaseTest {
     fun setUp() {
         createInitialProfileUseCase = CreateInitialProfileUseCase()
         every { firebaseUser.uid } returns "testUserId"
-        every { firebaseUser.email } returns "test@example.com"
+        every { firebaseUser.displayName } returns "hello"
     }
 
     @Test
@@ -33,8 +33,25 @@ class CreateInitialProfileUseCaseTest {
 
         assertThat(profileMap).isNotEmpty()
         assertThat(profileMap[UserProfileKey.ID.key]).isEqualTo(userId)
-        assertThat(profileMap[UserProfileKey.EMAIL.key]).isEqualTo("test@example.com")
+        assertThat(profileMap[UserProfileKey.NAME.key]).isEqualTo("hello")
         assertThat(profileMap[UserProfileKey.ROLE.key]).isEqualTo(UseCaseConstants.UserProfileConstants.ROLE_USER)
+    }
+
+    @Test
+    fun `FirebaseUser의 displayName이 null이면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest {
+        every { firebaseUser.displayName } returns null
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            createInitialProfileUseCase.createInitialProfile(firebaseUser, "testUserId")
+        }
+        assertThat(exception).hasMessageThat().contains("Firebase user name cannot be blank")
+    }
+
+    @Test
+    fun `FirebaseUser의 UID와 userId가 다르면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest{
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            createInitialProfileUseCase.createInitialProfile(firebaseUser, "wrongUserId")
+        }
+        assertThat(exception).hasMessageThat().contains("Firebase UID does not match with user ID")
     }
 
     @Test
@@ -52,22 +69,5 @@ class CreateInitialProfileUseCaseTest {
             createInitialProfileUseCase.createInitialProfile(firebaseUser, "testUserId")
         }
         assertThat(exception).hasMessageThat().contains("Firebase user ID cannot be blank")
-    }
-
-    @Test
-    fun `FirebaseUser의 이메일이 null이면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest {
-        every { firebaseUser.email } returns null
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            createInitialProfileUseCase.createInitialProfile(firebaseUser, "testUserId")
-        }
-        assertThat(exception).hasMessageThat().contains("Firebase user email cannot be empty")
-    }
-
-    @Test
-    fun `FirebaseUser의 UID와 userId가 다르면 IllegalArgumentException을 던진다`() = mainCoroutineRule.runTest{
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            createInitialProfileUseCase.createInitialProfile(firebaseUser, "wrongUserId")
-        }
-        assertThat(exception).hasMessageThat().contains("Firebase UID does not match with user ID")
     }
 }

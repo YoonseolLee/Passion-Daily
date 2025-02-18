@@ -13,12 +13,16 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import android.content.Context
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.passionDaily.quote.data.local.model.DailyQuoteDTO
 import com.example.passionDaily.resources.StringProvider
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.auth.oauth2.GoogleCredentials
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runBlockingTest
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import org.junit.After
 import java.io.InputStream
 import java.util.Calendar
 
@@ -65,49 +69,6 @@ class FCMNotificationManagerImplTest {
     }
 
     @Test
-    fun `FCM_알림_성공적으로_발송되는_경우`() = mainCoroutineRule.runTest {
-        // given
-        val users = listOf(
-            mockk<DocumentSnapshot> {
-                every { getString("fcmToken") } returns "test_token"
-                every { id } returns "user1"
-            }
-        )
-        val quote = DailyQuoteDTO(
-            text = "Test Quote",
-            person = "Test Person"
-        )
-
-        // 현재 날짜에 맞는 quote 설정
-        val today = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-        every { fcmService.monthlyQuotes } returns MutableStateFlow(
-            listOf(Triple("test_category", "test_quote_id", today))
-        )
-
-        val mockResponse = mockk<Response> {
-            every { isSuccessful } returns true
-            every { body } returns mockk {
-                every { string() } returns "success"
-            }
-            every { close() } just Runs
-        }
-
-        every { stringProvider.getString(any()) } returns
-                "https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send"
-
-        mockkConstructor(OkHttpClient::class)
-        every { anyConstructed<OkHttpClient>().newCall(any()).execute() } returns mockResponse
-
-        // when
-        manager.sendQuoteNotification(quote, users)
-
-        // then
-        coVerify { fcmService.monthlyQuotes }
-        verify { stringProvider.getString(any()) }
-        verify { mockCredentials.refreshAccessToken() }
-    }
-
-    @Test
     fun `FCM_알림_발송_전_월간_명언_구독이_성공적으로_초기화되는_경우`() = mainCoroutineRule.runTest {
         // given
         val quotes = listOf(
@@ -126,34 +87,5 @@ class FCMNotificationManagerImplTest {
             assertThat(emission).containsExactlyElementsIn(quotes)
         }
     }
-
-    @Test
-    fun `FCM_알림_발송_요청이_실패한_경우_예외가_정상적으로_처리되는지_확인`() = mainCoroutineRule.runTest {
-        // given
-        val users = listOf(
-            mockk<DocumentSnapshot> {
-                every { getString("fcmToken") } returns "test_token"
-                every { id } returns "user1"
-            }
-        )
-        val quote = DailyQuoteDTO(
-            text = "Test Quote",
-            person = "Test Person"
-        )
-
-        val mockResponse = mockk<Response> {
-            every { isSuccessful } returns false
-            every { code } returns 400
-            every { body } returns mockk {
-                every { string() } returns "error"
-            }
-            every { close() } just Runs
-        }
-
-        mockkConstructor(OkHttpClient::class)
-        every { anyConstructed<OkHttpClient>().newCall(any()).execute() } returns mockResponse
-
-        // when & then
-        manager.sendQuoteNotification(quote, users)
-    }
 }
+

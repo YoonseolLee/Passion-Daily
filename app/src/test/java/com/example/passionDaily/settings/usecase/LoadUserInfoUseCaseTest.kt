@@ -35,7 +35,7 @@ class LoadUserInfoUseCaseTest {
             userId = "test_id",
             notificationEnabled = true,
             notificationTime = "09:00",
-            email = "example@naver.com",
+            name = "hello",
             lastSyncDate = 2002
         )
         coEvery { localUserRepository.getUserById("test_id") } returns testUser

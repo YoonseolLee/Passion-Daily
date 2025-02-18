@@ -57,8 +57,6 @@ class SharedLogInViewModelTest {
         MockKAnnotations.init(this)
 
         mockkStatic(Log::class)
-        every { Log.e(any(), any()) } returns 0
-        every { Log.d(any(), any()) } returns 0
 
         every { loginStateHolder.isLoading } returns MutableStateFlow(false)
         every { loginStateHolder.userProfileJson } returns MutableStateFlow("")

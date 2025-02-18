@@ -62,11 +62,7 @@ class SharedLogInViewModelTest {
         mockkStatic(TextUtils::class)
         mockkStatic(android.util.SparseArray::class)
 
-        every { Log.e(any(), any(), any()) } returns 0
-        every { Log.e(any(), any()) } returns 0
-        every { Log.d(any(), any()) } returns 0
         every { TextUtils.isEmpty(any()) } returns false
-
         every { loginStateHolder.isLoading } returns MutableStateFlow(false)
         every { loginStateHolder.userProfileJson } returns MutableStateFlow("")
         every { loginStateHolder.userProfileJsonV2 } returns MutableStateFlow("")

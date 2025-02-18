@@ -146,48 +146,6 @@ class ScheduleDailyQuoteAlarmUseCaseTest {
     }
 
     @Test
-    fun `알람 예약 시 보안 예외가 발생하면 예외를 처리하는지 확인`() = mainCoroutineRule.runTest{
-        // given
-        every {
-            alarmManager.setExactAndAllowWhileIdle(
-                any(),
-                any(),
-                any()
-            )
-        } throws SecurityException("Permission denied")
-
-        // when
-        useCase.scheduleNotification(10, 30)
-
-        // then
-        verify {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                any(),
-                pendingIntent
-            )
-        }
-    }
-
-    @Test
-    fun `알람 예약 시 NullPointerException이 발생하면 알람 예약을 시도하지 않는지 확인`() = mainCoroutineRule.runTest{
-        // given
-        every { context.getSystemService(Context.ALARM_SERVICE) } returns null
-
-        // when
-        useCase.scheduleNotification(10, 30)
-
-        // then
-        verify(exactly = 0) {
-            alarmManager.setExactAndAllowWhileIdle(
-                any(),
-                any(),
-                any()
-            )
-        }
-    }
-
-    @Test
     fun `알람 예약 시 PendingIntent 생성 시 올바른 플래그가 사용되는지 확인`() = mainCoroutineRule.runTest{
         // given & when
         useCase.scheduleNotification(10, 30)

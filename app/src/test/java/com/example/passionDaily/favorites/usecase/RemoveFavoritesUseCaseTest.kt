@@ -28,7 +28,6 @@ class RemoveFavoritesUseCaseTest {
     fun setup() {
         removeFavoritesUseCase = RemoveFavoritesUseCase(
             localFavoriteRepository,
-            localQuoteRepository,
             remoteFavoriteRepository
         )
     }

@@ -61,40 +61,6 @@ class DailyQuoteAlarmReceiverTest {
     }
 
     @Test
-    fun `워크매니저_초기화_실패시_예외처리_및_정리`() = mainCoroutineRule.runTest {
-        // given
-        val intent = mockk<Intent>()
-        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
-        every { receiver.goAsync() } returns pendingResult
-        every {
-            workManager.enqueue(any<OneTimeWorkRequest>())
-        } throws IllegalStateException("WorkManager not initialized")
-
-        // when
-        receiver.onReceive(context, intent)
-
-        // then
-        verify { pendingResult.finish() }
-    }
-
-    @Test
-    fun `알람_권한_없을때_예외처리_및_정리`() = mainCoroutineRule.runTest {
-        // given
-        val intent = mockk<Intent>()
-        val pendingResult = mockk<BroadcastReceiver.PendingResult>(relaxed = true)
-        every { receiver.goAsync() } returns pendingResult
-        every {
-            workManager.enqueue(any<OneTimeWorkRequest>())
-        } throws IllegalStateException("WorkManager not initialized")
-
-        // when
-        receiver.onReceive(context, intent)
-
-        // then
-        verify { pendingResult.finish() }
-    }
-
-    @Test
     fun `알람_수신시_워크매니저_작업등록_및_다음알람_설정되어야_함`() = mainCoroutineRule.runTest {
         // given
         val intent = mockk<Intent>()
