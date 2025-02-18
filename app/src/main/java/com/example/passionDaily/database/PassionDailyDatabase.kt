@@ -19,7 +19,7 @@ import com.example.passionDaily.user.data.local.entity.UserEntity
         FavoriteEntity::class,
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class PassionDailyDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
