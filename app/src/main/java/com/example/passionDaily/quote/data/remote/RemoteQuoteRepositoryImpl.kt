@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.tasks.await
@@ -82,8 +83,16 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         try {
             withTimeout(3000L) {
                 val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
-                val result = query.get().await()
-                result.toQuoteResult()
+
+                // 먼저 캐시에서 시도
+                val cacheResult = query.get(Source.CACHE).await()
+                if (!cacheResult.isEmpty) {
+                    return@withTimeout cacheResult.toQuoteResult()
+                }
+
+                // 캐시에 없으면 서버에서 가져옴
+                val serverResult = query.get(Source.SERVER).await()
+                serverResult.toQuoteResult()
             }
         } catch (e: Exception) {
             when {
@@ -91,7 +100,6 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                         e.cause is UnknownHostException ||
                         e is TimeoutCancellationException ->
                     throw IOException("Network error while accessing Firestore", e)
-
                 else -> throw e
             }
         }

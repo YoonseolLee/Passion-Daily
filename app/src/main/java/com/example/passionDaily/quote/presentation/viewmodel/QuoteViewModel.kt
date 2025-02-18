@@ -1,6 +1,7 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -63,15 +64,43 @@ class QuoteViewModel @Inject constructor(
     private var isInitialLoad = true
 
     init {
-        // 앱 최초 실행 시에만 로드
-        if (quotes.value.isEmpty()) {
-            viewModelScope.launch {
-                selectedCategory.value?.let { category ->
-                    loadQuotes(category)
+        viewModelScope.launch {
+            Log.d("QuoteDebug", "초기 quotes 로딩 시작")
+            selectedCategory.value?.let { category ->
+                try {
+                    quoteStateHolder.updateIsQuoteLoading(true)
+                    val result = quoteLoadingManager.fetchQuotesByCategory(
+                        category = category,
+                        pageSize = PAGE_SIZE,
+                        lastLoadedQuote = null
+                    )
+
+                    if (result.quotes.isNotEmpty()) {
+                        lastLoadedQuote = result.lastDocument
+                        quoteLoadingManager.addQuotesToState(
+                            result.quotes,
+                            isNewCategory = true
+                        )
+                    }
+                } catch (e: Exception) {
+                    handleError(e)
+                } finally {
+                    quoteStateHolder.updateIsQuoteLoading(false)
                 }
             }
         }
     }
+
+//    init {
+//        // 앱 최초 실행 시에만 로드
+//        if (quotes.value.isEmpty()) {
+//            viewModelScope.launch {
+//                selectedCategory.value?.let { category ->
+//                    loadQuotes(category)
+//                }
+//            }
+//        }
+//    }
 
     override fun loadQuotes(category: QuoteCategory) {
         viewModelScope.launch {
