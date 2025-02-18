@@ -43,10 +43,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 코드 난독화 활성화
+            isMinifyEnabled = true
+            // 사용하지 않는 리소스 제거
+            isShrinkResources = true
+            // ProGuard 규칙 파일 설정
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
+                "proguard-rules.pro"
             )
             resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
             resValue("string", "fcm_url", getLocalProperty("FCM_URL"))
