@@ -67,12 +67,10 @@ fun QuoteScreen(
 
     var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
 
-    // 시스템 네비게이션 바 색상 설정
     val context = LocalContext.current
     DisposableEffect(Unit) {
         val window = (context as? Activity)?.window
         if (window != null) {
-            // WindowCompat 사용
             WindowCompat.getInsetsController(window, window.decorView).apply {
                 isAppearanceLightNavigationBars = false
             }

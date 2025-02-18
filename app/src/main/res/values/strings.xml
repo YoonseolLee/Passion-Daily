@@ -75,6 +75,7 @@
     <string name="FCM_URL">https://fcm.googleapis.com/v1/projects/passion-daily-d8b51/messages:send</string>
     <string name="fcmToken">fcmToken</string>
     <string name="firebase_messaging_url">https://www.googleapis.com/auth/firebase.messaging</string>
+    <string name="backgoround_photo_favorites">https://github.com/YoonseolLee/Passion-Daily-Photos/blob/main/pictures/background_photo_favorites.png?raw=true</string>
 
     <!-- 홈 및 설정 관련 -->
     <string name="home">홈</string>
