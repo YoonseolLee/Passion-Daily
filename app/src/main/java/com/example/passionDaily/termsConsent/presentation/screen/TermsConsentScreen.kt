@@ -153,7 +153,7 @@ fun CheckboxItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.check_without_circle),
+                painter = painterResource(id = R.drawable.check_with_circle),
                 contentDescription = "checkbox",
                 modifier = Modifier.size(24.dp),
                 colorFilter = if (isChecked)
