@@ -1,6 +1,5 @@
 package com.example.passionDaily.quote.data.remote
 
-import android.util.Log
 import com.example.passionDaily.R
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
@@ -60,8 +59,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
             val query = firestore.collection("categories")
                 .document(category.name.lowercase())
                 .collection("quotes")
-                .whereGreaterThan(FieldPath.documentId(), afterQuoteId)
                 .orderBy(FieldPath.documentId())
+                .startAfter(afterQuoteId)
                 .limit(limit.toLong())
                 .get()
                 .await()
@@ -70,8 +69,6 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 quotes = query.documents.map { it.toQuote() },
                 lastDocument = query.documents.lastOrNull()
             )
-        } catch (e: FirebaseFirestoreException) {
-            QuoteResult(emptyList(), null)
         } catch (e: Exception) {
             QuoteResult(emptyList(), null)
         }

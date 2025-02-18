@@ -80,12 +80,6 @@ fun QuoteScreen(
         onDispose {}
     }
 
-    LaunchedEffect(selectedCategory) {
-        if (quotes.isEmpty()) {
-            quoteViewModel.loadQuotes(selectedCategory)
-        }
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         // 백그라운드 이미지는 현재 명언이 있을 때만 표시
         currentQuote?.let {
@@ -110,7 +104,7 @@ fun QuoteScreen(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)  // Navigation Bar 공간 확보
         ) {
-            if (isQuoteLoading || currentQuote == null) {
+            if (quotes.isEmpty() && (isQuoteLoading || currentQuote == null)) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .testTag("LoadingIndicator")

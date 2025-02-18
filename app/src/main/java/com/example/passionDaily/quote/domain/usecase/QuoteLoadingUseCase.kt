@@ -91,7 +91,9 @@ class QuoteLoadingUseCase @Inject constructor(
         currentQuotes: List<Quote>,
         hasQuoteReachedEnd: StateFlow<Boolean>
     ): Boolean {
-        return nextIndex >= currentQuotes.size && !hasQuoteReachedEnd.value
+        return nextIndex >= currentQuotes.size &&
+                !hasQuoteReachedEnd.value &&
+                currentQuotes.isNotEmpty()
     }
 
     fun isLastQuote(nextIndex: Int, currentQuotes: List<Quote>): Boolean {
@@ -103,11 +105,12 @@ class QuoteLoadingUseCase @Inject constructor(
         lastQuoteId: String,
         pageSize: Int
     ): QuoteResult = withContext(Dispatchers.IO) {
-        remoteQuoteRepository.getQuotesAfterId(
+        val result = remoteQuoteRepository.getQuotesAfterId(
             category = category,
             afterQuoteId = lastQuoteId,
             limit = pageSize
         )
+        result
     }
 
     suspend fun updateQuotesAfterLoading(

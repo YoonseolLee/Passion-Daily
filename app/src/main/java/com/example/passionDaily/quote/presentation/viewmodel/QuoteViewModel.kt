@@ -22,6 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -59,29 +60,44 @@ class QuoteViewModel @Inject constructor(
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
+    private var isInitialLoad = true
+
+    init {
+        // 앱 최초 실행 시에만 로드
+        if (quotes.value.isEmpty()) {
+            viewModelScope.launch {
+                selectedCategory.value?.let { category ->
+                    loadQuotes(category)
+                }
+            }
+        }
+    }
+
     override fun loadQuotes(category: QuoteCategory) {
         viewModelScope.launch {
             try {
                 quoteStateHolder.updateIsQuoteLoading(true)
 
-                val result  =
-                    quoteLoadingManager.fetchQuotesByCategory(
-                        category = category,
-                        pageSize = PAGE_SIZE,
-                        lastLoadedQuote = lastLoadedQuote
-                    )
-
+                val result = quoteLoadingManager.fetchQuotesByCategory(
+                    category = category,
+                    pageSize = PAGE_SIZE,
+                    lastLoadedQuote = lastLoadedQuote
+                )
 
                 if (result.quotes.isEmpty()) {
                     quoteLoadingManager.setHasQuoteReachedEndTrue()
                     return@launch
                 }
 
-                lastLoadedQuote = result.lastDocument
-                quoteLoadingManager.addQuotesToState(
-                    result.quotes,
-                    isNewCategory = lastLoadedQuote == null
-                )
+                // quotes 추가 전에 상태 확인
+                if (quotes.value.isEmpty()) {
+                    lastLoadedQuote = result.lastDocument
+                    quoteLoadingManager.addQuotesToState(result.quotes, true)
+                } else {
+                    lastLoadedQuote = result.lastDocument
+                    quoteLoadingManager.addQuotesToState(result.quotes, false)
+                }
+
             } catch (e: Exception) {
                 handleError(e)
             } finally {
@@ -178,11 +194,10 @@ class QuoteViewModel @Inject constructor(
 
         if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasReachedEnd)) {
             viewModelScope.launch {
-                quoteLoadingManager.startQuoteLoading()
-
                 try {
-                    // 1. 먼저 다음 페이지의 데이터를 로드
-                    val result = withTimeout(10_000L) {  // 타임아웃 설정
+                    quoteLoadingManager.startQuoteLoading()
+
+                    val result = withTimeout(10_000L) {
                         selectedCategory.value?.let { category ->
                             quoteLoadingManager.loadQuotesAfter(
                                 category = category,
@@ -192,22 +207,20 @@ class QuoteViewModel @Inject constructor(
                         }
                     }
 
-                    // 2. 결과가 null이거나 비어있으면 hasReachedEnd를 true로 설정하고 첫 번째 명언으로 이동
                     if (result == null || result.quotes.isEmpty()) {
                         quoteLoadingManager.setHasQuoteReachedEndTrue()
                         savedStateHandle[KEY_QUOTE_INDEX] = 0
                         return@launch
                     }
 
-                    // 3. 데이터가 있는 경우에만 업데이트 진행
                     quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
                         lastLoadedQuote = newLastDocument
                     }
+
                     savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
+
                 } catch (e: Exception) {
                     handleError(e)
-                    // 에러 발생시에도 첫 번째 명언으로 이동
-                    savedStateHandle[KEY_QUOTE_INDEX] = 0
                 } finally {
                     quoteStateHolder.updateIsQuoteLoading(false)
                 }
@@ -215,11 +228,7 @@ class QuoteViewModel @Inject constructor(
             return
         }
 
-        if (isLastQuote(nextIndex, currentQuotes)) {
-            savedStateHandle[KEY_QUOTE_INDEX] = 0
-            return
-        }
-        savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
+        savedStateHandle[KEY_QUOTE_INDEX] = if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
     }
 
     private fun shouldLoadMoreQuotes(
@@ -273,34 +282,36 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
+    private var categoryChangeJob: Job? = null
+
     override fun onCategorySelected(category: QuoteCategory) {
-        viewModelScope.launch {
-            resetCategorySelection(category)
-            category?.let { loadQuotes(it) }
+        // 이전 Job 취소
+        categoryChangeJob?.cancel()
+
+        categoryChangeJob = viewModelScope.launch {
+            try {
+                // 모든 상태 초기화
+                resetAllStates(category)
+
+                // 새로운 데이터 로드
+                loadQuotes(category)
+
+            } catch (e: Exception) {
+                handleError(e)
+            }
         }
     }
 
-    private suspend fun resetCategorySelection(category: QuoteCategory) {
-        updateSelectedCategory(category)
-        resetQuoteState()
-    }
+    private suspend fun resetAllStates(newCategory: QuoteCategory) {
+        // 순서 보장을 위해 순차적으로 실행
+        quoteStateHolder.updateIsQuoteLoading(false)
+        quoteStateHolder.updateHasQuoteReachedEnd(false)
+        quoteStateHolder.updateSelectedCategory(newCategory)
+        quoteStateHolder.clearQuotes()
 
-    private suspend fun updateSelectedCategory(category: QuoteCategory) {
-        quoteLoadingManager.updateSelectedCategory(category)
-    }
-
-    private suspend fun resetQuoteState() {
         lastLoadedQuote = null
-        resetQuoteIndex()
-        clearQuotes()
-    }
-
-    private fun resetQuoteIndex() {
         savedStateHandle[KEY_QUOTE_INDEX] = 0
-    }
 
-    private suspend fun clearQuotes() {
-        quoteLoadingManager.clearQuotes()
     }
 
     fun getStateHolder(): QuoteStateHolder {
