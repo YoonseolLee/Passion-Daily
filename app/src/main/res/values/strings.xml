@@ -68,6 +68,8 @@
     <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
     <string name="todays_quote">오늘의 명언</string>
     <string name="fcmToken">fcmToken</string>
+    <string name="added_at">addedAt</string>
+    <string name="quote_id">quoteId</string>
     <string name="backgoround_photo_favorites">https://github.com/YoonseolLee/Passion-Daily-Photos/blob/main/pictures/background_photo_favorites.png?raw=true</string>
 
     <!-- 홈 및 설정 관련 -->
