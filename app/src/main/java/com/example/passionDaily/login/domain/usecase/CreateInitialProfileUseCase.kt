@@ -19,8 +19,9 @@ class CreateInitialProfileUseCase @Inject constructor() {
     private fun validateUserData(firebaseUser: FirebaseUser, userId: String) {
         require(userId.isNotBlank()) { "User ID cannot be blank" }
         require(firebaseUser.uid.isNotBlank()) { "Firebase user ID cannot be blank" }
-        require(firebaseUser.email?.isNotBlank() == true) { "Firebase user email cannot be empty" }
+        require(firebaseUser.displayName?.isNotBlank() == true) { "Firebase user name cannot be blank" }
         require(firebaseUser.uid == userId) { "Firebase UID does not match with user ID" }
+        //        require(firebaseUser.email?.isNotBlank() == true) { "Firebase user email cannot be empty" }
     }
 
     private fun buildUserProfileMap(
@@ -30,7 +31,7 @@ class CreateInitialProfileUseCase @Inject constructor() {
     ): Map<String, Any?> {
         return mapOf(
             UserProfileKey.ID.key to userId,
-            UserProfileKey.EMAIL.key to firebaseUser.email,
+            UserProfileKey.NAME.key to firebaseUser.displayName,
             UserProfileKey.ROLE.key to UserProfileConstants.ROLE_USER,
             UserProfileKey.LAST_LOGIN_DATE.key to timestamp,
             UserProfileKey.FCM_TOKEN.key to null,

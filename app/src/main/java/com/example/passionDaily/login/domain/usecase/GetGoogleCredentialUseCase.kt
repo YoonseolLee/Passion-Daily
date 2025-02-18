@@ -27,27 +27,10 @@ class GetGoogleCredentialUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     suspend fun getGoogleCredential(): GetCredentialResponse = withContext(Dispatchers.IO) {
-        Log.d("GoogleSignIn", "Creating credential manager")
         val credentialManager = createCredentialManager()
-
-        Log.d("GoogleSignIn", "Creating credential request")
         val request = createCredentialRequest()
-
-        Log.d("GoogleSignIn", "Fetching credential")
-        try {
-            val response = fetchCredential(credentialManager, request)
-            Log.d("GoogleSignIn", "Credential fetch successful")
-            response
-        } catch (e: Exception) {
-            Log.e("GoogleSignIn", "Error fetching credential", e)
-            throw e
-        }
+        fetchCredential(credentialManager, request)
     }
-//    suspend fun getGoogleCredential(): GetCredentialResponse = withContext(Dispatchers.IO) {
-//        val credentialManager = createCredentialManager()
-//        val request = createCredentialRequest()
-//        fetchCredential(credentialManager, request)
-//    }
 
     private fun createCredentialManager(): CredentialManager {
         return CredentialManager.create(context)
@@ -55,36 +38,20 @@ class GetGoogleCredentialUseCase @Inject constructor(
 
     private fun createCredentialRequest(): GetCredentialRequest {
         val clientId = context.getString(R.string.client_id)
-        val googleIdOption = GetSignInWithGoogleOption.Builder(clientId).build()
+        val googleIdOption = GetSignInWithGoogleOption.Builder(clientId)
+            .build()
         return GetCredentialRequest.Builder()
             .addCredentialOption(googleIdOption)
             .build()
     }
 
+
     private suspend fun fetchCredential(
         credentialManager: CredentialManager,
         request: GetCredentialRequest
     ): GetCredentialResponse {
-        return try {
-            val response = credentialManager.getCredential(context, request)
-            Log.d("GoogleSignIn", "Credential manager getCredential successful")
-            response
-        } catch (e: GetCredentialCancellationException) {
-            Log.e("GoogleSignIn", "Credential fetch cancelled", e)
-            Log.e("GoogleSignIn", "Error details: ${e.message}")
-            throw e
-        } catch (e: Exception) {
-            Log.e("GoogleSignIn", "Unexpected error in fetchCredential", e)
-            throw e
-        }
+        return credentialManager.getCredential(context, request)
     }
-
-//    private suspend fun fetchCredential(
-//        credentialManager: CredentialManager,
-//        request: GetCredentialRequest
-//    ): GetCredentialResponse {
-//        return credentialManager.getCredential(context, request)
-//    }
 
     suspend fun authenticateWithFirebase(idToken: String): AuthResult =
         withContext(Dispatchers.IO) {
@@ -109,50 +76,16 @@ class GetGoogleCredentialUseCase @Inject constructor(
         return googleIdTokenCredential.idToken
     }
 
-//    suspend fun clearCredentials() = withContext(Dispatchers.IO) {
-//        try {
-//            clearCredentialState()
-//
-//            suspendCancellableCoroutine { continuation ->
-//                // 리스너를 변수로 선언
-//                val listener = object : FirebaseAuth.AuthStateListener {
-//                    override fun onAuthStateChanged(auth: FirebaseAuth) {
-//                        if (auth.currentUser == null) {
-//                            // 로그아웃이 완료되면 리스너 제거 후 코루틴 재개
-//                            auth.removeAuthStateListener(this)
-//                            if (continuation.isActive) {
-//                                continuation.resume(Unit, null)
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                // 리스너 등록 후 signOut 실행
-//                auth.addAuthStateListener(listener)
-//                auth.signOut()
-//
-//                // 코루틴이 취소되면 리스너 제거
-//                continuation.invokeOnCancellation {
-//                    auth.removeAuthStateListener(listener)
-//                }
-//            }
-//
-//        } catch (e: Exception) {
-//            handleClearCredentialsError(e)
-//        }
-//    }
-
     suspend fun clearCredentials() = withContext(Dispatchers.IO) {
         try {
-            Log.d("GoogleSignIn", "Starting credentials clear process")
             clearCredentialState()
-            Log.d("GoogleSignIn", "Credential state cleared")
 
             suspendCancellableCoroutine { continuation ->
+                // 리스너를 변수로 선언
                 val listener = object : FirebaseAuth.AuthStateListener {
                     override fun onAuthStateChanged(auth: FirebaseAuth) {
                         if (auth.currentUser == null) {
-                            Log.d("GoogleSignIn", "Firebase user successfully logged out")
+                            // 로그아웃이 완료되면 리스너 제거 후 코루틴 재개
                             auth.removeAuthStateListener(this)
                             if (continuation.isActive) {
                                 continuation.resume(Unit, null)
@@ -161,18 +94,18 @@ class GetGoogleCredentialUseCase @Inject constructor(
                     }
                 }
 
-                Log.d("GoogleSignIn", "Adding auth state listener and signing out")
+                // 리스너 등록 후 signOut 실행
                 auth.addAuthStateListener(listener)
                 auth.signOut()
-                Log.d("GoogleSignIn", "SignOut called")
 
+                // 코루틴이 취소되면 리스너 제거
                 continuation.invokeOnCancellation {
-                    Log.d("GoogleSignIn", "Clear credentials coroutine cancelled")
                     auth.removeAuthStateListener(listener)
                 }
             }
+
+            Log.d("clearCredentials", "Auth credentials cleared successfully")
         } catch (e: Exception) {
-            Log.e("GoogleSignIn", "Error in clearCredentials", e)
             handleClearCredentialsError(e)
         }
     }
@@ -181,9 +114,16 @@ class GetGoogleCredentialUseCase @Inject constructor(
         val credentialManager = createCredentialManager()
         val request = ClearCredentialStateRequest()
         credentialManager.clearCredentialState(request)
+        Log.d("clearCredentials", "Google credential cleared")
+    }
+
+    private fun signOutFirebase() {
+        auth.signOut()
+        Log.d("clearCredentials", "Auth credentials cleared successfully")
     }
 
     private fun handleClearCredentialsError(e: Exception) {
+        Log.e("AuthenticationManager", "Error clearing credentials", e)
         throw e
     }
 }

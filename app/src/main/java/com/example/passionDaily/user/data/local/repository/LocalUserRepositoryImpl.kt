@@ -18,7 +18,7 @@ class LocalUserRepositoryImpl @Inject constructor(
     override fun convertToUserEntity(firestoreUser: User): UserEntity {
         return UserEntity(
             userId = firestoreUser.id,
-            email = firestoreUser.email,
+            name = firestoreUser.name,
             notificationEnabled = firestoreUser.notificationEnabled,
             notificationTime = firestoreUser.notificationTime,
             lastSyncDate = timeUtil.parseTimestamp(firestoreUser.lastSyncDate)

@@ -22,7 +22,7 @@ class UserProfileMapper @Inject constructor() {
         try {
             return UserEntity(
                 userId = profileMap[UserProfileKey.ID.key] as String,
-                email = profileMap[UserProfileKey.EMAIL.key] as String,
+                name = profileMap[UserProfileKey.NAME.key] as String,
                 notificationEnabled = profileMap[UserProfileKey.NOTIFICATION_ENABLED.key] as Boolean,
                 lastSyncDate = Converters.fromStringToLong(profileMap[UserProfileKey.LAST_SYNC_DATE.key] as String),
                 notificationTime = profileMap[UserProfileKey.NOTIFICATION_TIME.key] as String

@@ -4,7 +4,7 @@ import com.example.passionDaily.util.UserRole
 
 data class User(
     val id: String = "",
-    val email: String = "",
+    val name: String = "",
     val role: UserRole = UserRole.USER,
     val lastLoginDate: String = "",
     val notificationEnabled: Boolean = false,

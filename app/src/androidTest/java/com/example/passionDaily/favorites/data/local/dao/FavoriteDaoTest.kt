@@ -58,7 +58,7 @@ class FavoriteDaoTest {
 
             userDao.insertUser(UserEntity(
                 userId = "user1",
-                email = "test@example.com",
+                name = "ryan",
                 notificationEnabled = true,
                 notificationTime = "09:00",
                 lastSyncDate = System.currentTimeMillis()

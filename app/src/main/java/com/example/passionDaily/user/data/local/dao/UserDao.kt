@@ -35,8 +35,8 @@ interface UserDao {
     @Query("SELECT * FROM user WHERE user_id = :userId")
     suspend fun getUserByUserId(userId: String): UserEntity?
 
-    @Query("SELECT * FROM user WHERE email = :email")
-    suspend fun getUserByEmail(email: String): UserEntity?
+    @Query("SELECT * FROM user WHERE name = :name")
+    suspend fun getUserByName(name: String): UserEntity?
 
     @Query("SELECT * FROM user WHERE notification_enabled = :enabled")
     suspend fun getUsersWithNotifications(enabled: Boolean): List<UserEntity>

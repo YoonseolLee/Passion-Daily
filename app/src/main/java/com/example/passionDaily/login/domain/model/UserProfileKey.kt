@@ -2,7 +2,7 @@ package com.example.passionDaily.login.domain.model
 
 enum class UserProfileKey(val key: String) {
     ID("id"),
-    EMAIL("email"),
+    NAME("name"),
     ROLE("role"),
     LAST_LOGIN_DATE("lastLoginDate"),
     FCM_TOKEN("fcmToken"),
