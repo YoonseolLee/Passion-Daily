@@ -5,8 +5,7 @@
     <string name="version_info">버전 정보</string>
 
     <!-- 로그인 및 회원 관리 -->
-    <string name="header_title_login_screen">간편로그인 후
-이용이 가능합니다.</string>
+    <string name="header_title_login_screen">로그인 후\n이용이 가능합니다.</string>
     <string name="look">보기</string>
     <string name="header_subtitle1_login_screen">10초</string>
     <string name="header_subtitle2_login_screen">면 가입이 가능해요.</string>
