@@ -1,6 +1,5 @@
 package com.example.passionDaily.util
 
-import android.util.Log
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -17,10 +16,8 @@ object TimeUtil {
     fun parseTimestamp(timestamp: String): Long {
         return try {
             val date = parseToDate(timestamp)
-            Log.d("parseTimestamp", "Parsed timestamp to milliseconds: ${date.time}")
             date.time
         } catch (e: Exception) {
-            Log.e("TimestampParsing", "Failed to parse timestamp: $timestamp", e)
             System.currentTimeMillis()
         }
     }

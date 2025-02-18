@@ -1,13 +1,11 @@
 package com.example.passionDaily.login.presentation.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.passionDaily.R
 import com.example.passionDaily.login.base.SharedLogInActions
 import com.example.passionDaily.login.base.SharedLogInState
 import com.example.passionDaily.login.manager.AuthenticationManager
@@ -113,10 +111,8 @@ class SharedLogInViewModel @Inject constructor(
 
     private suspend fun handleUserRegistrationStatus(userId: String, userProfileJson: String) {
         if (remoteUserRepository.isUserRegistered(userId)) {
-            Log.d("UserRegistration", "User $userId is already registered, syncing existing user")
             syncExistingUser(userId)
         } else {
-            Log.d("UserRegistration", "User $userId is new, redirecting to consent screen. Profile: $userProfileJson")
             authStateHolder.setRequiresConsent(userId, userProfileJson)
         }
     }

@@ -4,10 +4,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.passionDaily.MainActivity
-import com.example.passionDaily.PassionDailyApp
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.AppConstants.PassionDaily.CHANNEL_ID
 import com.google.firebase.auth.FirebaseAuth
@@ -36,8 +34,6 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     private fun handleIncomingMessage(remoteMessage: RemoteMessage) {
-        Log.d("FCMService", "Message received from: ${remoteMessage.from}")
-
         remoteMessage.notification?.let { notification ->
             val category = remoteMessage.data["category"] ?: return
             val quoteId = remoteMessage.data["quoteId"] ?: return
@@ -87,7 +83,5 @@ class QuoteFirebaseMessagingService : FirebaseMessagingService() {
             System.currentTimeMillis().toInt(),
             notificationBuilder.build()
         )
-        Log.d("FCMService", "Notification displayed with title: ${remoteMessage.notification?.title}")
-        Log.d("FCMService", "Channel importance: ${notificationManager.getNotificationChannel(CHANNEL_ID)?.importance}")
     }
 }

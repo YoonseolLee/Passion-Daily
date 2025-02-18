@@ -1,13 +1,11 @@
 package com.example.passionDaily.login.domain.usecase
 
 import android.content.Context
-import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.example.passionDaily.R
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -104,7 +102,6 @@ class GetGoogleCredentialUseCase @Inject constructor(
                 }
             }
 
-            Log.d("clearCredentials", "Auth credentials cleared successfully")
         } catch (e: Exception) {
             handleClearCredentialsError(e)
         }
@@ -114,16 +111,9 @@ class GetGoogleCredentialUseCase @Inject constructor(
         val credentialManager = createCredentialManager()
         val request = ClearCredentialStateRequest()
         credentialManager.clearCredentialState(request)
-        Log.d("clearCredentials", "Google credential cleared")
-    }
-
-    private fun signOutFirebase() {
-        auth.signOut()
-        Log.d("clearCredentials", "Auth credentials cleared successfully")
     }
 
     private fun handleClearCredentialsError(e: Exception) {
-        Log.e("AuthenticationManager", "Error clearing credentials", e)
         throw e
     }
 }
