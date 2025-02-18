@@ -43,6 +43,7 @@ android {
 
     buildTypes {
         release {
+            isDebuggable = false
             // 코드 난독화 활성화
             isMinifyEnabled = true
             // 사용하지 않는 리소스 제거
