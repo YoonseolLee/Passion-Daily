@@ -31,9 +31,6 @@
 알려주세요.</string>
     <string name="header_subtitle_select_screen">오직 명언 추천을 위해 활용됩니다.</string>
 
-    <!-- API 관련 -->
-    <string name="client_id">608527802027-lmkfk6smqqfvolj7o8t31tualebqejs0.apps.googleusercontent.com</string>
-
     <!-- 약관 및 동의 -->
     <string name="terms_consent">이용 약관 동의</string>
     <string name="agree_all">전체 동의하기</string>

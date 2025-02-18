@@ -35,7 +35,7 @@ class GetGoogleCredentialUseCase @Inject constructor(
     }
 
     private fun createCredentialRequest(): GetCredentialRequest {
-        val clientId = context.getString(R.string.client_id)
+        val clientId = context.getString(R.string.google_client_id)
         val googleIdOption = GetSignInWithGoogleOption.Builder(clientId)
             .build()
         return GetCredentialRequest.Builder()

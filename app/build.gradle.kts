@@ -1,3 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+fun getLocalProperty(key: String, file: String = "local.properties"): String {
+    val properties = Properties()
+    val localProperties = File(file)
+    if (localProperties.isFile) {
+        properties.load(FileInputStream(localProperties))
+        return properties.getProperty(key)
+    } else {
+        throw GradleException("local.properties not found")
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -22,6 +36,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        manifestPlaceholders["GOOGLE_CLIENT_ID"] = getLocalProperty("GOOGLE_CLIENT_ID")
     }
 
     buildTypes {
@@ -31,6 +46,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
+        }
+        debug {
+            resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
         }
     }
     compileOptions {
