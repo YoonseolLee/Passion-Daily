@@ -1,13 +1,11 @@
 package com.example.passionDaily.constants
 
 object UseCaseConstants {
-    object QuoteLoading {
-    }
 
     object UserProfileConstants {
         const val ROLE_USER = "USER"
-        const val DEFAULT_NOTIFICATION_TIME = "12:00"
-        const val DEFAULT_NOTIFICATION_ENABLED = true
+        const val DEFAULT_NOTIFICATION_TIME = "08:00"
+        const val DEFAULT_NOTIFICATION_ENABLED = false
     }
 
     object ScheduleDailyQuoteAlarm {
