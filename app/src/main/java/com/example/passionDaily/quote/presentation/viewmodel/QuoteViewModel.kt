@@ -61,11 +61,8 @@ class QuoteViewModel @Inject constructor(
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    private var isInitialLoad = true
-
     init {
         viewModelScope.launch {
-            Log.d("QuoteDebug", "초기 quotes 로딩 시작")
             selectedCategory.value?.let { category ->
                 try {
                     quoteStateHolder.updateIsQuoteLoading(true)

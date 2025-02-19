@@ -26,6 +26,7 @@ import java.io.IOException
 import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.example.passionDaily.BuildConfig
 
 @Singleton
 class FCMNotificationManagerImpl @Inject constructor(
@@ -48,10 +49,10 @@ class FCMNotificationManagerImpl @Inject constructor(
         users: List<DocumentSnapshot>
     ) {
         users.forEachIndexed { index, user ->
-                user.getString(stringProvider.getString(R.string.fcmToken))?.let { token ->
-                    val message = createNotificationMessage(quote)
-                    sendNotification(token, message)
-                }
+            user.getString(stringProvider.getString(R.string.fcmToken))?.let { token ->
+                val message = createNotificationMessage(quote)
+                sendNotification(token, message)
+            }
         }
     }
 
@@ -64,6 +65,7 @@ class FCMNotificationManagerImpl @Inject constructor(
     private suspend fun sendNotification(token: String, message: QuoteNotificationMessageDTO) {
         try {
             val accessToken = getAccessToken()
+
             val json = createNotificationJson(token, message)
             if (json != null) {
                 sendFcmRequest(json, accessToken)
@@ -76,16 +78,22 @@ class FCMNotificationManagerImpl @Inject constructor(
     private fun getAccessToken(): String {
         return try {
             val credentials = loadCredentials()
-            credentials.refreshAccessToken().tokenValue
+            val token = credentials.refreshAccessToken().tokenValue
+            token
         } catch (e: Exception) {
             throw e
         }
     }
 
     private fun loadCredentials(): GoogleCredentials {
-        val asset = context.assets.open(stringProvider.getString(R.string.service_account_json))
-        return GoogleCredentials.fromStream(asset)
-            .createScoped(listOf(stringProvider.getString(R.string.firebase_messaging_url)))
+        try {
+            val asset = context.assets.open("service-account.json")
+            val credentials = GoogleCredentials.fromStream(asset)
+                .createScoped(listOf(BuildConfig.FIREBASE_MESSAGING_URL))
+            return credentials
+        } catch (e: Exception) {
+            throw e
+        }
     }
 
     private fun createNotificationJson(
@@ -93,9 +101,13 @@ class FCMNotificationManagerImpl @Inject constructor(
         message: QuoteNotificationMessageDTO
     ): JSONObject? {
         return try {
-            val quoteInfo = getQuoteForToday() ?: return null
+            val quoteInfo = getQuoteForToday()
+            if (quoteInfo == null) {
+                return null
+            }
             val (category, quoteId, _) = quoteInfo
-            buildNotificationJson(token, message, category, quoteId)
+            val json = buildNotificationJson(token, message, category, quoteId)
+            json
         } catch (e: Exception) {
             null
         }
@@ -159,8 +171,10 @@ class FCMNotificationManagerImpl @Inject constructor(
     }
 
     private fun buildFcmRequest(json: JSONObject, accessToken: String): Request {
+        val fcmUrl = BuildConfig.FCM_URL
+
         return Request.Builder()
-            .url(stringProvider.getString(R.string.fcm_url))
+            .url(fcmUrl)
             .addHeader("Authorization", "Bearer $accessToken")
             .addHeader("Content-Type", "application/json")
             .post(json.toString().toRequestBody("application/json".toMediaType()))

@@ -15,6 +15,10 @@ class LocalUserRepositoryImpl @Inject constructor(
         userDao.upsertUser(userEntity)
     }
 
+    override suspend fun upsertUser(userEntity: UserEntity) {
+        userDao.upsertUser(userEntity)
+    }
+
     override fun convertToUserEntity(firestoreUser: User): UserEntity {
         return UserEntity(
             userId = firestoreUser.id,

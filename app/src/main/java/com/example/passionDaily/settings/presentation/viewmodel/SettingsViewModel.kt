@@ -66,7 +66,7 @@ class SettingsViewModel @Inject constructor(
         } ?: run {
             // 로그아웃된 경우 설정 초기화
             settingsStateHolder.updateNotificationEnabled(false)
-            settingsStateHolder.updateNotificationTime(null)
+            settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
         }
 
     }
@@ -84,15 +84,35 @@ class SettingsViewModel @Inject constructor(
 
     override fun loadUserSettings() {
         viewModelScope.launch {
+            settingsStateHolder.updateIsLoading(true)
             getCurrentUser()?.uid?.let { userId ->
                 try {
                     userSettingsManager.loadUserSettings(userId) { enabled, timeStr ->
                         settingsStateHolder.updateNotificationEnabled(enabled)
-                        setNotificationTime(timeStr)
+                        if (timeStr != null) {
+                            setNotificationTime(timeStr)
+                        } else {
+                            // 시간 설정이 없으면 기본값 적용
+                            settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
+                        }
+
+                        // 설정이 로드된 후 알림 스케줄링 확인
+                        if (enabled && notificationTime.value != null) {
+                            notificationTime.value?.let { time ->
+                                notificationManager.scheduleNotification(time.hour, time.minute)
+                            }
+                        }
                     }
                 } catch (e: Exception) {
                     handleError(e)
+                    // 오류 발생 시 기본값 설정
+                    settingsStateHolder.updateNotificationEnabled(false)
+                    settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
+                } finally {
+                    settingsStateHolder.updateIsLoading(false) // 로딩 상태 종료
                 }
+            } ?: run {
+                settingsStateHolder.updateIsLoading(false)
             }
         }
     }

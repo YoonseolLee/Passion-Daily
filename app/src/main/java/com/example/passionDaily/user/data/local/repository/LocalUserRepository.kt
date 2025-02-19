@@ -6,6 +6,7 @@ import com.example.passionDaily.user.data.remote.model.User
 interface LocalUserRepository {
 
     suspend fun saveUser(userEntity: UserEntity)
+    suspend fun upsertUser(userEntity: UserEntity)
     fun convertToUserEntity(firestoreUser: User): UserEntity
     suspend fun updateNotificationSettingsToRoom(userId: String, enabled: Boolean)
     suspend fun getUserById(userId: String): UserEntity?

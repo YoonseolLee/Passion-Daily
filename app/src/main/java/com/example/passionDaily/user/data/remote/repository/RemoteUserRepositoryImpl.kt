@@ -2,6 +2,7 @@ package com.example.passionDaily.user.data.remote.repository
 
 import com.example.passionDaily.R
 import com.example.passionDaily.resources.StringProvider
+import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.user.data.remote.model.User
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.util.TimeUtil
@@ -60,9 +61,30 @@ class RemoteUserRepositoryImpl @Inject constructor(
 
     override suspend fun syncFirestoreUserToRoom(userId: String) {
         try {
+            // Firestore에서 최신 사용자 데이터 가져오기
             val firestoreUser = fetchFirestoreUser(userId)
-            val userEntity = localUserRepository.convertToUserEntity(firestoreUser)
-            localUserRepository.saveUser(userEntity)
+
+            // 로컬 DB에서 현재 사용자 데이터 가져오기
+            val localUser = localUserRepository.getUserById(userId)
+
+            if (localUser == null) {
+                // 로컬 DB에 사용자가 없으면 새로 생성
+                val userEntity = localUserRepository.convertToUserEntity(firestoreUser)
+                localUserRepository.saveUser(userEntity)
+            } else {
+                // 로컬 DB에 사용자가 있으면 필드별로 비교 후 업데이트
+                val needsUpdate = checkIfUpdateNeeded(firestoreUser, localUser)
+
+                if (needsUpdate) {
+                    val updatedEntity = localUserRepository.convertToUserEntity(firestoreUser)
+                    localUserRepository.upsertUser(updatedEntity)
+                } else {
+                }
+            }
+
+            // 마지막 동기화 일자 업데이트
+            updateLastSyncDate(userId)
+
         } catch (e: Exception) {
             when {
                 e is UnknownHostException ||
@@ -72,6 +94,14 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 else -> throw e
             }
         }
+    }
+
+    private fun checkIfUpdateNeeded(firestoreUser: User, localUser: UserEntity): Boolean {
+        return firestoreUser.id != localUser.userId ||
+                firestoreUser.name != localUser.name ||
+                firestoreUser.notificationEnabled != localUser.notificationEnabled ||
+                firestoreUser.notificationTime != localUser.notificationTime ||
+                timeUtil.parseTimestamp(firestoreUser.lastSyncDate) != localUser.lastSyncDate
     }
 
     override suspend fun fetchFirestoreUser(userId: String): User {

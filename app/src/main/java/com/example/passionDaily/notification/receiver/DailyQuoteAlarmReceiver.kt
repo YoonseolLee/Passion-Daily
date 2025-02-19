@@ -6,12 +6,16 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.passionDaily.constants.ManagerConstants.DailyQuoteAlarmReceive.ALARM_REQUEST_CODE
 import com.example.passionDaily.notification.worker.QuoteNotificationWorker
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class DailyQuoteAlarmReceiver : BroadcastReceiver() {
 
@@ -25,8 +29,7 @@ class DailyQuoteAlarmReceiver : BroadcastReceiver() {
     private fun enqueueNotificationWork(context: Context) {
         try {
             val workRequest = createNotificationWorkRequest()
-            WorkManager.getInstance(context)
-                .enqueue(workRequest)
+            WorkManager.getInstance(context).enqueue(workRequest)
         } catch (e: Exception) {
             throw e
         }
@@ -88,6 +91,12 @@ class DailyQuoteAlarmReceiver : BroadcastReceiver() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
                     triggerAtMillis,
                     pendingIntent

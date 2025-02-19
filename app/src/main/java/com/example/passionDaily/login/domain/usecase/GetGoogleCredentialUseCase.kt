@@ -6,7 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
-import com.example.passionDaily.R
+import com.example.passionDaily.BuildConfig
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthCredential
@@ -35,7 +35,7 @@ class GetGoogleCredentialUseCase @Inject constructor(
     }
 
     private fun createCredentialRequest(): GetCredentialRequest {
-        val clientId = context.getString(R.string.google_client_id)
+        val clientId = BuildConfig.GOOGLE_CLIENT_ID
         val googleIdOption = GetSignInWithGoogleOption.Builder(clientId)
             .build()
         return GetCredentialRequest.Builder()

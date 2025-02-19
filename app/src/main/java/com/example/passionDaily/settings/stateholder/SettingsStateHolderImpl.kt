@@ -27,7 +27,7 @@ class SettingsStateHolderImpl : SettingsStateHolder {
     }
 
     override fun updateNotificationTime(time: LocalTime?) {
-        _notificationTime.value = time
+        _notificationTime.value = time ?: LocalTime.of(8, 0)
     }
 
     override fun updateShowWithdrawalDialog(show: Boolean) {
