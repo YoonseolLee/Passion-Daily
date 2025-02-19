@@ -1,15 +1,8 @@
 import java.util.Properties
 import java.io.FileInputStream
 
-fun getLocalProperty(key: String, file: String = "local.properties"): String {
-    val properties = Properties()
-    val localProperties = File(file)
-    if (localProperties.isFile) {
-        properties.load(FileInputStream(localProperties))
-        return properties.getProperty(key)
-    } else {
-        throw GradleException("local.properties not found")
-    }
+val properties = Properties().apply {
+    load(rootProject.file("local.properties").inputStream())
 }
 
 plugins {
@@ -25,12 +18,17 @@ android {
     namespace = "com.example.passionDaily"
     compileSdk = 34
 
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
     signingConfigs {
         create("release") {
             storeFile = file("keystore/release-key.jks")
-            storePassword = getLocalProperty("STORE_PASSWORD")
-            keyAlias = getLocalProperty("KEY_ALIAS")
-            keyPassword = getLocalProperty("KEY_PASSWORD")
+            storePassword = properties.getProperty("STORE_PASSWORD")
+            keyAlias = properties.getProperty("KEY_ALIAS")
+            keyPassword = properties.getProperty("KEY_PASSWORD")
         }
     }
 
@@ -45,9 +43,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        manifestPlaceholders["GOOGLE_CLIENT_ID"] = getLocalProperty("GOOGLE_CLIENT_ID")
-        manifestPlaceholders["FCM_URL"] = getLocalProperty("FCM_URL")
-        manifestPlaceholders["FIREBASE_MESSAGING_URL"] = getLocalProperty("FIREBASE_MESSAGING_URL")
+        buildConfigField("String", "GOOGLE_CLIENT_ID",
+            "\"${properties.getProperty("GOOGLE_CLIENT_ID")}\"")
+        buildConfigField("String", "FCM_URL",
+            "\"${properties.getProperty("FCM_URL")}\"")
+        buildConfigField("String", "FIREBASE_MESSAGING_URL",
+            "\"${properties.getProperty("FIREBASE_MESSAGING_URL")}\"")
     }
 
     buildTypes {
@@ -55,23 +56,14 @@ android {
             signingConfig = signingConfigs.getByName("release")
 
             isDebuggable = false
-            // 코드 난독화 활성화
             isMinifyEnabled = true
-            // 사용하지 않는 리소스 제거
             isShrinkResources = true
-            // ProGuard 규칙 파일 설정
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
-            resValue("string", "fcm_url", getLocalProperty("FCM_URL"))
-            resValue("string", "firebase_messaging_url", getLocalProperty("FIREBASE_MESSAGING_URL"))
         }
         debug {
-            resValue("string", "google_client_id", getLocalProperty("GOOGLE_CLIENT_ID"))
-            resValue("string", "fcm_url", getLocalProperty("FCM_URL"))
-            resValue("string", "firebase_messaging_url", getLocalProperty("FIREBASE_MESSAGING_URL"))
         }
     }
     compileOptions {
