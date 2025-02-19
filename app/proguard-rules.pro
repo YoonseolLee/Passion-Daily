@@ -172,3 +172,9 @@
 -keep interface okhttp3.** { *; }
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Firestore Model 클래스 보존
+-keep class com.example.passionDaily.user.data.remote.model.** { *; }
+-keepclassmembers class com.example.passionDaily.user.data.remote.model.** {
+  <init>();
+}

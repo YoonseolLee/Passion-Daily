@@ -13,7 +13,23 @@ data class User(
     val isAccountDeleted: Boolean = false,
     val createdDate: String = "",
     val modifiedDate: String = "",
-    val termsOfServiceEnabled: Boolean,
-    val privacyPolicyEnabled: Boolean,
-    val fcmToken: String
-)
+    val termsOfServiceEnabled: Boolean = false,
+    val privacyPolicyEnabled: Boolean = false,
+    val fcmToken: String = ""
+) {
+    constructor() : this(
+        id = "",
+        name = "",
+        role = UserRole.USER,
+        lastLoginDate = "",
+        notificationEnabled = false,
+        notificationTime = "08:00",
+        lastSyncDate = "",
+        isAccountDeleted = false,
+        createdDate = "",
+        modifiedDate = "",
+        termsOfServiceEnabled = false,
+        privacyPolicyEnabled = false,
+        fcmToken = ""
+    )
+}

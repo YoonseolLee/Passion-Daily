@@ -834,7 +834,8 @@ fun SettingsCategoryHeader(text: String) {
             .height(45.dp)
             .background(color = Color(0xFF0E1C41))
             .padding(horizontal = 24.dp, vertical = 8.dp)
-            .testTag("CategoryHeader")
+            .testTag("CategoryHeader"),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = text,
