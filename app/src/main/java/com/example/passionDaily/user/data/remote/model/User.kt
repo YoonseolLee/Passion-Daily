@@ -13,4 +13,7 @@ data class User(
     val isAccountDeleted: Boolean = false,
     val createdDate: String = "",
     val modifiedDate: String = "",
+    val termsOfServiceEnabled: Boolean,
+    val privacyPolicyEnabled: Boolean,
+    val fcmToken: String
 )

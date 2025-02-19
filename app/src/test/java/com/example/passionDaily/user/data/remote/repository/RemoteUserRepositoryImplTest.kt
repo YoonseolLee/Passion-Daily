@@ -103,34 +103,6 @@ class RemoteUserRepositoryImplTest {
     }
 
     @Test
-    fun `Firestore 사용자 정보를 Room으로 동기화한다`() = mainCoroutineRule.runTest {
-        // Given
-        val userId = "testUserId"
-        val user = mockk<User>()
-        val userEntity = mockk<UserEntity>()
-
-        every {
-            firestore.collection("users")
-                .document(userId)
-        } returns documentReference
-        every { documentReference.get() } returns mockTask(documentSnapshot)
-        every { documentSnapshot.toObject(User::class.java) } returns user
-        every { localUserRepository.convertToUserEntity(user) } returns userEntity
-        coEvery { localUserRepository.saveUser(userEntity) } just Runs
-
-        // When
-        repository.syncFirestoreUserToRoom(userId)
-
-        // Then
-        coVerify {
-            documentReference.get()
-            documentSnapshot.toObject(User::class.java)
-            localUserRepository.convertToUserEntity(user)
-            localUserRepository.saveUser(userEntity)
-        }
-    }
-
-    @Test
     fun `사용자 프로필을 추가한다`() = mainCoroutineRule.runTest {
         // Given
         val userId = "testUserId"

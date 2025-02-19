@@ -98,6 +98,8 @@ class SettingsViewModelTest {
         every { favoritesStateHolder.isOptimisticallyFavorite(any(), any()) } returns false
         coEvery { favoritesStateHolder.clearOptimisticFavorites() } just Runs
 
+        coEvery { toastManager.showGeneralErrorToast() } just Runs
+
         viewModel = SettingsViewModel(
             userSettingsManager,
             scheduleAlarmUseCase,
@@ -185,9 +187,11 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         // Then
-        coVerify(exactly = 1) {
+        coVerifyOrder {
+            settingsStateHolder.updateIsLoading(true)
             settingsStateHolder.updateNotificationEnabled(true)
             settingsStateHolder.updateNotificationTime(expectedTime)
+            settingsStateHolder.updateIsLoading(false)
         }
     }
 
@@ -254,16 +258,18 @@ class SettingsViewModelTest {
             userSettingsManager.loadUserSettings(any(), any())
         } throws Exception("Failed to load settings")
 
-        coEvery { toastManager.showGeneralErrorToast() } just Runs
-
         // When
         viewModel.loadUserSettings()
         advanceUntilIdle()
 
         // Then
-        coVerify { toastManager.showGeneralErrorToast() }
-        coVerify(exactly = 0) { settingsStateHolder.updateNotificationEnabled(any()) }
-        coVerify(exactly = 0) { settingsStateHolder.updateNotificationTime(any()) }
+        coVerifyOrder {
+            settingsStateHolder.updateIsLoading(true)
+            toastManager.showGeneralErrorToast()
+            settingsStateHolder.updateNotificationEnabled(false)
+            settingsStateHolder.updateNotificationTime(LocalTime.of(8, 0))
+            settingsStateHolder.updateIsLoading(false)
+        }
     }
 
     @Test

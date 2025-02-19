@@ -55,7 +55,7 @@ class LoginScreenTest {
 
         // Then
         composeTestRule
-            .onNodeWithText("간편로그인 후 이용이 가능합니다.")
+            .onNodeWithText("로그인 후\n이용이 가능합니다.")
             .assertExists()
             .assertIsDisplayed()
 

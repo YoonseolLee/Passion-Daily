@@ -78,7 +78,6 @@ class RemoteUserRepositoryImpl @Inject constructor(
                 if (needsUpdate) {
                     val updatedEntity = localUserRepository.convertToUserEntity(firestoreUser)
                     localUserRepository.upsertUser(updatedEntity)
-                } else {
                 }
             }
 

@@ -21,15 +21,6 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="Tests in 'com.example.passionDaily'">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="FavoritesScreenTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="로딩중일때_프로그레스_인디케이터가_표시된다()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="Passion-Daily.Passion_Daily.app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
