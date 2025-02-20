@@ -35,6 +35,8 @@ class ScheduleDailyQuoteAlarmUseCaseTest {
         pendingIntent = mockk(relaxed = true)
 
         every { context.getSystemService(Context.ALARM_SERVICE) } returns alarmManager
+        // 권한 있음으로 설정
+        every { alarmManager.canScheduleExactAlarms() } returns true
 
         mockkStatic(PendingIntent::class)
         every {
@@ -62,19 +64,12 @@ class ScheduleDailyQuoteAlarmUseCaseTest {
     }
 
     @Test
-    fun `알람이 정상적으로 예약되는지 확인`() = mainCoroutineRule.runTest{
+    fun `권한 있을 때 알람이 정확하게 예약되는지 확인`() = mainCoroutineRule.runTest{
         // given
         val hour = 10
         val minute = 30
-        val expectedCalendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            if (before(Calendar.getInstance())) {
-                add(Calendar.DAY_OF_MONTH, 1)
-            }
-        }
 
+        every { alarmManager.canScheduleExactAlarms() } returns true
         every {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
@@ -104,12 +99,50 @@ class ScheduleDailyQuoteAlarmUseCaseTest {
     }
 
     @Test
-    fun `현재 시간이 지나면 알람이 다음날로 예약되는지 확인`()  = mainCoroutineRule.runTest{
+    fun `권한 없을 때 대체 알람이 예약되는지 확인`() = mainCoroutineRule.runTest{
+        // given
+        val hour = 10
+        val minute = 30
+
+        every { alarmManager.canScheduleExactAlarms() } returns false
+        every {
+            alarmManager.setWindow(
+                AlarmManager.RTC_WAKEUP,
+                any(),
+                any(), // 10분을 의미하는 600,000ms
+                any()
+            )
+        } just Runs
+
+        // when
+        useCase.scheduleNotification(hour, minute)
+
+        // then
+        verify {
+            alarmManager.setWindow(
+                AlarmManager.RTC_WAKEUP,
+                match { timeMillis ->
+                    val scheduledTime = Calendar.getInstance().apply {
+                        timeInMillis = timeMillis
+                    }
+                    scheduledTime.get(Calendar.HOUR_OF_DAY) == hour &&
+                            scheduledTime.get(Calendar.MINUTE) == minute &&
+                            scheduledTime.get(Calendar.SECOND) == 0
+                },
+                any(), // 윈도우 시간은 정확히 검증하지 않음
+                pendingIntent
+            )
+        }
+    }
+
+    @Test
+    fun `현재 시간이 지나면 알람이 다음날로 예약되는지 확인`() = mainCoroutineRule.runTest{
         // given
         val now = Calendar.getInstance()
         val hourBeforeNow = (now.get(Calendar.HOUR_OF_DAY) - 1).coerceIn(0, 23)
         val minute = 0
 
+        every { alarmManager.canScheduleExactAlarms() } returns true
         every {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,

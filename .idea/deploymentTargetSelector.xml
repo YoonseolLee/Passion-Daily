@@ -35,6 +35,15 @@
       <SelectionState runConfigName="Tests in 'com.example.passionDaily'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="QuoteScreenTest">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="로딩중일때_프로그레스_인디케이터가_표시된다()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="카테고리선택_버튼_클릭시_카테고리화면으로_이동한다()">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>
