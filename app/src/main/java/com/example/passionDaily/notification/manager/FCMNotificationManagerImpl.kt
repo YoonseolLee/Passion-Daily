@@ -1,6 +1,7 @@
 package com.example.passionDaily.notification.manager
 
 import android.content.Context
+import android.util.Log
 import com.example.passionDaily.R
 import com.example.passionDaily.notification.model.QuoteNotificationMessageDTO
 import com.example.passionDaily.notification.service.QuoteNotificationService
@@ -74,6 +75,7 @@ class FCMNotificationManagerImpl @Inject constructor(
             throw e
         }
     }
+
 
     private fun getAccessToken(): String {
         return try {

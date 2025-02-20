@@ -6,10 +6,12 @@ import javax.inject.Singleton
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import com.example.passionDaily.constants.UseCaseConstants.ScheduleDailyQuoteAlarm.ALARM_REQUEST_CODE
 import com.example.passionDaily.notification.receiver.DailyQuoteAlarmReceiver
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar
+import java.util.Date
 import javax.inject.Inject
 
 @Singleton
@@ -66,11 +68,46 @@ class ScheduleDailyQuoteAlarmUseCase @Inject constructor(
     }
 
     private fun schedulePreciseAlarm(calendar: Calendar) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getAlarmManager().setExactAndAllowWhileIdle(
+        val alarmManager = getAlarmManager()
+        val pendingIntent = getPendingIntent()
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    // 정확한 알람 권한이 없을 경우 대체 방법 사용
+                    alarmManager.setWindow(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        10 * 60 * 1000, // 10분 이내 실행 허용
+                        pendingIntent
+                    )
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            // 권한 없음 - 비정확 알람으로 대체
+            alarmManager.setWindow(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
-                getPendingIntent()
+                10 * 60 * 1000, // 10분 이내 실행 허용
+                pendingIntent
             )
         }
     }

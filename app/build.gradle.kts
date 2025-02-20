@@ -1,5 +1,4 @@
 import java.util.Properties
-import java.io.FileInputStream
 
 val properties = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
