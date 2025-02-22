@@ -20,6 +20,7 @@ import com.example.passionDaily.navigation.destinations.termsConsentComposable
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.quote.presentation.screen.QuoteScreen
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
+import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
@@ -35,6 +36,7 @@ fun SetupNavigation(
     val quoteViewModel: QuoteViewModel = hiltViewModel()
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
     val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     NavHost(
@@ -42,11 +44,9 @@ fun SetupNavigation(
         startDestination = "quote"
     ) {
         loginComposable(
-            sharedLogInViewModel = sharedLogInViewModel,
+            loginViewModel = loginViewModel,
             onNavigateToQuote = { screens.navigateToQuote(popUpTo = true) },
-            onNavigateToTermsConsent = { userProfileJson ->
-                screens.navigateToTermsConsent(userProfileJson)
-            }
+            onNavigateToSignUp = { screens.navigateToSignUp() }
         )
 
         termsConsentComposable(

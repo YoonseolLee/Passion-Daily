@@ -3,74 +3,51 @@ package com.example.passionDaily.login.presentation.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.passionDaily.R
-import com.example.passionDaily.ui.theme.BlackBackground
-import com.example.passionDaily.ui.theme.GrayScaleWhite
-import com.example.passionDaily.ui.theme.OnSurface
-import com.example.passionDaily.ui.theme.PrimaryColor
+import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.login.state.AuthState
-import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
+import com.example.passionDaily.ui.theme.BlackBackground
+import com.example.passionDaily.ui.theme.PrimaryColor
 
 @Composable
 fun LoginScreen(
-    sharedLogInViewModel: SharedLogInViewModel,
+    loginViewModel: LoginViewModel,
     onNavigateToQuote: () -> Unit,
-    onNavigateToTermsConsent: (String) -> Unit
+    onNavigateToSignUp: () -> Unit,
 ) {
-    val authState by sharedLogInViewModel.authState.collectAsState()
-    val userProfileJson by sharedLogInViewModel.userProfileJson.collectAsState()
-    val isLoading by sharedLogInViewModel.isLoading.collectAsState()
-
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthState.Authenticated -> {
-                sharedLogInViewModel.signalLoginSuccess()
-                onNavigateToQuote()
-            }
-
-            is AuthState.RequiresConsent -> {
-                userProfileJson?.let { json ->
-                    onNavigateToTermsConsent(json)
-                }
-            }
-
-            is AuthState.Unauthenticated -> {
-            }
-        }
-    }
+    val isLoading by loginViewModel.isLoading.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
 
     LoginScreenContent(
-        sharedLogInViewModel = sharedLogInViewModel,
+        onNavigateToSignUp = onNavigateToSignUp
     )
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Authenticated) {
+            // TODO: signal?
+            onNavigateToQuote()
+        }
+    }
 
     if (isLoading) {
         Box(
@@ -90,140 +67,224 @@ fun LoginScreen(
 
 @Composable
 fun LoginScreenContent(
-    sharedLogInViewModel: SharedLogInViewModel,
+    onNavigateToSignUp: () -> Unit
 ) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
     Box(
-        modifier =
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(BlackBackground),
     ) {
-        Column(
-            modifier =
-            Modifier
-                .offset(x = 34.dp, y = 100.dp)
-                .align(Alignment.TopStart),
-        ) {
-            LoginScreenHeaderTitle()
-            LoginScreenHeaderSubtitle()
-        }
-
-        LoginScreenSplashScreenLogo(
-            modifier = Modifier.align(Alignment.Center),
+        MainContent(
+            email = email,
+            onEmailChange = { email = it },
+            password = password,
+            onPasswordChange = { password = it },
+            passwordVisible = passwordVisible,
+            onPasswordVisibilityChange = { passwordVisible = it },
+            onLoginClick = {  }
         )
 
-        Column(
-            modifier =
-            Modifier
+        SignUpButton(
+            onSignUpClick = onNavigateToSignUp,
+            modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Top),
-            horizontalAlignment = Alignment.Start,
-        ) {
-            LoginScreenGoogleLoginButton(
-                onGoogleLoginClick = {
-                    sharedLogInViewModel.signInWithGoogle()
-                }
-            )
-        }
+                .padding(bottom = 70.dp)
+        )
     }
 }
 
 @Composable
-fun LoginScreenSplashScreenLogo(modifier: Modifier = Modifier) {
+private fun MainContent(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
+    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(22.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(top = 150.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.passion_daily_icon),
-            contentDescription = "passion_daily_icon",
+        AppLogo()
+        EmailInput(
+            email = email,
+            onEmailChange = onEmailChange,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-        Image(
-            painter = painterResource(id = R.drawable.passion_daily_text),
-            contentDescription = "passion_daily_text",
+        PasswordInput(
+            password = password,
+            onPasswordChange = onPasswordChange,
+            passwordVisible = passwordVisible,
+            onPasswordVisibilityChange = onPasswordVisibilityChange,
+            modifier = Modifier.padding(bottom = 24.dp)
         )
+        LoginButton(
+            onClick = onLoginClick
+        )
+        ForgotPasswordButton()
     }
 }
 
 @Composable
-fun LoginScreenHeaderTitle() {
-    Text(
-        text = stringResource(id = R.string.header_title_login_screen),
-        style =
-        TextStyle(
-            fontSize = 30.sp,
-            fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-            fontWeight = FontWeight(400),
-            color = GrayScaleWhite,
-        ),
+private fun AppLogo() {
+    Image(
+        painter = painterResource(id = R.drawable.app_logo_with_text),
+        contentDescription = "App Logo",
+        modifier = Modifier
+            .padding(bottom = 70.dp)
     )
 }
 
 @Composable
-fun LoginScreenHeaderSubtitle() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(top = 7.dp),
+private fun EmailInput(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = email,
+        onValueChange = onEmailChange,
+        placeholder = {
+            Text(
+                "이메일",
+                fontSize = 14.sp
+            )
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 50.dp),  // height 대신 defaultMinSize 사용
+        singleLine = true,
+        textStyle = TextStyle(
+            fontSize = 14.sp
+        ),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = Color.White,
+            focusedBorderColor = Color(0xFF1A3C96)
+        )
+    )
+}
+
+@Composable
+private fun PasswordInput(
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    passwordVisible: Boolean,
+    onPasswordVisibilityChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = password,
+        onValueChange = onPasswordChange,
+        placeholder = {
+            Text(
+                "비밀번호",
+                fontSize = 14.sp
+            )
+        },
+        visualTransformation = if (passwordVisible) VisualTransformation.None
+        else PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = { onPasswordVisibilityChange(!passwordVisible) }) {
+                Icon(
+                    painter = painterResource(
+                        id = if (passwordVisible) R.drawable.visibility_icon
+                        else R.drawable.visibility_off_icon
+                    ),
+                    contentDescription = if (passwordVisible) "Hide password"
+                    else "Show password"
+                )
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 50.dp),  // height 대신 defaultMinSize 사용
+        singleLine = true,
+        textStyle = TextStyle(
+            fontSize = 14.sp
+        ),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = Color.White,
+            focusedBorderColor = Color(0xFF1A3C96)
+        )
+    )
+}
+
+@Composable
+private fun LoginButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF1A3C96),
+            contentColor = Color.White
+        )
+    ) {
+        Text("로그인")
+    }
+}
+
+@Composable
+private fun ForgotPasswordButton(
+    modifier: Modifier = Modifier
+) {
+    TextButton(
+        onClick = { /* Navigate to forgot password */ },
+        modifier = modifier.padding(top = 8.dp)
     ) {
         Text(
-            text = stringResource(id = R.string.header_subtitle1_login_screen),
-            style =
-            TextStyle(
-                fontSize = 16.sp,
-                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                fontWeight = FontWeight(500),
-                color = PrimaryColor,
-            ),
-        )
-        Text(
-            text = stringResource(id = R.string.header_subtitle2_login_screen),
-            style =
-            TextStyle(
-                fontSize = 16.sp,
-                fontFamily = FontFamily(Font(R.font.inter_24pt_regular)),
-                fontWeight = FontWeight(500),
-                color = OnSurface,
-            ),
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Color(0xFFCCCCCC))) {
+                    append("비밀번호를 잊어버리셨나요? ")
+                }
+                withStyle(SpanStyle(color = Color(0xFF1A3C96))) {
+                    append("비밀번호 찾기")
+                }
+            }
         )
     }
 }
 
 @Composable
-fun LoginScreenGoogleLoginButton(
-    onGoogleLoginClick: () -> Unit
+private fun SignUpButton(
+    onSignUpClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier =
-        Modifier
-            .width(345.dp)
-            .height(54.dp)
-            .background(color = GrayScaleWhite, shape = RoundedCornerShape(size = 10.dp))
-            .padding(start = 17.dp)
-            .clickable(onClick = onGoogleLoginClick),
-        horizontalArrangement = Arrangement.spacedBy(79.dp, Alignment.Start),
-        verticalAlignment = Alignment.CenterVertically,
+    TextButton(
+        onClick = { onSignUpClick },
+        modifier = modifier.fillMaxWidth()
     ) {
-        Image(
-            modifier =
-            Modifier
-                .width(24.dp)
-                .height(24.dp)
-                .background(color = GrayScaleWhite),
-            painter = painterResource(id = R.drawable.google_icon),
-            contentDescription = "google_icon",
-            contentScale = ContentScale.None,
-        )
         Text(
-            text = stringResource(id = R.string.google_login),
-            style =
-            TextStyle(
-                fontSize = 18.sp,
-                fontFamily = FontFamily(Font(R.font.inter_18pt_regular)),
-                fontWeight = FontWeight(400),
-                color = Color(0xFF000000),
-            ),
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Color(0xFFCCCCCC))) {
+                    append("아직 회원이 아니신가요? ")
+                }
+                withStyle(SpanStyle(color = Color(0xFF1A3C96))) {
+                    append("회원가입 하기")
+                }
+            }
         )
     }
 }

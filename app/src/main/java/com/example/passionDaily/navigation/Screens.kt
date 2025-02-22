@@ -8,6 +8,7 @@ class Screens(private val navController: NavHostController) {
     private object Routes {
         const val QUOTE = "quote"
         const val LOGIN = "login"
+        const val SIGN_UP = "signup"
         const val TERMS_CONSENT = "termsConsent"
         const val CATEGORY = "category"
         const val FAVORITES = "favorites"
@@ -27,6 +28,10 @@ class Screens(private val navController: NavHostController) {
 
     fun navigateToLogin() {
         navController.navigate(Routes.LOGIN, simpleNavOptions)
+    }
+
+    fun navigateToSignUp() {
+        navController.navigate(Routes.SIGN_UP, simpleNavOptions)
     }
 
     fun navigateToTermsConsent(userProfileJson: String) {

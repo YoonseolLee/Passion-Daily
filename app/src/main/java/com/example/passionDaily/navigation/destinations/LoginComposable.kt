@@ -3,18 +3,18 @@ package com.example.passionDaily.navigation.destinations
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.example.passionDaily.login.presentation.screen.LoginScreen
-import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
+import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 
 fun NavGraphBuilder.loginComposable(
-    sharedLogInViewModel: SharedLogInViewModel,
+    loginViewModel: LoginViewModel,
     onNavigateToQuote: () -> Unit,
-    onNavigateToTermsConsent: (String) -> Unit
+    onNavigateToSignUp: () -> Unit
 ) {
     composable(route = "login") {
         LoginScreen(
-            sharedLogInViewModel = sharedLogInViewModel,
-            onNavigateToQuote = onNavigateToQuote,
-            onNavigateToTermsConsent = onNavigateToTermsConsent
+            loginViewModel,
+            onNavigateToQuote,
+            onNavigateToSignUp
         )
     }
 }
