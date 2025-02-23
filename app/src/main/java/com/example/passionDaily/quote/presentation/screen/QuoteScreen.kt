@@ -72,7 +72,9 @@ fun QuoteScreen(
     val quotes by quoteStateHolder.quotes.collectAsState()
     val isQuoteLoading by quoteStateHolder.isQuoteLoading.collectAsState()
 
-    var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
+    var slideDirection by remember {
+        mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start)
+    }
 
     val context = LocalContext.current
     DisposableEffect(Unit) {
@@ -162,8 +164,9 @@ fun QuoteScreen(
                         quoteViewModel.nextQuote()
                     })
                 }
+            }
 
-                // 명언 표시
+                    // 명언 표시
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -175,13 +178,9 @@ fun QuoteScreen(
                     AnimatedContent(
                         targetState = currentQuote,
                         transitionSpec = {
-                            val direction = slideDirection
-                            (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
+                            (slideIntoContainer(slideDirection, animationSpec = ContentAnimationSpec) +
                                     fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
-                                slideOutOfContainer(
-                                    direction,
-                                    animationSpec = ContentAnimationSpec
-                                ) +
+                                slideOutOfContainer(slideDirection, animationSpec = ContentAnimationSpec) +
                                         fadeOut(animationSpec = FadeAnimationSpec)
                             )
                         }
@@ -215,7 +214,6 @@ fun QuoteScreen(
                     }
                 }
             }
-        }
 
         // Navigation Bar는 항상 표시
         Row(

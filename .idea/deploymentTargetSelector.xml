@@ -32,9 +32,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="LoginScreenContentPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="Tests in 'com.example.passionDaily.quote'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>

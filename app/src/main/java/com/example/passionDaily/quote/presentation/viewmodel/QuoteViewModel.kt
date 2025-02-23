@@ -226,8 +226,8 @@ class QuoteViewModel @Inject constructor(
         val nextIndex = _currentQuoteIndex.value + 1
         val currentQuotes = quotes.value
 
-        if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasReachedEnd)) {
-            viewModelScope.launch {
+        viewModelScope.launch {
+            if (shouldLoadMoreQuotes(nextIndex, currentQuotes, hasReachedEnd)) {
                 try {
                     quoteLoadingManager.startQuoteLoading()
 
@@ -243,27 +243,27 @@ class QuoteViewModel @Inject constructor(
 
                     if (result == null || result.quotes.isEmpty()) {
                         quoteLoadingManager.setHasQuoteReachedEndTrue()
+                        // 더 이상 데이터가 없을 때는 첫 번째로 돌아가기
                         savedStateHandle[KEY_QUOTE_INDEX] = 0
-                        return@launch
+                    } else {
+                        // 새로운 데이터가 있을 때만 상태 업데이트
+                        quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
+                            lastLoadedQuote = newLastDocument
+                        }
+                        savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
                     }
-
-                    quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
-                        lastLoadedQuote = newLastDocument
-                    }
-
-                    savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
 
                 } catch (e: Exception) {
                     handleError(e)
                 } finally {
                     quoteStateHolder.updateIsQuoteLoading(false)
                 }
+            } else {
+                // 현재 페이지 내에서 다음 인덱스로 이동하거나 처음으로 돌아가기
+                savedStateHandle[KEY_QUOTE_INDEX] =
+                    if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
             }
-            return
         }
-
-        savedStateHandle[KEY_QUOTE_INDEX] =
-            if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
     }
 
     private fun shouldLoadMoreQuotes(
