@@ -67,6 +67,30 @@ class ToastManagerImpl @Inject constructor(
         showToast(R.string.error_uri_syntax)
     }
 
+    override fun showInvalidEmailFormatToast() {
+        showToast(R.string.error_invalid_email_format)
+    }
+
+    override fun showEmailAlreadyExistsToast() {
+        showToast(R.string.error_email_already_exists)
+    }
+
+    override fun showInvalidPasswordFormatToast() {
+        showToast(R.string.error_invalid_password_format)
+    }
+
+    override fun showPasswordMismatchToast() {
+        showToast(R.string.error_password_mismatch)
+    }
+
+    override fun showSignupFailedToast() {
+        showToast(R.string.error_signup_fail)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
     private fun showToast(@StringRes resId: Int) {
         Toast.makeText(context, context.getString(resId), Toast.LENGTH_SHORT).show()
     }

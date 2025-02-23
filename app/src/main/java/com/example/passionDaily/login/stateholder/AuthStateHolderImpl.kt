@@ -22,7 +22,7 @@ class AuthStateHolderImpl @Inject constructor() : AuthStateHolder {
         _authState.emit(AuthState.Unauthenticated)
     }
 
-    override suspend fun setRequiresConsent(userId: String, userProfileJson: String?) {
-        _authState.emit(AuthState.RequiresConsent(userId, userProfileJson))
+    override suspend fun setRequiresConsent() {
+        _authState.emit(AuthState.RequiresConsent)
     }
 }

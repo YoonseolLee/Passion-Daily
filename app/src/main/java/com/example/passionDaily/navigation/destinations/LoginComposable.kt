@@ -8,13 +8,13 @@ import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 fun NavGraphBuilder.loginComposable(
     loginViewModel: LoginViewModel,
     onNavigateToQuote: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+    onNavigateToTermsConsent: () -> Unit
 ) {
     composable(route = "login") {
         LoginScreen(
             loginViewModel,
             onNavigateToQuote,
-            onNavigateToSignUp
+            onNavigateToTermsConsent
         )
     }
 }

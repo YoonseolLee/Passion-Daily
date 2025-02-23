@@ -15,4 +15,9 @@ interface ToastManager {
     fun showWithDrawlSuccessToast()
     fun showReLoginForWithDrawlToast()
     fun showURISyntaxException()
+    fun showInvalidEmailFormatToast()
+    fun showEmailAlreadyExistsToast()
+    fun showInvalidPasswordFormatToast()
+    fun showPasswordMismatchToast()
+    fun showSignupFailedToast()
 }

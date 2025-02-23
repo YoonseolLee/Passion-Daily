@@ -30,12 +30,8 @@ class Screens(private val navController: NavHostController) {
         navController.navigate(Routes.LOGIN, simpleNavOptions)
     }
 
-    fun navigateToSignUp() {
-        navController.navigate(Routes.SIGN_UP, simpleNavOptions)
-    }
-
-    fun navigateToTermsConsent(userProfileJson: String) {
-        navController.navigate("${Routes.TERMS_CONSENT}/$userProfileJson", simpleNavOptions)
+    fun navigateToTermsConsent() {
+        navController.navigate(Routes.TERMS_CONSENT, simpleNavOptions)
     }
 
     fun navigateToCategory() {

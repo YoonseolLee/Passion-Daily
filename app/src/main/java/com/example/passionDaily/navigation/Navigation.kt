@@ -24,6 +24,7 @@ import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
+import com.example.passionDaily.signup.SignupViewModel
 
 @Composable
 fun SetupNavigation(
@@ -37,6 +38,7 @@ fun SetupNavigation(
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
     val sharedLogInViewModel: SharedLogInViewModel = hiltViewModel()
     val loginViewModel: LoginViewModel = hiltViewModel()
+    val signupViewModel: SignupViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     NavHost(
@@ -46,7 +48,7 @@ fun SetupNavigation(
         loginComposable(
             loginViewModel = loginViewModel,
             onNavigateToQuote = { screens.navigateToQuote(popUpTo = true) },
-            onNavigateToSignUp = { screens.navigateToSignUp() }
+            onNavigateToTermsConsent = {screens.navigateToTermsConsent()}
         )
 
         termsConsentComposable(

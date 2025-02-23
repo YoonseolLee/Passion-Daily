@@ -4,6 +4,21 @@
     <string name="app_name">Passion Daily</string>
     <string name="version_info">버전 정보</string>
 
+<!-- 회원가입   -->
+    <string name="signup">회원가입</string>
+    <string name="email">이메일</string>
+    <string name="password">비밀번호</string>
+    <string name="password_confirm">비밀번호 확인</string>
+    <string name="error_invalid_email_format">이메일 형식이 잘못됐어요</string>
+    <string name="error_email_already_exists">이미 등록된 이메일이에요</string>
+    <string name="error_invalid_password_format">비밀번호 형식이 잘못됐어요</string>
+    <string name="error_password_mismatch">비밀번호가 일치하지 않아요</string>
+    <string name="error_signup_fail">회원가입에 실패했어요</string>
+    <string name="verify">인증하기</string>
+    <string name="send_verification_link">인증 링크 발송</string>
+    <string name="verification_link_sent">인증 메일 발송됨</string>
+    <string name="check_email_for_verification">이메일로 발송된 인증 링크를 확인해주세요</string>
+
     <!-- 로그인 및 회원 관리 -->
     <string name="header_title_login_screen">로그인 후\n이용이 가능합니다.</string>
     <string name="look">보기</string>
@@ -30,7 +45,7 @@
     <string name="header_subtitle_select_screen">오직 명언 추천을 위해 활용됩니다.</string>
 
     <!-- 약관 및 동의 -->
-    <string name="terms_consent">이용 약관 동의</string>
+    <string name="terms_consent">약관 동의</string>
     <string name="agree_all">전체 동의하기</string>
     <string name="view">보기</string>
     <string name="privacy_policy_agreement">개인정보 수집 및 이용 동의</string>

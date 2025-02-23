@@ -93,7 +93,7 @@ class SharedLogInViewModel @Inject constructor(
             val userProfileMap = userProfileManager.createInitialProfile(firebaseUser, userId)
 
             val userProfileJson = storeUserProfile(userProfileMap)
-            handleUserRegistrationStatus(userId, userProfileJson)
+            handleUserRegistrationStatus(userId)
         } catch (e: Exception) {
             handleException(e)
         }
@@ -105,11 +105,11 @@ class SharedLogInViewModel @Inject constructor(
         return userProfileJson
     }
 
-    private suspend fun handleUserRegistrationStatus(userId: String, userProfileJson: String) {
+    private suspend fun handleUserRegistrationStatus(userId: String) {
         if (remoteUserRepository.isUserRegistered(userId)) {
             syncExistingUser(userId)
         } else {
-            authStateHolder.setRequiresConsent(userId, userProfileJson)
+            authStateHolder.setRequiresConsent()
         }
     }
 

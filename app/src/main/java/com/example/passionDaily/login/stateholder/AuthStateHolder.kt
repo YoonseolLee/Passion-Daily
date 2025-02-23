@@ -8,5 +8,5 @@ interface AuthStateHolder {
 
     suspend fun setAuthenticated(userId: String)
     suspend fun setUnAuthenticated()
-    suspend fun setRequiresConsent(userId: String, userProfileJson: String?)
+    suspend fun setRequiresConsent()
 }

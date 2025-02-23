@@ -41,7 +41,6 @@ import com.example.passionDaily.login.state.AuthState
 
 @Composable
 fun TermsConsentScreen(
-    userProfileJson: String? = null,
     sharedLogInViewModel: SharedLogInViewModel,
     onNavigateToQuoteScreen: () -> Unit,
 ) {
@@ -49,11 +48,6 @@ fun TermsConsentScreen(
     val consent by sharedLogInViewModel.consent.collectAsState()
     val userProfileJsonV2 by sharedLogInViewModel.userProfileJsonV2.collectAsState()
     val authState by sharedLogInViewModel.authState.collectAsState()
-
-    // 초기 userProfileJson 검증
-    LaunchedEffect(userProfileJson) {
-        sharedLogInViewModel.verifyUserProfileJson(userProfileJson)
-    }
 
     Box(
         modifier = Modifier
@@ -120,8 +114,8 @@ fun TermsConsentScreen(
             NextButton(
                 enabled = consent.termsOfService && consent.privacyPolicy,
                 onNextClicked = {
-                    if (authState is AuthState.RequiresConsent && userProfileJson != null) {
-                        sharedLogInViewModel.handleNextClick(userProfileJson)
+                    if (authState is AuthState.RequiresConsent ) {
+//                        sharedLogInViewModel.handleNextClick()
                     }
                 }
             )

@@ -11,16 +11,8 @@ fun NavGraphBuilder.termsConsentComposable(
     sharedLogInViewModel: SharedLogInViewModel,
     onNavigateToQuoteScreen: () -> Unit,
 ) {
-    composable(
-        route = "termsConsent/{userProfileJson}",
-        arguments = listOf(
-            navArgument("userProfileJson") { type = NavType.StringType }
-        )
-    ) { backStackEntry ->
-        val userProfileJson = backStackEntry.arguments?.getString("userProfileJson")
-
+    composable(route = "termsConsent") {
         TermsConsentScreen(
-            userProfileJson = userProfileJson,
             sharedLogInViewModel = sharedLogInViewModel,
             onNavigateToQuoteScreen = onNavigateToQuoteScreen,
         )
