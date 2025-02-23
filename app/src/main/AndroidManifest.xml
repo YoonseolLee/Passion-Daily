@@ -5,13 +5,6 @@
     <!-- 인터넷 권한 추가 -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- 정확한 알람 권한 (Android 12 이하) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
-        android:maxSdkVersion="32"/>
-
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"
-        android:minSdkVersion="33" />
-
     <application
         android:name=".PassionDailyApp"
         android:allowBackup="false"
