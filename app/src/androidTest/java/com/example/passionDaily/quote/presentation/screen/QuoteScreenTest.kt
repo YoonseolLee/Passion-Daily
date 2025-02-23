@@ -58,7 +58,6 @@ class QuoteScreenTest {
                 onNavigateToFavorites = { },
                 onNavigateToQuote = { },
                 onNavigateToSettings = { },
-                onNavigateToLogin = { },
                 currentScreen = NavigationBarScreens.QUOTE
             )
         }

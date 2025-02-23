@@ -3,15 +3,10 @@ package com.example.passionDaily.settings.presentation.viewmodel
 import android.content.Intent
 import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.settings.base.SettingsViewModelActions
 import com.example.passionDaily.settings.manager.EmailManager
-import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
-import com.google.firebase.FirebaseNetworkException
-import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.cancel
 import java.io.IOException
 import java.net.URISyntaxException
 import javax.inject.Inject
@@ -36,12 +31,8 @@ class SettingsViewModel @Inject constructor(
 
     private fun handleError(e: Exception) {
         when (e) {
-            is IOException, is FirebaseNetworkException -> {
+            is IOException -> {
                 toastManager.showNetworkErrorToast()
-            }
-
-            is FirebaseFirestoreException -> {
-                toastManager.showFirebaseErrorToast()
             }
 
             is SQLiteException -> {

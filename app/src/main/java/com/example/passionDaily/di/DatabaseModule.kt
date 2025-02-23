@@ -30,10 +30,6 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideUserDao(database: PassionDailyDatabase): UserDao = database.userDao()
-
-    @Provides
-    @Singleton
     fun provideQuoteDao(database: PassionDailyDatabase): QuoteDao = database.quoteDao()
 
     @Provides

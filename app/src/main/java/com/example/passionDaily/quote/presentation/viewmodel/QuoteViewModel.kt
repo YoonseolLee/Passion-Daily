@@ -1,23 +1,21 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
-import com.example.passionDaily.login.stateholder.AuthStateHolder
-import com.example.passionDaily.quote.data.remote.model.Quote
-import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
-import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.quote.base.QuoteViewModelActions
-import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.quote.base.QuoteViewModelState
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.manager.QuoteLoadingManager
 import com.example.passionDaily.quote.manager.ShareQuoteManager
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
 import com.example.passionDaily.quotecategory.model.QuoteCategory
+import com.example.passionDaily.toast.manager.ToastManager
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,11 +27,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
+import javax.inject.Inject
 
 @HiltViewModel
 class QuoteViewModel @Inject constructor(
@@ -43,7 +41,6 @@ class QuoteViewModel @Inject constructor(
     private val toastManager: ToastManager,
     private val quoteLoadingManager: QuoteLoadingManager,
     private val shareQuoteManager: ShareQuoteManager,
-    private val authStateHolder: AuthStateHolder
 ) : ViewModel(), QuoteViewModelState, QuoteViewModelActions {
     private var lastLoadedQuote: DocumentSnapshot? = null
     override val quotes: StateFlow<List<Quote>> = quoteStateHolder.quotes
@@ -51,7 +48,6 @@ class QuoteViewModel @Inject constructor(
     override val hasReachedEnd: StateFlow<Boolean> = quoteStateHolder.hasQuoteReachedEnd
     override val selectedCategory: StateFlow<QuoteCategory> =
         quoteStateHolder.selectedQuoteCategory
-    override val authState = authStateHolder.authState
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
     override val currentQuoteIndex: StateFlow<Int> = _currentQuoteIndex

@@ -45,25 +45,6 @@
                 tools:node="remove" />
         </provider>
 
-        <service
-            android:name=".notification.service.QuoteFirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="passiondaily" android:host="quote" />
-            </intent-filter>
-        </service>
-
-        <receiver
-            android:name=".notification.receiver.DailyQuoteAlarmReceiver"
-            android:enabled="true"
-            android:exported="false">
-        </receiver>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -71,17 +52,7 @@
             android:theme="@style/Theme.App.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="passiondaily.page.link"
-                    android:pathPrefix="/email-link-login" />
             </intent-filter>
         </activity>
     </application>

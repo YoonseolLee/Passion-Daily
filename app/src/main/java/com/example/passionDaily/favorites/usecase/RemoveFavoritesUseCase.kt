@@ -3,9 +3,6 @@ package com.example.passionDaily.favorites.usecase
 import androidx.room.Transaction
 import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
-import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

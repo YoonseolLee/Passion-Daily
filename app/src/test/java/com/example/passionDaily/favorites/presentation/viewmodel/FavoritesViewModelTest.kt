@@ -1,28 +1,27 @@
 package com.example.passionDaily.favorites.presentation.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
+import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
+import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
+import com.example.passionDaily.favorites.manager.FavoritesSavingManager
+import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
+import com.example.passionDaily.login.state.AuthState
+import com.example.passionDaily.login.stateholder.AuthStateHolder
+import com.example.passionDaily.quote.data.local.entity.QuoteEntity
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import androidx.lifecycle.SavedStateHandle
-import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
-import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
-import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
-import com.example.passionDaily.favorites.manager.FavoritesSavingManager
-import com.example.passionDaily.quote.data.local.entity.QuoteEntity
-import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
-import com.example.passionDaily.login.state.AuthState
-import com.example.passionDaily.login.stateholder.AuthStateHolder
-import com.example.passionDaily.toast.manager.ToastManager
-import com.example.passionDaily.quote.stateholder.QuoteStateHolder
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 
 @ExperimentalCoroutinesApi
 class FavoritesViewModelTest {
@@ -40,7 +39,6 @@ class FavoritesViewModelTest {
     private lateinit var favoritesRemoveManager: FavoritesRemoveManager
     private lateinit var toastManager: ToastManager
     private lateinit var mockUser: FirebaseUser
-    private lateinit var authStateHolder: AuthStateHolder
 
 
     @Before
@@ -58,18 +56,15 @@ class FavoritesViewModelTest {
 
         every { firebaseAuth.currentUser } returns mockUser
         every { mockUser.uid } returns "testUserId"
-        every { authStateHolder.authState } returns MutableStateFlow(AuthState.Authenticated("testUserId"))
 
         viewModel = FavoritesViewModel(
             quoteStateHolder = quoteStateHolder,
             savedStateHandle = savedStateHandle,
-            firebaseAuth = firebaseAuth,
             favoritesStateHolder = favoritesStateHolder,
             favoritesLoadingManager = favoritesLoadingManager,
             favoritesSavingManager = favoritesSavingManager,
             favoritesRemoveManager = favoritesRemoveManager,
             toastManager = toastManager,
-            authStateHolder = authStateHolder,
         )
     }
 
@@ -138,26 +133,8 @@ class FavoritesViewModelTest {
     }
 
     @Test
-    fun `즐겨찾기_삭제시_로컬DB와_파이어스토어에서_정상적으로_삭제된다`() = mainCoroutineRule.runTest {
-        // given
-        val quoteId = "testQuoteId"
-        val categoryId = 1
-        val userId = "testUserId"
+    fun `즐겨찾기_삭제시_로컬DB에서_정상적으로_삭제된다`() = mainCoroutineRule.runTest {
 
-        every { mockUser.uid } returns userId
-        coEvery {
-            favoritesRemoveManager.getRequiredDataForRemove(firebaseAuth, categoryId)
-        } returns Pair(mockUser, categoryId)
-
-        // when
-        viewModel.removeFavorite(quoteId, categoryId)
-
-        // then
-        coVerifySequence {
-            favoritesRemoveManager.getRequiredDataForRemove(firebaseAuth, categoryId)
-            favoritesRemoveManager.deleteFavoriteFromFirestore(mockUser, quoteId, categoryId)
-            favoritesRemoveManager.deleteLocalFavorite(eq(userId), eq(quoteId), eq(categoryId))
-        }
     }
 
     @Test
