@@ -17,11 +17,11 @@ class FavoritesLoadingManagerImpl @Inject constructor(
         loadFavoritesUseCase.updateIsFavoriteLoading(isLoading)
     }
 
-    override suspend fun getAllFavorites(currentUserId: String): Flow<List<QuoteEntity>> {
-        return loadFavoritesUseCase.getAllFavorites(currentUserId)
+    override suspend fun getAllFavorites(): Flow<List<QuoteEntity>> {
+        return loadFavoritesUseCase.getAllFavorites()
     }
 
-    override fun checkIfQuoteIsFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
-        return loadFavoritesUseCase.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
+    override fun checkIfQuoteIsFavorite(quoteId: String, categoryId: Int): Flow<Boolean> {
+        return loadFavoritesUseCase.checkIfQuoteIsFavorite(quoteId, categoryId)
     }
 }

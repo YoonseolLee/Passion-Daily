@@ -7,16 +7,14 @@ import javax.inject.Inject
 
 class GetRequiredDataUseCase @Inject constructor() {
     fun getRequiredDataForAdd(
-        currentUser: FirebaseUser?,
         selectedCategory: QuoteCategory?,
         quotes: List<Quote>,
         quoteId: String
-    ): Triple<FirebaseUser, QuoteCategory, Quote> {
-        val user = currentUser ?: throw IllegalStateException("No user logged in")
+    ): Pair<QuoteCategory, Quote> {
         val category = selectedCategory ?: throw IllegalStateException("No category selected")
         val quote = quotes.find { it.id == quoteId }
             ?: throw IllegalStateException("Quote not found: $quoteId")
 
-        return Triple(user, category, quote)
+        return Pair(category, quote)
     }
 }

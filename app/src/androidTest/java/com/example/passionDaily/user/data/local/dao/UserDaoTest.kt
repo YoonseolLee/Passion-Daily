@@ -4,7 +4,6 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.passionDaily.database.PassionDailyDatabase
-import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
 import org.junit.After

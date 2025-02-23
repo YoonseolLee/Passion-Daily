@@ -236,7 +236,6 @@ fun Buttons(
     favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
     category: QuoteCategory,
-    onRequireLogin: () -> Unit,
     quoteDisplay: QuoteDisplay
 ) {
     ShareButton(
@@ -250,7 +249,6 @@ fun Buttons(
         favoritesViewModel = favoritesViewModel,
         currentQuoteId = currentQuoteId,
         category = category,
-        onRequireLogin = onRequireLogin
     )
 }
 
@@ -288,14 +286,11 @@ fun AddToFavoritesButton(
     favoritesViewModel: FavoritesViewModel,
     currentQuoteId: String,
     category: QuoteCategory,
-    onRequireLogin: () -> Unit,
 ) {
-    val currentUser = FirebaseAuth.getInstance().currentUser
     val coroutineScope = rememberCoroutineScope()
     val categoryId = category?.categoryId ?: return
-    val userId = currentUser?.uid ?: ""
 
-    val isFavorite by favoritesViewModel.isFavorite(userId, currentQuoteId, categoryId)
+    val isFavorite by favoritesViewModel.isFavorite(currentQuoteId, categoryId)
         .collectAsState(initial = false)
 
     var isAnimating by remember { mutableStateOf(false) }
@@ -342,24 +337,20 @@ fun AddToFavoritesButton(
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
-                if (currentUser == null) {
-                    onRequireLogin()
-                } else {
-                    isAnimating = true
+                isAnimating = true
 
-                    localIsFavorite = !localIsFavorite
+                localIsFavorite = !localIsFavorite
 
-                    coroutineScope.launch {
-                        try {
-                            if (!localIsFavorite) {
-                                favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
-                            } else {
-                                favoritesViewModel.addFavorite(currentQuoteId)
-                            }
-                        } catch (e: Exception) {
-                            // 실패 시 UI 상태를 원래대로 복구
-                            localIsFavorite = !localIsFavorite
+                coroutineScope.launch {
+                    try {
+                        if (!localIsFavorite) {
+                            favoritesViewModel.removeFavorite(currentQuoteId, categoryId)
+                        } else {
+                            favoritesViewModel.addFavorite(currentQuoteId)
                         }
+                    } catch (e: Exception) {
+                        // 실패 시 UI 상태를 원래대로 복구
+                        localIsFavorite = !localIsFavorite
                     }
                 }
             }

@@ -10,37 +10,25 @@ import javax.inject.Inject
 
 class FavoritesSavingManagerImpl @Inject constructor(
     private val saveFavoritesToLocalUseCase: SaveFavoritesToLocalUseCase,
-    private val saveFavoritesToRemoteUseCase: SaveFavoritesToRemoteUseCase,
     private val getRequiredDataUseCase: GetRequiredDataUseCase
 ) : FavoritesSavingManager {
 
     override suspend fun saveToLocalDatabase(
-        currentUser: FirebaseUser,
         selectedCategory: QuoteCategory,
         currentQuote: Quote
     ) {
-        saveFavoritesToLocalUseCase.saveToLocalDatabase(currentUser, selectedCategory, currentQuote)
+        saveFavoritesToLocalUseCase.saveToLocalDatabase(selectedCategory, currentQuote)
     }
 
     override fun getRequiredDataForAdd(
-        currentUser: FirebaseUser?,
         selectedCategory: QuoteCategory,
         quotes: List<Quote>,
         quoteId: String
-    ): Triple<FirebaseUser, QuoteCategory, Quote>? {
+    ): Pair<QuoteCategory, Quote>? {
         return getRequiredDataUseCase.getRequiredDataForAdd(
-            currentUser,
             selectedCategory,
             quotes,
             quoteId
         )
-    }
-
-    override suspend fun addFavoriteToFirestore(
-        currentUser: FirebaseUser,
-        quoteId: String,
-        selectedCategory: QuoteCategory
-    ) {
-        saveFavoritesToRemoteUseCase.addFavoriteToFirestore(currentUser, quoteId, selectedCategory)
     }
 }

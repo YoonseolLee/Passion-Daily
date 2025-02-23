@@ -18,8 +18,6 @@ import com.example.passionDaily.quote.data.local.dao.QuoteDao
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quotecategory.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.quotecategory.data.local.entity.QuoteCategoryEntity
-import com.example.passionDaily.user.data.local.dao.UserDao
-import com.example.passionDaily.user.data.local.entity.UserEntity
 import kotlinx.coroutines.runBlocking
 
 @RunWith(AndroidJUnit4::class)

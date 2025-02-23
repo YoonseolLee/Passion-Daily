@@ -57,7 +57,6 @@ fun QuoteScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
 ) {
     val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
@@ -182,7 +181,6 @@ fun QuoteScreen(
                             favoritesViewModel = favoritesViewModel,
                             currentQuoteId = quote.id,
                             category = selectedCategory,
-                            onRequireLogin = onNavigateToLogin,
                             quoteDisplay = quote.toQuoteDisplay()
                         )
                     }

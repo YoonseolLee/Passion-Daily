@@ -15,8 +15,8 @@ class LoadFavoritesUseCase @Inject constructor(
         favoritesStateHolder.updateIsFavoriteLoading(isLoading)
     }
 
-    suspend fun getAllFavorites(userId: String): Flow<List<QuoteEntity>> {
-        return localFavoriteRepository.getAllFavorites(userId)
+    suspend fun getAllFavorites(): Flow<List<QuoteEntity>> {
+        return localFavoriteRepository.getAllFavorites()
     }
 
     fun updateFavoriteQuotes(quotes: List<QuoteEntity>) {
@@ -24,16 +24,14 @@ class LoadFavoritesUseCase @Inject constructor(
     }
 
     fun checkIfQuoteIsFavorite(
-        userId: String,
         quoteId: String,
         categoryId: Int
     ): Flow<Boolean> {
         return localFavoriteRepository
-            .checkFavoriteEntity(userId, quoteId, categoryId)
+            .checkFavoriteEntity(quoteId, categoryId)
             .map { favorite ->
                 // 즐겨찾기 엔티티가 존재하고, 모든 ID가 일치하는 경우에만 true 반환
                 favorite?.run {
-                    this.userId == userId &&
                             this.quoteId == quoteId &&
                             this.categoryId == categoryId
                 } ?: false

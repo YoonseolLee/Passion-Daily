@@ -206,7 +206,6 @@ fun FavoritesScreen(
                             favoritesViewModel = favoritesViewModel,
                             currentQuoteId = quote.quoteId,
                             category = QuoteCategory.fromCategoryId(quote.categoryId),
-                            onRequireLogin = onNavigateToLogin,
                             quoteDisplay = quote.toQuoteDisplay()
                         )
                     }

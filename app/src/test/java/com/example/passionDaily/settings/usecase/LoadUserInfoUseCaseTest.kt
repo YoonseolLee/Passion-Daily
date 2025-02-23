@@ -1,7 +1,6 @@
 package com.example.passionDaily.settings.usecase
 
 import com.example.passionDaily.settings.domain.usecase.LoadUserInfoUseCase
-import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat

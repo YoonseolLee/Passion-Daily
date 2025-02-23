@@ -18,13 +18,12 @@ class SaveFavoritesToLocalUseCase @Inject constructor(
 ) {
 
     suspend fun saveToLocalDatabase(
-        currentUser: FirebaseUser,
         selectedCategory: QuoteCategory,
         currentQuote: Quote
     ) {
         ensureCategoryExists(selectedCategory)
         ensureQuoteExists(selectedCategory, currentQuote)
-        saveFavorite(currentUser, currentQuote.id, selectedCategory)
+        saveFavorite(currentQuote.id, selectedCategory)
     }
 
     private suspend fun ensureCategoryExists(category: QuoteCategory) {
@@ -54,12 +53,10 @@ class SaveFavoritesToLocalUseCase @Inject constructor(
     }
 
     private suspend fun saveFavorite(
-        user: FirebaseUser,
         quoteId: String,
         category: QuoteCategory
     ) {
         val favoriteEntity = FavoriteEntity(
-            userId = user.uid,
             quoteId = quoteId,
             categoryId = category.ordinal
         )

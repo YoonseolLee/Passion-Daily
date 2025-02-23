@@ -1,6 +1,5 @@
 package com.example.passionDaily.util.mapper
 
-import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.login.domain.model.UserProfileKey
 import com.example.passionDaily.util.Converters
 import com.google.gson.Gson

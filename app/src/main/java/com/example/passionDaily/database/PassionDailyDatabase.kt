@@ -5,11 +5,9 @@ import androidx.room.RoomDatabase
 import com.example.passionDaily.favorites.data.local.dao.FavoriteDao
 import com.example.passionDaily.quotecategory.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.quote.data.local.dao.QuoteDao
-import com.example.passionDaily.user.data.local.dao.UserDao
 import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
 import com.example.passionDaily.quotecategory.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
-import com.example.passionDaily.user.data.local.entity.UserEntity
 
 @Database(
     entities = [

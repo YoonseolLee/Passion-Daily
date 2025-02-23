@@ -1,7 +1,6 @@
 package com.example.passionDaily.user.data.remote.repository
 
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.user.data.local.entity.UserEntity
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository
 import com.example.passionDaily.user.data.remote.model.User
 import com.example.passionDaily.util.MainCoroutineRule

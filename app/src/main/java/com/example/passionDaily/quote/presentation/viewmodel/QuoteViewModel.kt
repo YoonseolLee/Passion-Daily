@@ -88,17 +88,6 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-//    init {
-//        // 앱 최초 실행 시에만 로드
-//        if (quotes.value.isEmpty()) {
-//            viewModelScope.launch {
-//                selectedCategory.value?.let { category ->
-//                    loadQuotes(category)
-//                }
-//            }
-//        }
-//    }
-
     override fun loadQuotes(category: QuoteCategory) {
         viewModelScope.launch {
             try {

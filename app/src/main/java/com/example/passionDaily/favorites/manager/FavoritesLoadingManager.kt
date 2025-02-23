@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface FavoritesLoadingManager {
     fun updateFavoriteQuotes(quotes: List<QuoteEntity>)
     fun updateIsFavoriteLoading(isLoading: Boolean)
-    suspend fun getAllFavorites(currentUserId: String): Flow<List<QuoteEntity>>
-    fun checkIfQuoteIsFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean>
+    suspend fun getAllFavorites(): Flow<List<QuoteEntity>>
+    fun checkIfQuoteIsFavorite(quoteId: String, categoryId: Int): Flow<Boolean>
 }

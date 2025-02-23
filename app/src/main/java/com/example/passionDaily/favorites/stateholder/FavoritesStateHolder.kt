@@ -11,8 +11,4 @@ interface FavoritesStateHolder {
     fun updateFavoriteQuotes(quotes: List<QuoteEntity>)
     fun updateIsFavoriteLoading(isLoading: Boolean)
     fun updateError(errorMessage: String?)
-    fun addOptimisticFavorite(quoteId: String, categoryId: Int)
-    fun removeOptimisticFavorite(quoteId: String, categoryId: Int)
-    fun isOptimisticallyFavorite(quoteId: String, categoryId: Int): Boolean
-    fun clearOptimisticFavorites()
 }

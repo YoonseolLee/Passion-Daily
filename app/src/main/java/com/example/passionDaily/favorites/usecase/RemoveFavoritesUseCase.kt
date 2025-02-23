@@ -12,29 +12,16 @@ import javax.inject.Inject
 
 class RemoveFavoritesUseCase @Inject constructor(
     private val localFavoriteRepository: LocalFavoriteRepository,
-    private val remoteFavoriteRepository: RemoteFavoriteRepository
 ) {
-
-    suspend fun getRequiredDataForRemove(
-        firebaseAuth: FirebaseAuth,
-        categoryId: Int
-    ): Pair<FirebaseUser, Int>? = withContext(Dispatchers.IO) {
-        val currentUser = firebaseAuth.currentUser ?: run {
-            return@withContext null
-        }
-        Pair(currentUser, categoryId)
-    }
-
     @Transaction
-    suspend fun deleteLocalFavorite(userId: String, quoteId: String, categoryId: Int) =
+    suspend fun deleteLocalFavorite(quoteId: String, categoryId: Int) =
         withContext(Dispatchers.IO) {
-            deleteFavorite(userId, quoteId, categoryId)
-
+            deleteFavorite(quoteId, categoryId)
             getRemainingFavorites(quoteId, categoryId)
         }
 
-    private suspend fun deleteFavorite(userId: String, quoteId: String, categoryId: Int) {
-        localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId)
+    private suspend fun deleteFavorite(quoteId: String, categoryId: Int) {
+        localFavoriteRepository.deleteFavorite(quoteId, categoryId)
     }
 
     private suspend fun getRemainingFavorites(
@@ -42,13 +29,5 @@ class RemoveFavoritesUseCase @Inject constructor(
         categoryId: Int
     ): List<FavoriteEntity> {
         return localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
-    }
-
-    suspend fun deleteFavoriteFromFirestore(
-        currentUser: FirebaseUser,
-        quoteId: String,
-        categoryId: Int
-    ) {
-        remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
     }
 }

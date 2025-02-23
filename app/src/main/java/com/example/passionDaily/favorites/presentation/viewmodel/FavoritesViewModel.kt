@@ -42,7 +42,6 @@ import kotlin.coroutines.cancellation.CancellationException
 class FavoritesViewModel @Inject constructor(
     private val quoteStateHolder: QuoteStateHolder,
     private val savedStateHandle: SavedStateHandle,
-    private val firebaseAuth: FirebaseAuth,
     private val favoritesStateHolder: FavoritesStateHolder,
     private val favoritesLoadingManager: FavoritesLoadingManager,
     private val favoritesSavingManager: FavoritesSavingManager,
@@ -80,7 +79,6 @@ class FavoritesViewModel @Inject constructor(
                     is AuthState.Authenticated -> loadFavorites()
                     else -> {
                         favoritesStateHolder.updateFavoriteQuotes(emptyList())
-                        favoritesStateHolder.clearOptimisticFavorites()
                     }
                 }
             }
@@ -142,6 +140,7 @@ class FavoritesViewModel @Inject constructor(
                         handleError(e)
                     }
                 }
+
                 else -> {
                     // 로그아웃 상태에서는 빈 리스트로 업데이트
                     favoritesStateHolder.updateFavoriteQuotes(emptyList())
@@ -162,44 +161,31 @@ class FavoritesViewModel @Inject constructor(
         }
     }
 
-    fun isFavorite(userId: String, quoteId: String, categoryId: Int): Flow<Boolean> {
-        return favoritesLoadingManager.checkIfQuoteIsFavorite(userId, quoteId, categoryId)
-            .map { isFavoriteInDb ->
-                isFavoriteInDb || favoritesStateHolder.isOptimisticallyFavorite(quoteId, categoryId)
-            }
+    fun isFavorite(quoteId: String, categoryId: Int): Flow<Boolean> {
+        return favoritesLoadingManager.checkIfQuoteIsFavorite(quoteId, categoryId)
     }
 
     override fun addFavorite(quoteId: String) {
-        val (currentUser, selectedCategory, currentQuote) = getRequiredDataForAdd(
-            firebaseAuth.currentUser,
+        val (selectedCategory, currentQuote) = getRequiredDataForAdd(
             selectedQuoteCategory.value,
             quotes.value,
             quoteId
         ) ?: return
 
-        favoritesStateHolder.addOptimisticFavorite(quoteId, selectedCategory.categoryId)
-
         viewModelScope.launch {
             try {
-                favoritesSavingManager.addFavoriteToFirestore(
-                    currentUser,
-                    quoteId,
-                    selectedCategory
-                ).also {
-                    favoritesSavingManager.saveToLocalDatabase(
-                        currentUser,
-                        selectedCategory,
-                        currentQuote
-                    )
-                    loadFavorites()
-                }
+                favoritesSavingManager.saveToLocalDatabase(
+                    selectedCategory,
+                    currentQuote
+                )
+                loadFavorites()
             } catch (e: Exception) {
-                favoritesStateHolder.removeOptimisticFavorite(quoteId, selectedCategory.categoryId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
                         loadFavorites()
                     }
+
                     else -> handleError(e)
                 }
             }
@@ -207,13 +193,11 @@ class FavoritesViewModel @Inject constructor(
     }
 
     private fun getRequiredDataForAdd(
-        currentUser: FirebaseUser?,
         selectedCategory: QuoteCategory,
         quotes: List<Quote>,
         quoteId: String
-    ): Triple<FirebaseUser, QuoteCategory, Quote>? {
+    ): Pair<QuoteCategory, Quote>? {
         return favoritesSavingManager.getRequiredDataForAdd(
-            currentUser,
             selectedCategory,
             quotes,
             quoteId
@@ -221,41 +205,26 @@ class FavoritesViewModel @Inject constructor(
     }
 
     override suspend fun removeFavorite(quoteId: String, categoryId: Int) {
-        val (currentUser, actualCategoryId) = getRequiredDataForRemove(firebaseAuth, categoryId)
-            ?: return
-
-        favoritesStateHolder.removeOptimisticFavorite(quoteId, categoryId)
 
         viewModelScope.launch {
             try {
-                favoritesRemoveManager.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
-                    .also {
-                        favoritesRemoveManager.deleteLocalFavorite(
-                            currentUser.uid,
-                            quoteId,
-                            actualCategoryId
-                        )
-                        loadFavorites()
-                    }
+                favoritesRemoveManager.deleteLocalFavorite(
+                    quoteId,
+                    categoryId
+                )
+                loadFavorites()
             } catch (e: Exception) {
                 // 실패 시 롤백할 때도 categoryId 함께 사용
-                favoritesStateHolder.addOptimisticFavorite(quoteId, categoryId)
                 when (e) {
                     is IOException, is TimeoutCancellationException -> {
                         handleError(e)
                         loadFavorites()
                     }
+
                     else -> handleError(e)
                 }
             }
         }
-    }
-
-    private suspend fun getRequiredDataForRemove(
-        firebaseAuth: FirebaseAuth,
-        categoryId: Int
-    ): Pair<FirebaseUser, Int>? {
-        return favoritesRemoveManager.getRequiredDataForRemove(firebaseAuth, categoryId)
     }
 
     private fun handleError(e: Exception) {
