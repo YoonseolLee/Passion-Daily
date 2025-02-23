@@ -10,10 +10,8 @@ import com.example.passionDaily.favorites.stateholder.FavoritesStateHolder
 import com.example.passionDaily.login.manager.AuthenticationManager
 import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.stateholder.LoginStateHolder
-import com.example.passionDaily.settings.manager.UserSettingsManager
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.settings.manager.EmailManager
-import com.example.passionDaily.settings.manager.NotificationManager
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
 import com.google.android.gms.tasks.Task
 import com.google.common.truth.Truth.assertThat

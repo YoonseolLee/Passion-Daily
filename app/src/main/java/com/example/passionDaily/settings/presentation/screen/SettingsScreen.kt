@@ -1,11 +1,8 @@
 package com.example.passionDaily.settings.presentation.screen
 
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,49 +17,33 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.DialogProperties
 import com.example.passionDaily.R
-import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
-import com.example.passionDaily.ui.component.CommonNavigationBar
-import java.time.LocalTime
-import android.provider.Settings
-import android.Manifest
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.core.content.ContextCompat
-import com.example.passionDaily.ui.component.BackButton
 import com.example.passionDaily.constants.NavigationBarScreens
-import com.example.passionDaily.ui.theme.PrimaryColor
-import com.google.firebase.auth.FirebaseUser
+import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
+import com.example.passionDaily.ui.component.BackButton
+import com.example.passionDaily.ui.component.CommonNavigationBar
 
 @Composable
 fun SettingsScreen(
@@ -74,78 +55,27 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        val currentUser by settingsViewModel.currentUser.collectAsState()
-        val isNotificationEnabled by settingsViewModel.notificationEnabled.collectAsState()
-        val notificationTime by settingsViewModel.notificationTime.collectAsState()
-        val showWithdrawalDialog by settingsViewModel.showWithdrawalDialog.collectAsState()
-
         SettingsScreenContent(
-            currentUser = currentUser,
-            isNotificationEnabled = isNotificationEnabled,
-            notificationTime = notificationTime,
-            showWithdrawalDialog = showWithdrawalDialog,
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
             currentScreen = currentScreen,
             onBack = onBack,
-            onUpdateNotificationSettings = { enabled ->
-                settingsViewModel.updateNotificationSettings(enabled)
-            },
-            onUpdateNotificationTime = { time ->
-                settingsViewModel.updateNotificationTime(time)
-            },
-            onLogout = {
-                settingsViewModel.logOut(onNavigateToQuote)
-            },
             onCreateEmailIntent = {
                 settingsViewModel.createEmailIntent() ?: Intent()
             },
-            onUpdateShowWithdrawalDialog = { show ->
-                settingsViewModel.updateShowWithdrawalDialog(show)
-            },
-            onWithdrawUser = {
-                settingsViewModel.withdrawUser(onNavigateToQuote, onNavigateToLogin)
-            }
         )
-
-        if (settingsViewModel.isLoading.collectAsState().value) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable(enabled = false) { },
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    color = PrimaryColor,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .testTag("LoadingIndicator")
-                )
-            }
-        }
     }
 }
 
 @Composable
 fun SettingsScreenContent(
-    currentUser: FirebaseUser?,
-    isNotificationEnabled: Boolean,
-    notificationTime: LocalTime?,
-    showWithdrawalDialog: Boolean,
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
-    onUpdateNotificationSettings: (Boolean) -> Unit,
-    onUpdateNotificationTime: (LocalTime) -> Unit,
-    onLogin: () -> Unit,
-    onLogout: () -> Unit,
     onCreateEmailIntent: () -> Intent,
-    onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
-    onWithdrawUser: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -182,41 +112,10 @@ fun SettingsScreenContent(
                 .fillMaxWidth()
                 .padding(top = 89.dp)
         ) {
-            // 알림 설정
-            SettingsCategoryHeader(text = stringResource(id = R.string.notification_settings))
-            NotificationSettingItem(
-                isEnabled = isNotificationEnabled,
-                currentUser = currentUser,
-                onUpdateNotificationSettings = onUpdateNotificationSettings,
-                onLogin = onLogin
-            )
-            NotificationTimeSettingItem(
-                notificationTime = notificationTime,
-                onUpdateNotificationTime = onUpdateNotificationTime,
-                currentUser = currentUser,
-            )
-
-            // 프로필 설정
-            SettingsCategoryHeader(text = stringResource(id = R.string.account_management))
-            if (currentUser != null) {
-                LogoutSettingItem(
-                    onLogout = onLogout
-                )
-            } else {
-                LoginSettingItem(
-                    onLogin = onLogin
-                )
-            }
-
             // 고객 지원
             SettingsCategoryHeader(text = stringResource(id = R.string.customer_support))
             SuggestionSettingItem(
                 onCreateEmailIntent = onCreateEmailIntent
-            )
-            WithdrawalSettingItem(
-                showWithdrawalDialog = showWithdrawalDialog,
-                onUpdateShowWithdrawalDialog = onUpdateShowWithdrawalDialog,
-                onWithdrawUser = onWithdrawUser
             )
             VersionInfoItem()
 
@@ -243,145 +142,6 @@ fun SettingsScreenContent(
 }
 
 @Composable
-fun NotificationSettingItem(
-    isEnabled: Boolean,
-    currentUser: FirebaseUser?,
-    onUpdateNotificationSettings: (Boolean) -> Unit,
-    onLogin: () -> Unit
-) {
-    val context = LocalContext.current
-    var showSettingsDialog by remember { mutableStateOf(false) }
-
-    NotificationPermissionDialog(
-        showDialog = showSettingsDialog,
-        onDismiss = { showSettingsDialog = false },
-        onConfirm = {
-            showSettingsDialog = false
-            navigateToAppSettings(context)
-        }
-    )
-
-    // 비로그인 상태면 항상 off, 클릭시 로그인으로 이동
-    NotificationToggle(
-        isEnabled = if (currentUser == null) false else isEnabled,
-        currentUser = currentUser,
-        onToggleChange = { enabled ->
-            if (currentUser == null) {
-                onLogin()
-                return@NotificationToggle
-            }
-            handleNotificationToggle(
-                enabled = enabled,
-                context = context,
-                currentUser = currentUser,
-                onUpdateNotificationSettings = onUpdateNotificationSettings,
-                showSettingsDialog = { showSettingsDialog = true }
-            )
-        }
-    )
-}
-
-private fun handleNotificationToggle(
-    enabled: Boolean,
-    context: Context,
-    currentUser: FirebaseUser?,
-    onUpdateNotificationSettings: (Boolean) -> Unit,
-    showSettingsDialog: () -> Unit
-) {
-    if (currentUser == null) {
-        onUpdateNotificationSettings(false)
-        return
-    }
-
-    if (!enabled) {
-        onUpdateNotificationSettings(false)
-        return
-    }
-
-    // Android 13(Tiramisu) 이상에서만 권한 체크
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val hasPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.POST_NOTIFICATIONS
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            onUpdateNotificationSettings(true)
-        } else {
-            showSettingsDialog()
-        }
-    } else {
-        onUpdateNotificationSettings(true)
-    }
-}
-
-@Composable
-fun NotificationTimeSettingItem(
-    notificationTime: LocalTime?,
-    onUpdateNotificationTime: (LocalTime) -> Unit,
-    currentUser: FirebaseUser?
-) {
-    val context = LocalContext.current
-    var showTimePickerDialog by rememberSaveable { mutableStateOf(false) }
-
-    val displayTime = if (currentUser == null) {
-        stringResource(R.string.default_notification_time)
-    } else {
-        notificationTime?.toString() ?: stringResource(R.string.default_notification_time)
-    }
-
-    CommonTextItem(
-        title = stringResource(R.string.notification_time_setting),
-        value = displayTime,
-        onClick = {
-            if (currentUser != null) {
-                // Dialog를 직접 생성하고 show
-                TimePickerDialog(
-                    context,
-                    { _, selectedHour, selectedMinute ->
-                        val selectedTime = LocalTime.of(selectedHour, selectedMinute)
-                        onUpdateNotificationTime(selectedTime)
-                    },
-                    notificationTime?.hour ?: 8,
-                    notificationTime?.minute ?: 0,
-                    true
-                ).show()
-            }
-        }
-    )
-}
-
-@Composable
-fun LoginSettingItem(
-    onLogin: () -> Unit
-) {
-    CommonNavigationItem(
-        title = stringResource(R.string.login),
-        onClick = onLogin
-    )
-}
-
-@Composable
-fun LogoutSettingItem(
-    onLogout: () -> Unit
-) {
-    var showLogoutDialog by remember { mutableStateOf(false) }
-
-    LogoutConfirmationDialog(
-        showDialog = showLogoutDialog,
-        onConfirm = {
-            onLogout()
-            showLogoutDialog = false
-        },
-        onDismiss = { showLogoutDialog = false }
-    )
-
-    LogoutButton(
-        onClick = { showLogoutDialog = true }
-    )
-}
-
-@Composable
 fun SuggestionSettingItem(
     onCreateEmailIntent: () -> Intent
 ) {
@@ -398,161 +158,6 @@ fun SuggestionSettingItem(
                 e.printStackTrace()
             }
         }
-    )
-}
-
-@Composable
-fun WithdrawalSettingItem(
-    showWithdrawalDialog: Boolean,
-    onUpdateShowWithdrawalDialog: (Boolean) -> Unit,
-    onWithdrawUser: () -> Unit
-) {
-    WithdrawalButton(
-        onClick = {
-            onUpdateShowWithdrawalDialog(true)
-        }
-    )
-
-    if (showWithdrawalDialog) {
-        AlertDialog(
-            onDismissRequest = { onUpdateShowWithdrawalDialog(false) },
-            title = {
-                Text(
-                    text = stringResource(R.string.withdrawal),
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFFFFF)
-                    )
-                )
-            },
-            text = {
-                Text(
-                    text = stringResource(R.string.withdrawal_confirmation_message),
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        color = Color(0xFFE1E1E1),
-                        lineHeight = 24.sp
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onWithdrawUser()
-                        onUpdateShowWithdrawalDialog(false)
-                    }
-                ) {
-                    Text(
-                        stringResource(R.string.withdrawal),
-                        color = Color(0xFFFF6B6B)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { onUpdateShowWithdrawalDialog(false) }
-                ) {
-                    Text(
-                        stringResource(R.string.no),
-                        color = Color(0xFFCCCCCC)
-                    )
-                }
-            },
-            containerColor = Color(0xFF1A2847),
-            shape = RoundedCornerShape(8.dp),
-            properties = DialogProperties(
-                dismissOnClickOutside = true,
-                dismissOnBackPress = true
-            )
-        )
-    }
-}
-
-@Composable
-private fun WithdrawalButton(onClick: () -> Unit) {
-    CommonNavigationItem(
-        title = stringResource(R.string.withdrawal),
-        onClick = onClick
-    )
-}
-
-@Composable
-private fun LogoutConfirmationDialog(
-    showDialog: Boolean,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    if (!showDialog) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            LogoutDialogTitle()
-        },
-        text = {
-            LogoutDialogMessage()
-        },
-        confirmButton = {
-            LogoutConfirmButton(onClick = onConfirm)
-        },
-        dismissButton = {
-            LogoutCancelButton(onClick = onDismiss)
-        },
-        containerColor = Color(0xFF1A2847),
-        shape = RoundedCornerShape(8.dp)
-    )
-}
-
-@Composable
-private fun LogoutDialogTitle() {
-    Text(
-        text = stringResource(R.string.logout),
-        style = TextStyle(
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFFFFFF)
-        )
-    )
-}
-
-@Composable
-private fun LogoutDialogMessage() {
-    Text(
-        text = stringResource(R.string.logout_confirmation_message),
-        style = TextStyle(
-            fontSize = 15.sp,
-            color = Color(0xFFE1E1E1),
-            lineHeight = 24.sp
-        )
-    )
-}
-
-@Composable
-private fun LogoutConfirmButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.logout),
-            color = Color(0xFFFF6B6B)
-        )
-    }
-}
-
-@Composable
-private fun LogoutCancelButton(onClick: () -> Unit) {
-    TextButton(onClick = onClick) {
-        Text(
-            stringResource(R.string.cancel),
-            color = Color(0xFFCCCCCC)
-        )
-    }
-}
-
-@Composable
-private fun LogoutButton(onClick: () -> Unit) {
-    CommonNavigationItem(
-        title = stringResource(R.string.logout),
-        onClick = onClick
     )
 }
 
@@ -744,80 +349,6 @@ private fun CommonTextItem(
             )
         )
     }
-}
-
-@Composable
-fun NotificationPermissionDialog(
-    showDialog: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
-) {
-    if (!showDialog) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.notification_permission_needed),
-                style = TextStyle(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFFFFFF)
-                )
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(R.string.notification_permission_message),
-                style = TextStyle(
-                    fontSize = 15.sp,
-                    color = Color(0xFFE1E1E1),
-                    lineHeight = 24.sp
-                )
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    stringResource(R.string.go_to_settings),
-                    color = Color(0xFFFF6B6B)
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    stringResource(R.string.cancel),
-                    color = Color(0xFFCCCCCC)
-                )
-            }
-        },
-        containerColor = Color(0xFF1A2847),
-        shape = RoundedCornerShape(8.dp),
-        properties = DialogProperties(
-            dismissOnClickOutside = true,
-            dismissOnBackPress = true
-        )
-    )
-}
-
-@Composable
-private fun NotificationToggle(
-    isEnabled: Boolean,
-    currentUser: FirebaseUser?,
-    onToggleChange: (Boolean) -> Unit
-) {
-    CommonToggleItem(
-        title = stringResource(R.string.daily_quote_notification_setting),
-        isEnabled = isEnabled,
-        onToggleChange = onToggleChange
-    )
-}
-
-private fun navigateToAppSettings(context: Context) {
-    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-        data = Uri.fromParts("package", context.packageName, null)
-    })
 }
 
 @Composable

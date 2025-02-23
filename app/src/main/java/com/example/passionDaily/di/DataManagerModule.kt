@@ -44,17 +44,10 @@ import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCa
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
 import com.example.passionDaily.quotecategory.manager.QuoteCategoryManagerImpl
 import com.example.passionDaily.resources.StringProvider
-import com.example.passionDaily.settings.domain.usecase.LoadUserInfoUseCase
 import com.example.passionDaily.settings.domain.usecase.ParseTimeUseCase
-import com.example.passionDaily.settings.domain.usecase.SaveNotificationUseCase
 import com.example.passionDaily.settings.domain.usecase.SendEmailUseCase
-import com.example.passionDaily.settings.domain.usecase.UpdateNotificationUseCase
 import com.example.passionDaily.settings.manager.EmailManager
 import com.example.passionDaily.settings.manager.EmailManagerImpl
-import com.example.passionDaily.settings.manager.NotificationManager
-import com.example.passionDaily.settings.manager.NotificationManagerImpl
-import com.example.passionDaily.settings.manager.UserSettingsManager
-import com.example.passionDaily.settings.manager.UserSettingsManagerImpl
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.toast.manager.ToastManagerImpl
 import com.example.passionDaily.user.data.local.repository.LocalUserRepository

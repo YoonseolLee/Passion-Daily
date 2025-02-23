@@ -2,8 +2,6 @@ package com.example.passionDaily.settings.manager
 
 import com.example.passionDaily.notification.usecase.ScheduleDailyQuoteAlarmUseCase
 import com.example.passionDaily.settings.domain.usecase.ParseTimeUseCase
-import com.example.passionDaily.settings.domain.usecase.SaveNotificationUseCase
-import com.example.passionDaily.settings.domain.usecase.UpdateNotificationUseCase
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
 import io.mockk.coVerify
