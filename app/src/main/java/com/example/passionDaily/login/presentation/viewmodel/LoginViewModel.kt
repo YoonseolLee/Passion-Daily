@@ -9,7 +9,6 @@ import com.example.passionDaily.login.manager.UserConsentManager
 import com.example.passionDaily.login.manager.UserProfileManager
 import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.login.stateholder.LoginStateHolder
-import com.example.passionDaily.login.domain.model.LoginFormState
 import com.example.passionDaily.login.domain.model.LoginVerification
 import com.example.passionDaily.login.domain.model.VerificationResult
 import com.example.passionDaily.login.manager.SignupManager
@@ -120,8 +119,12 @@ class LoginViewModel @Inject constructor(
         try {
             withContext(Dispatchers.IO) {
                 signupManager.sendSignInLinkToEmail(email)
+                    .onSuccess {
+                        // 이메일 전송 성공
+                        _showEmailSentDialog.value = true
+                        // 이메일을 SharedPreferences에 저장 (이미 SignupManager에서 처리됨)
+                    }
             }
-            _showEmailSentDialog.value = true
         } catch (e: Exception) {
             handleException(e)
         } finally {
