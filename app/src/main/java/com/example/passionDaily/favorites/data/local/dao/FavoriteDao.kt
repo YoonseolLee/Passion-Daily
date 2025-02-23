@@ -40,18 +40,6 @@ interface FavoriteDao {
         categoryId: Int
     )
 
-    @Query("SELECT quote_id FROM favorites")
-    fun getAllFavoriteIds(): Flow<List<String>>
-
-    @Query(
-        """
-            SELECT f.quote_id, q.category_id
-            FROM favorites f
-            INNER JOIN quotes q ON f.quote_id = q.quote_id
-        """
-    )
-    fun getAllFavoriteIdsWithCategory(): Flow<List<FavoriteWithCategory>>
-
     @Query("SELECT * FROM favorites WHERE quote_id = :quoteId AND category_id = :categoryId")
     suspend fun getFavoritesForQuote(quoteId: String, categoryId: Int): List<FavoriteEntity>
 }

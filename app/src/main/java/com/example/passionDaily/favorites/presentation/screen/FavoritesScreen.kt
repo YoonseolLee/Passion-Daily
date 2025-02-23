@@ -111,7 +111,6 @@ fun FavoritesScreen(
                         .testTag("LoadingIndicator")
                 )
             } else if (isFavoriteQuotesEmpty) {
-                // Empty state message in the center
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -135,7 +134,6 @@ fun FavoritesScreen(
                     )
                 }
             } else {
-                // Arrow buttons
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -158,7 +156,6 @@ fun FavoritesScreen(
                     })
                 }
 
-                // Quote display
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -191,7 +188,6 @@ fun FavoritesScreen(
                     Spacer(modifier = Modifier.weight(1f))
                 }
 
-                // Buttons
                 Row(
                     modifier = Modifier
                         .offset(y = -172.dp)
@@ -212,7 +208,6 @@ fun FavoritesScreen(
             }
         }
 
-        // Navigation Bar
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

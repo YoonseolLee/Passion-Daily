@@ -1,6 +1,5 @@
 package com.example.passionDaily.login.domain.usecase
 
-import com.example.passionDaily.constants.UseCaseConstants
 import com.example.passionDaily.login.domain.model.UserProfileKey
 import com.example.passionDaily.util.MainCoroutineRule
 import com.google.common.truth.Truth.assertThat
