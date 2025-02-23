@@ -16,7 +16,7 @@ import com.example.passionDaily.quote.data.local.entity.QuoteEntity
         FavoriteEntity::class,
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class PassionDailyDatabase : RoomDatabase() {
     abstract fun quoteDao(): QuoteDao

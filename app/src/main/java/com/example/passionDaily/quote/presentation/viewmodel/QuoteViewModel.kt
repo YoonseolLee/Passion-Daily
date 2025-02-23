@@ -56,17 +56,27 @@ class QuoteViewModel @Inject constructor(
         combine(quotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
         }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+    private var retryCount = 0
+    private val maxRetries = 3
 
     init {
+        loadInitialQuotes()
+    }
+
+    private var initialLoadDone = false
+
+    fun loadInitialQuotes() {
         viewModelScope.launch {
             selectedCategory.value?.let { category ->
                 try {
                     quoteStateHolder.updateIsQuoteLoading(true)
-                    val result = quoteLoadingManager.fetchQuotesByCategory(
-                        category = category,
-                        pageSize = PAGE_SIZE,
-                        lastLoadedQuote = null
-                    )
+                    val result = retryWithTimeout {
+                        quoteLoadingManager.fetchQuotesByCategory(
+                            category = category,
+                            pageSize = PAGE_SIZE,
+                            lastLoadedQuote = null
+                        )
+                    }
 
                     if (result.quotes.isNotEmpty()) {
                         lastLoadedQuote = result.lastDocument
@@ -76,13 +86,28 @@ class QuoteViewModel @Inject constructor(
                         )
                     }
                 } catch (e: Exception) {
-                    handleError(e)
+                    if (retryCount < maxRetries) {
+                        retryCount++
+                        loadInitialQuotes()
+                    } else {
+                        handleError(e)
+                    }
                 } finally {
                     quoteStateHolder.updateIsQuoteLoading(false)
                 }
             }
         }
     }
+
+    private suspend fun <T> retryWithTimeout(
+        timeoutMs: Long = 10000,
+        block: suspend () -> T
+    ): T {
+        return withTimeout(timeoutMs) {
+            block()
+        }
+    }
+
 
     override fun loadQuotes(category: QuoteCategory) {
         viewModelScope.launch {
@@ -100,7 +125,6 @@ class QuoteViewModel @Inject constructor(
                     return@launch
                 }
 
-                // quotes 추가 전에 상태 확인
                 if (quotes.value.isEmpty()) {
                     lastLoadedQuote = result.lastDocument
                     quoteLoadingManager.addQuotesToState(result.quotes, true)
@@ -108,7 +132,6 @@ class QuoteViewModel @Inject constructor(
                     lastLoadedQuote = result.lastDocument
                     quoteLoadingManager.addQuotesToState(result.quotes, false)
                 }
-
             } catch (e: Exception) {
                 handleError(e)
             } finally {
@@ -239,7 +262,8 @@ class QuoteViewModel @Inject constructor(
             return
         }
 
-        savedStateHandle[KEY_QUOTE_INDEX] = if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
+        savedStateHandle[KEY_QUOTE_INDEX] =
+            if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
     }
 
     private fun shouldLoadMoreQuotes(
@@ -262,7 +286,7 @@ class QuoteViewModel @Inject constructor(
         context: Context,
         imageUrl: String?,
         quoteText: String,
-        author: String
+        author: String,
     ) {
         viewModelScope.launch {
             try {
@@ -270,7 +294,7 @@ class QuoteViewModel @Inject constructor(
                     context = context,
                     imageUrl = imageUrl,
                     quoteText = quoteText,
-                    author = author
+                    author = author,
                 )
             } catch (e: Exception) {
                 handleError(e)
@@ -296,17 +320,12 @@ class QuoteViewModel @Inject constructor(
     private var categoryChangeJob: Job? = null
 
     override fun onCategorySelected(category: QuoteCategory) {
-        // 이전 Job 취소
         categoryChangeJob?.cancel()
 
         categoryChangeJob = viewModelScope.launch {
             try {
-                // 모든 상태 초기화
                 resetAllStates(category)
-
-                // 새로운 데이터 로드
                 loadQuotes(category)
-
             } catch (e: Exception) {
                 handleError(e)
             }
@@ -335,9 +354,11 @@ class QuoteViewModel @Inject constructor(
             is IOException -> {
                 toastManager.showNetworkErrorToast()
             }
+
             is FirebaseFirestoreException -> {
                 toastManager.showFirebaseErrorToast()
             }
+
             else -> {
                 toastManager.showGeneralErrorToast()
             }

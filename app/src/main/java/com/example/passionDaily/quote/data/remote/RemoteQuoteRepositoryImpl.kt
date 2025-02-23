@@ -81,7 +81,7 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         lastLoadedQuote: DocumentSnapshot?
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
-            withTimeout(3000L) {
+            withTimeout(10000L) {
                 val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
 
                 // 먼저 캐시에서 시도

@@ -3,14 +3,12 @@ package com.example.passionDaily.favorites.presentation.screen
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.with
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -50,17 +47,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import com.example.passionDaily.R
+import com.example.passionDaily.constants.NavigationBarScreens
+import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
 import com.example.passionDaily.quote.presentation.components.LeftArrow
 import com.example.passionDaily.quote.presentation.components.QuoteAndPerson
 import com.example.passionDaily.quote.presentation.components.RightArrow
 import com.example.passionDaily.quote.presentation.components.toQuoteDisplay
-import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
-import com.example.passionDaily.constants.NavigationBarScreens
-import com.example.passionDaily.ui.component.CommonNavigationBar
 import com.example.passionDaily.quotecategory.model.QuoteCategory
+import com.example.passionDaily.ui.component.CommonNavigationBar
 
 @Composable
 fun FavoritesScreen(
@@ -97,7 +94,9 @@ fun FavoritesScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BackgroundImage(imageUrl = stringResource(R.string.backgoround_photo_favorites),)
+        currentFavoriteQuote?.let {
+            BackgroundImage(imageUrl = it.imageUrl)
+        }
 
         Box(
             modifier = Modifier

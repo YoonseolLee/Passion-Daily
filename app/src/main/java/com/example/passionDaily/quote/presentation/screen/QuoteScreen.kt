@@ -43,8 +43,16 @@ import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.ui.component.CommonNavigationBar
 import android.app.Activity
+import android.util.Log
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 
@@ -103,13 +111,34 @@ fun QuoteScreen(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)  // Navigation Bar 공간 확보
         ) {
-            if (quotes.isEmpty() && (isQuoteLoading || currentQuote == null)) {
+            if (isQuoteLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .testTag("LoadingIndicator")
                         .align(Alignment.Center),
                     color = PrimaryColor
                 )
+            } else if (quotes.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "데이터를 불러오지 못했습니다",
+                        color = Color.White,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            quoteViewModel.loadInitialQuotes()
+                        },
+                        colors = ButtonDefaults.buttonColors(PrimaryColor)
+                    ) {
+                        Text("다시 시도", color = Color.White)
+                    }
+                }
             } else {
                 // 화살표 버튼
                 Box(
