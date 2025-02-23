@@ -69,7 +69,6 @@ fun FavoritesScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
 ) {
     val favoriteQuotes by favoritesViewModel.favoriteQuotes.collectAsState()

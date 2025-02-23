@@ -70,7 +70,6 @@ fun SettingsScreen(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
 ) {
@@ -88,7 +87,6 @@ fun SettingsScreen(
             onNavigateToFavorites = onNavigateToFavorites,
             onNavigateToQuote = onNavigateToQuote,
             onNavigateToSettings = onNavigateToSettings,
-            onNavigateToLogin = onNavigateToLogin,
             currentScreen = currentScreen,
             onBack = onBack,
             onUpdateNotificationSettings = { enabled ->
@@ -96,9 +94,6 @@ fun SettingsScreen(
             },
             onUpdateNotificationTime = { time ->
                 settingsViewModel.updateNotificationTime(time)
-            },
-            onLogin = {
-                settingsViewModel.logIn(onNavigateToLogin)
             },
             onLogout = {
                 settingsViewModel.logOut(onNavigateToQuote)
@@ -142,7 +137,6 @@ fun SettingsScreenContent(
     onNavigateToFavorites: () -> Unit,
     onNavigateToQuote: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit,
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
     onUpdateNotificationSettings: (Boolean) -> Unit,

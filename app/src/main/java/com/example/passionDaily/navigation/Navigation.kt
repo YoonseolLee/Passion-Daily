@@ -45,7 +45,6 @@ fun SetupNavigation(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
-            onNavigateToLogin = { screens.navigateToLogin() }
         )
 
         composable(
@@ -94,14 +93,12 @@ fun SetupNavigation(
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
-            onNavigateToLogin = { screens.navigateToLogin() }
         )
 
         settingsComposable(
             settingsViewModel = settingsViewModel,
             onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
             onNavigateToQuote = { screens.navigateToQuote() },
-            onNavigateToLogin = { screens.navigateToLogin() },
             onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
             onBack = { navController.popBackStack() }
         )
