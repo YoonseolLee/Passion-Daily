@@ -99,7 +99,7 @@ class LoginViewModel @Inject constructor(
 
     fun onNextButtonClick() {
         viewModelScope.launch {
-            loginStateHolder.updateIsLoading(true)  // 즉시 로딩 표시
+            loginStateHolder.updateIsLoading(true)
             handleNextClick()
         }
     }
