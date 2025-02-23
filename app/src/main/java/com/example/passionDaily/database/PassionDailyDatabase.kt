@@ -11,7 +11,6 @@ import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 
 @Database(
     entities = [
-        UserEntity::class,
         QuoteEntity::class,
         QuoteCategoryEntity::class,
         FavoriteEntity::class,
@@ -20,7 +19,6 @@ import com.example.passionDaily.quote.data.local.entity.QuoteEntity
     exportSchema = false
 )
 abstract class PassionDailyDatabase : RoomDatabase() {
-    abstract fun userDao(): UserDao
     abstract fun quoteDao(): QuoteDao
     abstract fun categoryDao(): QuoteCategoryDao
     abstract fun favoriteDao(): FavoriteDao

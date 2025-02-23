@@ -125,7 +125,7 @@ class FavoritesViewModel @Inject constructor(
                 is AuthState.Authenticated -> {
                     favoritesLoadingManager.updateIsFavoriteLoading(true)
                     try {
-                        favoritesLoadingManager.getAllFavorites(state.userId)
+                        favoritesLoadingManager.getAllFavorites()
                             .catch { e ->
                                 favoritesLoadingManager.updateIsFavoriteLoading(false)
                                 favoritesStateHolder.updateIsFavoriteLoading(false)

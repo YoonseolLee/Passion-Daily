@@ -13,14 +13,11 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.example.passionDaily.navigation.destinations.categoryComposable
 import com.example.passionDaily.navigation.destinations.favoritesComposable
-import com.example.passionDaily.navigation.destinations.loginComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
 import com.example.passionDaily.navigation.destinations.settingsComposable
-import com.example.passionDaily.navigation.destinations.termsConsentComposable
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.quote.presentation.screen.QuoteScreen
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
-import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.settings.presentation.viewmodel.SettingsViewModel
 
@@ -34,23 +31,12 @@ fun SetupNavigation(
 
     val quoteViewModel: QuoteViewModel = hiltViewModel()
     val favoritesViewModel: FavoritesViewModel = hiltViewModel()
-    val loginViewModel: LoginViewModel = hiltViewModel()
     val settingsViewModel: SettingsViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
         startDestination = "quote"
     ) {
-        loginComposable(
-            loginViewModel = loginViewModel,
-            onNavigateToQuote = { screens.navigateToQuote(popUpTo = true) },
-            onNavigateToTermsConsent = {screens.navigateToTermsConsent()}
-        )
-
-        termsConsentComposable(
-            loginViewModel = loginViewModel,
-            onNavigateToQuoteScreen = { screens.navigateToQuote(popUpTo = true) }
-        )
 
         quoteComposable(
             quoteViewModel = quoteViewModel,
@@ -91,7 +77,6 @@ fun SetupNavigation(
                 onNavigateToFavorites = { screens.navigateToFavoritesFromNavBar() },
                 onNavigateToQuote = { screens.navigateToQuoteFromNavBar() },
                 onNavigateToSettings = { screens.navigateToSettingsFromNavBar() },
-                onNavigateToLogin = { screens.navigateToLogin() },
                 currentScreen = NavigationBarScreens.QUOTE
             )
         }
