@@ -1,4 +1,4 @@
-package com.example.passionDaily.signup.domain.model
+package com.example.passionDaily.login.domain.model
 
 data class VerificationResult(
     val verification: LoginVerification,

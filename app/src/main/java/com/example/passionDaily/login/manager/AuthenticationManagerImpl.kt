@@ -46,14 +46,6 @@ class AuthenticationManagerImpl @Inject constructor(
         loginStateHolder.updateIsLoading(false)
     }
 
-    override suspend fun updateUserProfileJson(json: String?) {
-        loginStateHolder.updateUserProfileJson(json)
-    }
-
-    override suspend fun updateUserProfileJsonV2(json: String?) {
-        loginStateHolder.updateUserProfileJsonV2(json)
-    }
-
     override suspend fun updateIsLoggedIn(isLoggedIn: Boolean) {
         loginStateHolder.updateIsLoggedIn(isLoggedIn)
     }

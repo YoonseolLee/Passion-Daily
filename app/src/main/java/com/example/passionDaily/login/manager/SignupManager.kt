@@ -1,4 +1,4 @@
-package com.example.passionDaily.signup.manager
+package com.example.passionDaily.login.manager
 
 import android.content.Context
 import android.util.Log

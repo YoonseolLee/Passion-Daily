@@ -14,7 +14,5 @@ interface AuthenticationManager {
     suspend fun clearCredentials()
     suspend fun startLoading()
     suspend fun stopLoading()
-    suspend fun updateUserProfileJson(json: String?)
-    suspend fun updateUserProfileJsonV2(json: String?)
     suspend fun updateIsLoggedIn(isLoggedIn: Boolean)
 }

@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,27 +30,57 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewModelScope
 import com.example.passionDaily.R
+import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.ui.theme.BlackBackground
 import com.example.passionDaily.ui.theme.GrayScaleWhite
 import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
-import com.example.passionDaily.login.state.AuthState
+import kotlinx.coroutines.launch
 
 @Composable
 fun TermsConsentScreen(
-    sharedLogInViewModel: SharedLogInViewModel,
+    loginViewModel: LoginViewModel,
     onNavigateToQuoteScreen: () -> Unit,
 ) {
-    val isAgreeAllChecked by sharedLogInViewModel.isAgreeAllChecked.collectAsState()
-    val consent by sharedLogInViewModel.consent.collectAsState()
-    val userProfileJsonV2 by sharedLogInViewModel.userProfileJsonV2.collectAsState()
-    val authState by sharedLogInViewModel.authState.collectAsState()
+    val isAgreeAllChecked by loginViewModel.isAgreeAllChecked.collectAsState()
+    val consent by loginViewModel.consent.collectAsState()
+    val authState by loginViewModel.authState.collectAsState()
+    val formState by loginViewModel.signupFormState.collectAsState()
+    val showDialog by loginViewModel.showEmailSentDialog.collectAsState()
+    val isLoading by loginViewModel.isLoading.collectAsState()  // 추가!
+
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = false) {},
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator(
+                color = PrimaryColor,
+                modifier = Modifier.size(48.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        EmailSentDialog(
+            email = formState.email,
+            onDismiss = { loginViewModel.dismissEmailSentDialog() }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -74,7 +107,7 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.agree_all),
                 isChecked = isAgreeAllChecked,
-                onCheckedChange = { sharedLogInViewModel.toggleAgreeAll() },
+                onCheckedChange = { loginViewModel.toggleAgreeAll() },
                 isAgreeAll = true
             )
 
@@ -83,9 +116,9 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.terms_of_service),
                 isChecked = consent.termsOfService,
-                onCheckedChange = { sharedLogInViewModel.toggleIndividualItem("termsOfService") },
+                onCheckedChange = { loginViewModel.toggleIndividualItem("termsOfService") },
                 url = stringResource(id = R.string.terms_of_service_url),
-                sharedLogInViewModel = sharedLogInViewModel
+                loginViewModel = loginViewModel
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -93,9 +126,9 @@ fun TermsConsentScreen(
             CheckboxItem(
                 text = stringResource(id = R.string.privacy_policy_agreement),
                 isChecked = consent.privacyPolicy,
-                onCheckedChange = { sharedLogInViewModel.toggleIndividualItem("privacyPolicy") },
+                onCheckedChange = { loginViewModel.toggleIndividualItem("privacyPolicy") },
                 url = stringResource(id = R.string.privacy_policy_url),
-                sharedLogInViewModel = sharedLogInViewModel
+                loginViewModel = loginViewModel
             )
         }
 
@@ -105,19 +138,34 @@ fun TermsConsentScreen(
                 .padding(bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            LaunchedEffect(userProfileJsonV2, authState) {
-                if (authState is AuthState.Authenticated && userProfileJsonV2 != null) {
-                    onNavigateToQuoteScreen()
-                }
-            }
-
             NextButton(
-                enabled = consent.termsOfService && consent.privacyPolicy,
+                enabled = consent.termsOfService &&
+                        consent.privacyPolicy &&
+                        formState.email.isNotBlank(),
                 onNextClicked = {
-                    if (authState is AuthState.RequiresConsent ) {
-//                        sharedLogInViewModel.handleNextClick()
-                    }
+                    loginViewModel.onNextButtonClick()
                 }
+            )
+        }
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(enabled = false) {},
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(
+                    color = PrimaryColor,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+        }
+
+        if (showDialog) {
+            EmailSentDialog(
+                email = formState.email,
+                onDismiss = { loginViewModel.dismissEmailSentDialog() }
             )
         }
     }
@@ -130,7 +178,7 @@ fun CheckboxItem(
     onCheckedChange: () -> Unit,
     isAgreeAll: Boolean = false,
     url: String? = null,
-    sharedLogInViewModel: SharedLogInViewModel? = null
+    loginViewModel: LoginViewModel? = null
 ) {
     val context = LocalContext.current
 
@@ -173,7 +221,7 @@ fun CheckboxItem(
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .clickable {
-                        sharedLogInViewModel?.openUrl(context, url)
+                        loginViewModel?.openUrl(context, url)
                     },
                 style = TextStyle(
                     fontSize = 14.sp,
@@ -208,5 +256,57 @@ fun NextButton(
                 color = Color.Black
             )
         )
+    }
+}
+
+@Composable
+private fun EmailSentDialog(
+    email: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .background(
+                    color = Color(0xFF1A2847),  // 배경색 변경
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(24.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    "이메일을 확인하세요!",
+                    color = GrayScaleWhite,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = buildAnnotatedString {
+                        append("이메일 주소를 확인하려면\n")
+                        // SpanStyle 제거하고 모두 흰색으로 통일
+                        append(email)
+                        append("\n로 보낸 이메일의 링크를 클릭하세요.")
+                    },
+                    color = GrayScaleWhite,  // 전체 텍스트 흰색으로
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryColor
+                    )
+                ) {
+                    Text("확인", color = Color.White)
+                }
+            }
+        }
     }
 }

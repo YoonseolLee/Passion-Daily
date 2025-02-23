@@ -1,9 +1,10 @@
-package com.example.passionDaily.signup.manager
+package com.example.passionDaily.login.manager
 
+import android.util.Log
 import android.util.Patterns
-import com.example.passionDaily.signup.domain.model.LoginFormState
-import com.example.passionDaily.signup.domain.model.LoginVerification
-import com.example.passionDaily.signup.domain.model.VerificationResult
+import com.example.passionDaily.login.domain.model.LoginFormState
+import com.example.passionDaily.login.domain.model.LoginVerification
+import com.example.passionDaily.login.domain.model.VerificationResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
@@ -20,6 +21,9 @@ class VerifyManager @Inject constructor(
 
     suspend fun verifyLoginForm(email: String): VerificationResult =
         suspendCoroutine { continuation ->
+            Log.d("VerifyManager", "Verifying email: $email")
+
+
             val formState = LoginFormState(
                 email = email,
                 isEmailValid = true
@@ -27,6 +31,8 @@ class VerifyManager @Inject constructor(
 
             // 1. 이메일 형식 검증
             if (!emailPattern.matcher(email).matches()) {
+                Log.d("VerifyManager", "emialpattern 에러 . Email is: $email")
+
                 continuation.resume(
                     VerificationResult(
                         LoginVerification.Error.InvalidEmailFormat,
@@ -54,6 +60,7 @@ class VerifyManager @Inject constructor(
                             )
                         } else {
                             // 새로운 회원인 경우
+                            Log.d("VerifyManager", "Email format valid, proceeding with verification")
                             continuation.resume(
                                 VerificationResult(
                                     LoginVerification.Success.NewUser,

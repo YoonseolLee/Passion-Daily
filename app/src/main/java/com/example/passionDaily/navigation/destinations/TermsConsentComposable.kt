@@ -4,16 +4,16 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.passionDaily.login.presentation.viewmodel.LoginViewModel
 import com.example.passionDaily.termsConsent.presentation.screen.TermsConsentScreen
-import com.example.passionDaily.login.presentation.viewmodel.SharedLogInViewModel
 
 fun NavGraphBuilder.termsConsentComposable(
-    sharedLogInViewModel: SharedLogInViewModel,
+    loginViewModel: LoginViewModel,
     onNavigateToQuoteScreen: () -> Unit,
 ) {
     composable(route = "termsConsent") {
         TermsConsentScreen(
-            sharedLogInViewModel = sharedLogInViewModel,
+            loginViewModel =  loginViewModel,
             onNavigateToQuoteScreen = onNavigateToQuoteScreen,
         )
     }

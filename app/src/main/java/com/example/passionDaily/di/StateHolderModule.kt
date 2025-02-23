@@ -19,8 +19,6 @@ import com.example.passionDaily.login.stateholder.LoginStateHolderImpl
 import com.example.passionDaily.login.stateholder.UserProfileStateHolder
 import com.example.passionDaily.login.stateholder.UserProfileStateHolderImpl
 import com.example.passionDaily.settings.stateholder.SettingsStateHolder
-import com.example.passionDaily.signup.stateholder.SignupStateHolder
-import com.example.passionDaily.signup.stateholder.SignupStateHolderImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -53,8 +51,4 @@ object StateHolderModule {
     @Singleton
     fun provideFavoritesStateHolder(): FavoritesStateHolder =
         FavoritesStateHolderImpl().also { it.updateFavoriteQuotes(emptyList()) }
-
-    @Provides
-    @Singleton
-    fun provideSignupStateHolder(): SignupStateHolder = SignupStateHolderImpl()
 }

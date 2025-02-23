@@ -1,9 +1,11 @@
 package com.example.passionDaily.login.stateholder
 
+import com.example.passionDaily.login.domain.model.LoginFormState
 import com.example.passionDaily.login.state.AuthState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,14 +16,6 @@ class LoginStateHolderImpl @Inject constructor() : LoginStateHolder {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
     override val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    // 사용자 프로필 JSON 데이터
-    private val _userProfileJson = MutableStateFlow<String?>(null)
-    override val userProfileJson: StateFlow<String?> = _userProfileJson.asStateFlow()
-
-    // 사용자 프로필 JSON 데이터 (V2)
-    private val _userProfileJsonV2 = MutableStateFlow<String?>(null)
-    override val userProfileJsonV2: StateFlow<String?> = _userProfileJsonV2.asStateFlow()
-
     // 로그인 여부
     private val _isLoggedIn = MutableStateFlow(false)
     override val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
@@ -30,16 +24,11 @@ class LoginStateHolderImpl @Inject constructor() : LoginStateHolder {
     private val _isLoading = MutableStateFlow(false)
     override val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _loginFormState = MutableStateFlow(LoginFormState())
+    override val loginFormState = _loginFormState.asStateFlow()
+
     override suspend fun updateAuthState(authState: AuthState) {
         _authState.emit(authState)
-    }
-
-    override suspend fun updateUserProfileJson(json: String?) {
-        _userProfileJson.value = json
-    }
-
-    override suspend fun updateUserProfileJsonV2(json: String?) {
-        _userProfileJsonV2.value = json
     }
 
     override suspend fun updateIsLoggedIn(isLoggedIn: Boolean) {
@@ -51,9 +40,15 @@ class LoginStateHolderImpl @Inject constructor() : LoginStateHolder {
     }
 
     override suspend fun clearLoginState() {
-        _userProfileJson.value = null
-        _userProfileJsonV2.value = null
         _isLoggedIn.value = false
         _isLoading.value = false
+    }
+
+    override fun updateEmail(email: String) {
+        _loginFormState.update { it.copy(email = email) }
+    }
+
+    override fun updateFormState(newState: LoginFormState) {
+        _loginFormState.update { newState }
     }
 }
