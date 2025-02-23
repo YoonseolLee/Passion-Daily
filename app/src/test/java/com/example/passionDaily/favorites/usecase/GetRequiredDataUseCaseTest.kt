@@ -15,9 +15,8 @@ class GetRequiredDataUseCaseTest {
     private val getRequiredDataUseCase = GetRequiredDataUseCase()
 
     @Test
-    fun `모든 값이 정상일 경우 Triple을 반환한다`() {
+    fun `모든 값이 정상일 경우 Pair를 반환한다`() {
         // Given
-        val currentUser = mockk<FirebaseUser>()
         val selectedCategory = mockk<QuoteCategory>()
         val quotes = listOf(mockk<Quote> {
             every { id } returns "quote1"
@@ -26,32 +25,11 @@ class GetRequiredDataUseCaseTest {
 
         // When & Then
         val result = getRequiredDataUseCase.getRequiredDataForAdd(
-            currentUser,
             selectedCategory,
             quotes,
             quoteId
         )
         assertNotNull(result)
-    }
-
-    @Test
-    fun `FirebaseUser가 null일 경우 IllegalStateException을 던진다`() {
-        // Given
-        val currentUser: FirebaseUser? = null
-        val selectedCategory = mockk<QuoteCategory>()
-        val quotes = listOf(mockk<Quote> { every { id } returns "quote1" })
-        val quoteId = "quote1"
-
-        // When & Then
-        val exception = assertThrows(IllegalStateException::class.java) {
-            getRequiredDataUseCase.getRequiredDataForAdd(
-                currentUser,
-                selectedCategory,
-                quotes,
-                quoteId
-            )
-        }
-        assertEquals("No user logged in", exception.message)
     }
 
     @Test
@@ -65,7 +43,6 @@ class GetRequiredDataUseCaseTest {
         // When & Then
         val exception = assertThrows(IllegalStateException::class.java) {
             getRequiredDataUseCase.getRequiredDataForAdd(
-                currentUser,
                 selectedCategory,
                 quotes,
                 quoteId
@@ -85,7 +62,6 @@ class GetRequiredDataUseCaseTest {
         // When & Then
         val exception = assertThrows(IllegalStateException::class.java) {
             getRequiredDataUseCase.getRequiredDataForAdd(
-                currentUser,
                 selectedCategory,
                 quotes,
                 quoteId

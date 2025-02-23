@@ -40,21 +40,19 @@ class LoadFavoritesUseCaseTest {
             val categoryId = 1
 
             val favoriteEntity = FavoriteEntity(
-                userId = userId,
                 quoteId = quoteId,
                 categoryId = categoryId
             )
 
             coEvery {
                 localFavoriteRepository.checkFavoriteEntity(
-                    userId,
                     quoteId,
                     categoryId
                 )
             } returns flowOf(favoriteEntity)
 
             // When
-            loadFavoritesUseCase.checkIfQuoteIsFavorite(userId, quoteId, categoryId).test {
+            loadFavoritesUseCase.checkIfQuoteIsFavorite(quoteId, categoryId).test {
                 // Then
                 assertThat(awaitItem()).isTrue()
                 cancelAndConsumeRemainingEvents()
@@ -71,14 +69,13 @@ class LoadFavoritesUseCaseTest {
 
             coEvery {
                 localFavoriteRepository.checkFavoriteEntity(
-                    userId,
                     quoteId,
                     categoryId
                 )
             } returns flowOf(null)
 
             // When
-            loadFavoritesUseCase.checkIfQuoteIsFavorite(userId, quoteId, categoryId).test {
+            loadFavoritesUseCase.checkIfQuoteIsFavorite(quoteId, categoryId).test {
                 // Then
                 assertThat(awaitItem()).isFalse()
                 cancelAndConsumeRemainingEvents()

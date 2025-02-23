@@ -6,8 +6,6 @@ import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
 import com.example.passionDaily.favorites.manager.FavoritesRemoveManager
 import com.example.passionDaily.favorites.manager.FavoritesSavingManager
 import com.example.passionDaily.favorites.stateholder.FavoritesStateHolderImpl
-import com.example.passionDaily.login.state.AuthState
-import com.example.passionDaily.login.stateholder.AuthStateHolder
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.toast.manager.ToastManager
@@ -17,7 +15,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import org.junit.Before
 import org.junit.Rule
@@ -44,7 +41,6 @@ class FavoritesViewModelTest {
     @Before
     fun setUp() {
         quoteStateHolder = mockk(relaxed = true)
-        authStateHolder = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle()
         firebaseAuth = mockk(relaxed = true)
         favoritesStateHolder = FavoritesStateHolderImpl()

@@ -1,177 +1,80 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
-import android.util.Log
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialResponse
-import com.example.passionDaily.resources.StringProvider
+import androidx.lifecycle.SavedStateHandle
+import com.example.passionDaily.quote.domain.model.QuoteResult
+import com.example.passionDaily.quote.manager.QuoteLoadingManager
+import com.example.passionDaily.quote.manager.ShareQuoteManager
+import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.quotecategory.manager.QuoteCategoryManager
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.example.passionDaily.toast.manager.ToastManager
 import com.example.passionDaily.util.MainCoroutineRule
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.FirebaseUser
-import io.mockk.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import java.io.IOException
 
-@ExperimentalCoroutinesApi
-@RunWith(JUnit4::class)
-class SharedLogInViewModelTest {
-
+class QuoteViewModelTest {
     @get:Rule
     val mainCoroutineRule = MainCoroutineRule()
 
-    private val authManager = mockk<AuthenticationManager>()
-    private val userProfileManager = mockk<UserProfileManager>()
-    private val userConsentManager = mockk<UserConsentManager>()
-    private val remoteUserRepository = mockk<RemoteUserRepository>()
-    private val toastManager = mockk<ToastManager>()
-    private val userProfileMapper = mockk<UserProfileMapper>()
-    private val stringProvider = mockk<StringProvider>()
-    private val authStateHolder = mockk<AuthStateHolder>()
-    private val loginStateHolder = mockk<LoginStateHolder>()
-    private val urlManager = mockk<UrlManager>()
-
-    private lateinit var viewModel: SharedLogInViewModel
+    private lateinit var viewModel: QuoteViewModel
+    private val quoteStateHolder: QuoteStateHolder = mockk(relaxed = true)
+    private val savedStateHandle = SavedStateHandle()
+    private val categoryManager: QuoteCategoryManager = mockk()
+    private val toastManager: ToastManager = mockk(relaxed = true)
+    private val quoteLoadingManager: QuoteLoadingManager = mockk()
+    private val shareQuoteManager: ShareQuoteManager = mockk()
 
     @Before
     fun setup() {
-        MockKAnnotations.init(this)
+        every { quoteStateHolder.selectedQuoteCategory } returns MutableStateFlow(QuoteCategory.EFFORT)
 
-        mockkStatic(Log::class)
-
-        every { loginStateHolder.isLoading } returns MutableStateFlow(false)
-        every { loginStateHolder.userProfileJson } returns MutableStateFlow("")
-        every { loginStateHolder.userProfileJsonV2 } returns MutableStateFlow("")
-        every { authStateHolder.authState } returns MutableStateFlow(Unauthenticated)
-        every { userConsentManager.consent } returns MutableStateFlow(
-            UserConsent(
-                termsOfService = false,
-                privacyPolicy = false
-            )
-        )
-        every { userConsentManager.isAgreeAllChecked } returns MutableStateFlow(false)
-        every { stringProvider.getString(any()) } returns "Error message"
-
-        coEvery { toastManager.showNetworkErrorToast() } just Runs
-        coEvery { toastManager.showCredentialErrorToast() } just Runs
-        coEvery { toastManager.showGeneralErrorToast() } just Runs
-        coEvery { toastManager.showFirebaseErrorToast() } just Runs
-        coEvery { toastManager.showLoginSuccessToast() } just Runs
-
-        viewModel = SharedLogInViewModel(
-            authManager = authManager,
-            userProfileManager = userProfileManager,
-            userConsentManager = userConsentManager,
-            urlManager = urlManager,
-            remoteUserRepository = remoteUserRepository,
-            toastManager = toastManager,
-            userProfileMapper = userProfileMapper,
-            stringProvider = stringProvider,
-            authStateHolder = authStateHolder,
-            loginStateHolder = loginStateHolder
+        viewModel = QuoteViewModel(
+            quoteStateHolder,
+            savedStateHandle,
+            categoryManager,
+            toastManager,
+            quoteLoadingManager,
+            shareQuoteManager
         )
     }
 
     @Test
-    fun `구글_로그인_성공시_신규_사용자는_동의화면으로_이동한다`() = mainCoroutineRule.runTest {
-        // given
-        val userId = "testUserId"
-        val credential = mockk<CustomCredential> {
-            every { type } returns GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        }
-        val response = mockk<GetCredentialResponse> {
-            every { this@mockk.credential } returns credential
-        }
-        val authResult = mockk<AuthResult>()
-        val firebaseUser = mockk<FirebaseUser>()
-        val userProfileJson = "{}"
+    fun `카테고리 변경시 상태가 초기화되고 새로운 데이터를 로드한다`() = mainCoroutineRule.runTest {
+        // Given
+        val category = QuoteCategory.EFFORT
+        coEvery { quoteLoadingManager.fetchQuotesByCategory(any(), any(), any()) } returns
+                QuoteResult(emptyList(), null)
 
-        setupSuccessfulLoginMocks(
-            response = response,
-            authResult = authResult,
-            firebaseUser = firebaseUser,
-            userId = userId,
-            userProfileJson = userProfileJson,
-            isRegistered = false
-        )
+        // When
+        viewModel.onCategorySelected(category)
 
-        // when
-        viewModel.signInWithGoogle()
-
-        // then
-        coVerify(exactly = 1) {
-            authManager.startLoading()
-            authManager.clearCredentials()
-            authManager.getGoogleCredential()
-            authManager.extractIdToken(credential)
-            authManager.authenticateWithFirebase("test_token")
-            authManager.getFirebaseUser(authResult)
-            authManager.getUserId(firebaseUser)
-            userProfileManager.createInitialProfile(firebaseUser, userId)
-            userProfileMapper.convertMapToJson(any())
-            authManager.updateUserProfileJson(userProfileJson)
-            remoteUserRepository.isUserRegistered(userId)
-            authStateHolder.setRequiresConsent(userId, userProfileJson)
-            authManager.stopLoading()
+        // Then
+        coVerify {
+            quoteStateHolder.updateIsQuoteLoading(false)
+            quoteStateHolder.updateHasQuoteReachedEnd(false)
+            quoteStateHolder.updateSelectedCategory(category)
+            quoteStateHolder.clearQuotes()
         }
     }
 
     @Test
-    fun `구글_로그인_성공시_기존_사용자는_프로필_동기화한다`() = mainCoroutineRule.runTest {
-        // given
-        val userId = "testUserId"
-        val credential = mockk<CustomCredential> {
-            every { type } returns GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        }
-        val response = mockk<GetCredentialResponse> {
-            every { this@mockk.credential } returns credential
-        }
-        val authResult = mockk<AuthResult>()
-        val firebaseUser = mockk<FirebaseUser>()
-        val userProfileJson = "{}"
+    fun `네트워크 에러 발생시 적절한 토스트 메시지를 표시한다`() = mainCoroutineRule.runTest {
+        // Given
+        val category = QuoteCategory.EFFORT
+        coEvery { quoteLoadingManager.fetchQuotesByCategory(any(), any(), any()) } throws
+                IOException()
 
-        setupSuccessfulLoginMocks(
-            response = response,
-            authResult = authResult,
-            firebaseUser = firebaseUser,
-            userId = userId,
-            userProfileJson = userProfileJson,
-            isRegistered = true
-        )
+        // When
+        viewModel.loadQuotes(category)
 
-        // when
-        viewModel.signInWithGoogle()
-
-        // then
-        coVerify { userProfileManager.syncExistingUser(userId) }
-    }
-
-    private fun setupSuccessfulLoginMocks(
-        response: GetCredentialResponse,
-        authResult: AuthResult,
-        firebaseUser: FirebaseUser,
-        userId: String,
-        userProfileJson: String,
-        isRegistered: Boolean
-    ) {
-        coEvery { authManager.startLoading() } just Runs
-        coEvery { authManager.stopLoading() } just Runs
-        coEvery { authManager.clearCredentials() } just Runs
-        coEvery { authManager.getGoogleCredential() } returns response
-        coEvery { authManager.extractIdToken(any()) } returns "test_token"
-        coEvery { authManager.authenticateWithFirebase(any()) } returns authResult
-        coEvery { authManager.getFirebaseUser(any()) } returns firebaseUser
-        coEvery { authManager.getUserId(any()) } returns userId
-        coEvery { userProfileManager.createInitialProfile(any(), any()) } returns mapOf("key" to "value")
-        coEvery { userProfileMapper.convertMapToJson(any()) } returns userProfileJson
-        coEvery { authManager.updateUserProfileJson(any()) } just Runs
-        coEvery { remoteUserRepository.isUserRegistered(userId) } returns isRegistered
-        coEvery { authStateHolder.setRequiresConsent(any(), any()) } just Runs
-        coEvery { userProfileManager.syncExistingUser(any()) } just Runs
+        // Then
+        coVerify { toastManager.showNetworkErrorToast() }
     }
 }

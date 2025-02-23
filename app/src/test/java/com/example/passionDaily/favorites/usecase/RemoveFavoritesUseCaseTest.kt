@@ -2,16 +2,14 @@ package com.example.passionDaily.favorites.usecase
 
 import com.example.passionDaily.favorites.data.local.entity.FavoriteEntity
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
-import com.example.passionDaily.favorites.data.remote.repository.RemoteFavoriteRepository
-import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
 import com.example.passionDaily.util.MainCoroutineRule
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.google.common.truth.Truth.assertThat
 import io.mockk.*
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import com.google.common.truth.Truth.assertThat
 
 class RemoveFavoritesUseCaseTest {
 
@@ -20,75 +18,75 @@ class RemoveFavoritesUseCaseTest {
 
     private lateinit var removeFavoritesUseCase: RemoveFavoritesUseCase
     private val localFavoriteRepository: LocalFavoriteRepository = mockk()
-    private val localQuoteRepository: LocalQuoteRepository = mockk()
-    private val remoteFavoriteRepository: RemoteFavoriteRepository = mockk()
-    private val firebaseAuth: FirebaseAuth = mockk()
 
     @Before
     fun setup() {
-        removeFavoritesUseCase = RemoveFavoritesUseCase(
-            localFavoriteRepository,
-            remoteFavoriteRepository
-        )
+        removeFavoritesUseCase = RemoveFavoritesUseCase(localFavoriteRepository)
     }
 
     @Test
-    fun `유저가 로그인되어 있으면 getRequiredDataForRemove가 정상적으로 값을 반환한다`() = mainCoroutineRule.runTest {
+    fun `즐겨찾기 삭제 후 남은 즐겨찾기 목록을 반환한다`() = mainCoroutineRule.runTest {
         // Given
-        val categoryId = 1
-        val firebaseUser: FirebaseUser = mockk()
-        every { firebaseAuth.currentUser } returns firebaseUser
-
-        // When
-        val result = removeFavoritesUseCase.getRequiredDataForRemove(firebaseAuth, categoryId)
-
-        // Then
-        assertThat(result).isEqualTo(Pair(firebaseUser, categoryId))
-    }
-
-    @Test
-    fun `유저가 로그인되어 있지 않으면 getRequiredDataForRemove가 null을 반환한다`() = mainCoroutineRule.runTest {
-        // Given
-        val categoryId = 1
-        every { firebaseAuth.currentUser } returns null
-
-        // When
-        val result = removeFavoritesUseCase.getRequiredDataForRemove(firebaseAuth, categoryId)
-
-        // Then
-        assertThat(result).isNull()
-    }
-
-    @Test
-    fun `즐겨찾기 삭제 후 즐겨찾기 목록이 남아있으면 인용구 삭제되지 않는다`() = mainCoroutineRule.runTest {
-        // Given
-        val userId = "user1"
         val quoteId = "quote1"
         val categoryId = 1
         val favoriteEntity = mockk<FavoriteEntity>()
-        coEvery { localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId) } returns listOf(favoriteEntity, favoriteEntity) // 남아있는 즐겨찾기 있음
-        coEvery { localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId) } just Runs
+        val expectedFavorites = listOf(favoriteEntity)
+
+        coEvery { localFavoriteRepository.deleteFavorite(quoteId, categoryId) } just Runs
+        coEvery { localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId) } returns expectedFavorites
 
         // When
-        removeFavoritesUseCase.deleteLocalFavorite(userId, quoteId, categoryId)
+        val result = removeFavoritesUseCase.deleteLocalFavorite(quoteId, categoryId)
 
         // Then
-        coVerify { localFavoriteRepository.deleteFavorite(userId, quoteId, categoryId) }
-        coVerify(exactly = 0) { localQuoteRepository.deleteQuote(quoteId, categoryId) }
+        coVerify {
+            localFavoriteRepository.deleteFavorite(quoteId, categoryId)
+            localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
+        }
+        assertThat(result).isEqualTo(expectedFavorites)
     }
 
     @Test
-    fun `파이어베이스에서 즐겨찾기 삭제가 정상적으로 호출된다`() = mainCoroutineRule.runTest {
+    fun `즐겨찾기 삭제 시 에러가 발생하면 예외를 던진다`() = mainCoroutineRule.runTest {
         // Given
-        val currentUser: FirebaseUser = mockk()
         val quoteId = "quote1"
         val categoryId = 1
-        coEvery { remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId) } just Runs
+        val exception = RuntimeException("Delete failed")
 
-        // When
-        removeFavoritesUseCase.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId)
+        coEvery { localFavoriteRepository.deleteFavorite(quoteId, categoryId) } throws exception
 
-        // Then
-        coVerify { remoteFavoriteRepository.deleteFavoriteFromFirestore(currentUser, quoteId, categoryId) }
+        // When & Then
+        val thrown = assertThrows(RuntimeException::class.java) {
+            runBlocking {
+                removeFavoritesUseCase.deleteLocalFavorite(quoteId, categoryId)
+            }
+        }
+
+        assertThat(thrown.message).isEqualTo("Delete failed")
+        coVerify { localFavoriteRepository.deleteFavorite(quoteId, categoryId) }
+    }
+
+    @Test
+    fun `남은 즐겨찾기 조회 시 에러가 발생하면 예외를 던진다`() = mainCoroutineRule.runTest {
+        // Given
+        val quoteId = "quote1"
+        val categoryId = 1
+        val exception = RuntimeException("Query failed")
+
+        coEvery { localFavoriteRepository.deleteFavorite(quoteId, categoryId) } just Runs
+        coEvery { localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId) } throws exception
+
+        // When & Then
+        val thrown = assertThrows(RuntimeException::class.java) {
+            runBlocking {
+                removeFavoritesUseCase.deleteLocalFavorite(quoteId, categoryId)
+            }
+        }
+
+        assertThat(thrown.message).isEqualTo("Query failed")
+        coVerify {
+            localFavoriteRepository.deleteFavorite(quoteId, categoryId)
+            localFavoriteRepository.getFavoritesForQuote(quoteId, categoryId)
+        }
     }
 }

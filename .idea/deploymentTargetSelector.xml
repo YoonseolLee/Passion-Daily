@@ -38,6 +38,9 @@
       <SelectionState runConfigName="Tests in 'com.example.passionDaily.quote'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="Tests in 'com.example.passionDaily'">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>
