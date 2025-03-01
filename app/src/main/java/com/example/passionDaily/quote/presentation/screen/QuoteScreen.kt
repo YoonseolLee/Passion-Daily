@@ -1,22 +1,28 @@
 package com.example.passionDaily.quote.presentation.screen
 
 import android.app.Activity
-import androidx.compose.animation.core.*
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.ui.unit.dp
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,41 +30,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import com.example.passionDaily.R
+import com.example.passionDaily.constants.NavigationBarScreens
+import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
+import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
 import com.example.passionDaily.quote.presentation.components.CategorySelectionButton
 import com.example.passionDaily.quote.presentation.components.LeftArrow
 import com.example.passionDaily.quote.presentation.components.QuoteAndPerson
 import com.example.passionDaily.quote.presentation.components.RightArrow
 import com.example.passionDaily.quote.presentation.components.toQuoteDisplay
-import com.example.passionDaily.ui.theme.PrimaryColor
-import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
-import com.example.passionDaily.constants.NavigationBarScreens
-import com.example.passionDaily.ui.component.CommonNavigationBar
-import android.util.Log
-import android.view.Choreographer
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.core.view.WindowCompat
-import com.example.passionDaily.quote.presentation.components.BackgroundImage
-import com.example.passionDaily.ui.component.AnimationSpecs
 import com.example.passionDaily.ui.component.AnimationSpecs.ContentAnimationSpec
 import com.example.passionDaily.ui.component.AnimationSpecs.FadeAnimationSpec
+import com.example.passionDaily.ui.component.CommonNavigationBar
+import com.example.passionDaily.ui.theme.PrimaryColor
 
 @Composable
 fun QuoteScreen(
@@ -92,38 +85,6 @@ fun QuoteScreen(
         }
 
         onDispose {}
-    }
-
-    // FPS 측정 추가
-    val choreographer = remember { Choreographer.getInstance() }
-    val frameCallback = remember {
-        object : Choreographer.FrameCallback {
-            var lastFrameTimeNanos = 0L
-            var frameCount = 0
-
-            override fun doFrame(frameTimeNanos: Long) {
-                if (lastFrameTimeNanos > 0) {
-                    frameCount++
-                    val elapsedSeconds = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000.0
-                    if (elapsedSeconds >= 1.0) {
-                        val fps = frameCount / elapsedSeconds
-                        Log.d("FPSMonitor", "현재 FPS: ${fps}")
-                        frameCount = 0
-                        lastFrameTimeNanos = frameTimeNanos
-                    }
-                } else {
-                    lastFrameTimeNanos = frameTimeNanos
-                }
-                choreographer.postFrameCallback(this)
-            }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        choreographer.postFrameCallback(frameCallback)
-        onDispose {
-            choreographer.removeFrameCallback(frameCallback)
-        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -165,7 +126,7 @@ fun QuoteScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "데이터를 불러오지 못했습니다",
+                        text = stringResource(id = R.string.unable_to_load_data),
                         color = Color.White,
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -175,7 +136,7 @@ fun QuoteScreen(
                         },
                         colors = ButtonDefaults.buttonColors(PrimaryColor)
                     ) {
-                        Text("다시 시도", color = Color.White)
+                        Text(stringResource(id = R.string.try_again), color = Color.White)
                     }
                 }
             } else {
@@ -235,13 +196,6 @@ fun QuoteScreen(
                         quotes.find { it.id == quoteId } ?: currentQuote
                     }
 
-                    SideEffect {
-                        Log.d(
-                            "OptimizationLog",
-                            "AnimatedContent recomposed (optimized): quoteId=$quoteId, time=${System.currentTimeMillis()}"
-                        )
-                    }
-
                     displayedQuote?.let {
                         QuoteAndPerson(
                             quote = it.text,
@@ -251,48 +205,6 @@ fun QuoteScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f))
             }
-
-//            // 명언 표시
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(horizontal = 16.dp),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Spacer(modifier = Modifier.weight(1f))
-//
-//                // 문제 지점: 전체 currentQuote 객체를 targetState로 사용
-//                AnimatedContent(
-//                    targetState = currentQuote,
-//                    transitionSpec = {
-//                        (slideIntoContainer(slideDirection, animationSpec = ContentAnimationSpec) +
-//                                fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
-//                            slideOutOfContainer(
-//                                slideDirection,
-//                                animationSpec = ContentAnimationSpec
-//                            ) +
-//                                    fadeOut(animationSpec = FadeAnimationSpec)
-//                        )
-//                    }
-//
-//                ) { quote ->
-//                    quote?.let {
-//                        SideEffect {
-//                            Log.d(
-//                                "OptimizationLog",
-//                                "AnimatedContent recomposed: quoteId=${quote.id}, time=${System.currentTimeMillis()}"
-//                            )
-//                        }
-//
-//                        QuoteAndPerson(
-//                            quote = it.text,
-//                            author = it.person
-//                        )
-//                    }
-//                }
-//                Spacer(modifier = Modifier.weight(1f))
-//            }
 
             // 버튼들
             Row(

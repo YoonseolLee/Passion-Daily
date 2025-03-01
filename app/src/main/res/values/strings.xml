@@ -44,21 +44,7 @@
 알려주세요.</string>
     <string name="header_subtitle_select_screen">오직 명언 추천을 위해 활용됩니다.</string>
 
-    <!-- 약관 및 동의 -->
-    <string name="terms_consent">약관 동의</string>
-    <string name="agree_all">전체 동의하기</string>
-    <string name="view">보기</string>
-    <string name="privacy_policy_agreement">개인정보 수집 및 이용 동의</string>
-    <string name="marketing_consent">(선택) 마케팅 정보 수신 동의</string>
-    <string name="next">다음</string>
-    <string name="terms_of_service_url">https://sites.google.com/view/passiondaily-1/%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%9D%B4%EC%9A%A9-%EC%95%BD%EA%B4%80?authuser=0</string>
-    <string name="privacy_policy_url">https://sites.google.com/view/passiondaily-1/%EA%B0%9C%EC%9D%B8-%EC%A0%95%EB%B3%B4-%EC%B2%98%EB%A6%AC-%EB%B0%A9%EC%B9%A8?authuser=0</string>
-    <string name="marketing_consent_url">https://sites.google.com/view/passiondaily-1/%EB%A7%88%EC%BC%80%ED%8C%85-%EC%A0%95%EB%B3%B4-%EC%88%98%EC%8B%A0-%EB%8F%99%EC%9D%98?authuser=0</string>
-    <string name="terms_of_service">이용약관</string>
-    <string name="privacy_policy">개인정보 처리방침</string>
-
     <!-- 명언 및 관련 정보 -->
-
     <string name="category">category</string>
     <string name="category_kor">카테고리</string>
     <string name="select_category">카테고리 선택</string>
@@ -70,6 +56,8 @@
     <string name="text">text</string>
     <string name="person">person</string>
     <string name="users">users</string>
+    <string name="try_again">다시 시도</string>
+    <string name="unable_to_load_data">데이터를 불러오지 못했습니다</string>
 
     <!-- 즐겨찾기 및 알림 관련 -->
     <string name="favorites">즐겨찾기</string>
@@ -77,15 +65,9 @@
     <string name="favorites_save_fail">즐겨찾기 저장에 실패했습니다.</string>
     <string name="favorites_fetch_fail">즐겨찾기 불러오기에 실패했습니다.</string>
     <string name="favorites_remove_fail">즐겨찾기 삭제에 실패했습니다.</string>
-    <string name="daily_quote_notification_setting">데일리 명언 알림 설정</string>
-    <string name="notification_time_setting">알림 시간 설정</string>
-    <string name="default_notification_time">08:00</string>
     <string name="no_quotes_in_favorites">아직 즐겨찾기한 명언이 없어요.</string>
-    <string name="todays_quote">오늘의 명언</string>
-    <string name="fcmToken">fcmToken</string>
     <string name="added_at">addedAt</string>
     <string name="quote_id">quoteId</string>
-    <string name="backgoround_photo_favorites">https://github.com/YoonseolLee/Passion-Daily-Photos/blob/main/pictures/background_photo_favorites.png?raw=true</string>
 
     <!-- 홈 및 설정 관련 -->
     <string name="home">홈</string>
@@ -94,13 +76,6 @@
     <string name="account_management">계정 관리</string>
     <string name="customer_support">고객 지원</string>
     <string name="terms_and_privacy">약관 및 개인정보 처리 동의</string>
-
-    <!-- 알림 권한 관련 -->
-    <string name="notification_permission_needed">알림 권한 필요</string>
-    <string name="notification_permission_message">알림을 받으려면 설정에서 알림 권한을 허용해주세요.</string>
-    <string name="go_to_settings">설정으로 이동</string>
-    <string name="cancel">취소</string>
-    <string name="monthly_quotes">monthly_quotes</string>
 
     <!-- 회원 관리 추가 UI -->
     <string name="send_suggestion">제안 보내기</string>

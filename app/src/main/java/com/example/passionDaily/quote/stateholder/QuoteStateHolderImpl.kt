@@ -1,6 +1,5 @@
 package com.example.passionDaily.quote.stateholder
 
-import android.util.Log
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.model.QuoteCategory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +31,6 @@ class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
     }
 
     override suspend fun updateIsQuoteLoading(isLoading: Boolean) {
-        Log.d("StateHolder", "updateIsQuoteLoading: $isLoading, time=${System.currentTimeMillis()}")
         _isQuoteLoading.emit(isLoading)
     }
 
@@ -41,8 +39,6 @@ class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
     }
 
     override suspend fun addQuotes(additionalQuotes: List<Quote>, isNewCategory: Boolean) {
-        Log.d("StateHolder", "addQuotes: count=${additionalQuotes.size}, isNew=$isNewCategory, time=${System.currentTimeMillis()}")
-
         // 1. 비어있는 리스트가 들어오면 처리하지 않음
         if (additionalQuotes.isEmpty()) return
 

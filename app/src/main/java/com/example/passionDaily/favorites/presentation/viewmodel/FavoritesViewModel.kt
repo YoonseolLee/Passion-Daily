@@ -62,7 +62,7 @@ class FavoritesViewModel @Inject constructor(
     private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> {
         return combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(2000), null)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     }
 
     init {
