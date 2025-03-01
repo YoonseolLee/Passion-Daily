@@ -161,7 +161,7 @@ fun FavoritesScreen(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     AnimatedContent(
-                        targetState = currentFavoriteQuote,
+                        targetState = currentFavoriteQuote?.quoteId ?: "",
                         transitionSpec = {
                             val direction = slideDirection
                             (slideIntoContainer(
@@ -176,11 +176,15 @@ fun FavoritesScreen(
                                         fadeOut(animationSpec = AnimationSpecs.FadeAnimationSpec)
                             )
                         }
-                    ) { quote ->
-                        quote?.let {
+                    ) { quoteId ->
+                        val displayedQuote = remember(quoteId) {
+                            if (currentFavoriteQuote?.quoteId == quoteId) currentFavoriteQuote else null
+                        }
+
+                        displayedQuote?.let { quote ->
                             QuoteAndPerson(
-                                quote = it.text,
-                                author = it.person
+                                quote = quote.text,
+                                author = quote.person
                             )
                         }
                     }
