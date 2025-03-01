@@ -1,9 +1,7 @@
 package com.example.passionDaily.quote.presentation.screen
 
-import androidx.compose.animation.AnimatedContent
+import android.app.Activity
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -19,7 +17,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.IntOffset
-import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
 import com.example.passionDaily.quote.presentation.components.CategorySelectionButton
 import com.example.passionDaily.quote.presentation.components.LeftArrow
@@ -42,19 +38,27 @@ import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.ui.component.CommonNavigationBar
-import android.app.Activity
 import android.util.Log
+import android.view.Choreographer
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.core.view.WindowCompat
+import com.example.passionDaily.quote.presentation.components.BackgroundImage
+import com.example.passionDaily.ui.component.AnimationSpecs
+import com.example.passionDaily.ui.component.AnimationSpecs.ContentAnimationSpec
+import com.example.passionDaily.ui.component.AnimationSpecs.FadeAnimationSpec
 
 @Composable
 fun QuoteScreen(
@@ -67,6 +71,7 @@ fun QuoteScreen(
     onNavigateToSettings: () -> Unit,
     currentScreen: NavigationBarScreens,
 ) {
+
     val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
     val currentQuote by quoteViewModel.currentQuote.collectAsState()
     val quotes by quoteStateHolder.quotes.collectAsState()
@@ -87,6 +92,38 @@ fun QuoteScreen(
         }
 
         onDispose {}
+    }
+
+    // FPS 측정 추가
+    val choreographer = remember { Choreographer.getInstance() }
+    val frameCallback = remember {
+        object : Choreographer.FrameCallback {
+            var lastFrameTimeNanos = 0L
+            var frameCount = 0
+
+            override fun doFrame(frameTimeNanos: Long) {
+                if (lastFrameTimeNanos > 0) {
+                    frameCount++
+                    val elapsedSeconds = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000.0
+                    if (elapsedSeconds >= 1.0) {
+                        val fps = frameCount / elapsedSeconds
+                        Log.d("FPSMonitor", "현재 FPS: ${fps}")
+                        frameCount = 0
+                        lastFrameTimeNanos = frameTimeNanos
+                    }
+                } else {
+                    lastFrameTimeNanos = frameTimeNanos
+                }
+                choreographer.postFrameCallback(this)
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        choreographer.postFrameCallback(frameCallback)
+        onDispose {
+            choreographer.removeFrameCallback(frameCallback)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -166,54 +203,116 @@ fun QuoteScreen(
                 }
             }
 
-                    // 명언 표시
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-                    AnimatedContent(
-                        targetState = currentQuote,
-                        transitionSpec = {
-                            (slideIntoContainer(slideDirection, animationSpec = ContentAnimationSpec) +
-                                    fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
-                                slideOutOfContainer(slideDirection, animationSpec = ContentAnimationSpec) +
-                                        fadeOut(animationSpec = FadeAnimationSpec)
-                            )
-                        }
-                    ) { quote ->
-                        quote?.let {
-                            QuoteAndPerson(
-                                quote = it.text,
-                                author = it.person
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+            // 명언 표시
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
 
-                // 버튼들
-                Row(
-                    modifier = Modifier
-                        .offset(y = -172.dp)
-                        .align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    currentQuote?.let { quote ->
-                        Buttons(
-                            quoteViewModel = quoteViewModel,
-                            favoritesViewModel = favoritesViewModel,
-                            currentQuoteId = quote.id,
-                            category = selectedCategory,
-                            quoteDisplay = quote.toQuoteDisplay()
+                AnimatedContent(
+                    targetState = currentQuote?.id ?: "",
+                    transitionSpec = {
+                        (slideIntoContainer(
+                            slideDirection,
+                            animationSpec = ContentAnimationSpec
+                        ) +
+                                fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
+                            slideOutOfContainer(
+                                slideDirection,
+                                animationSpec = ContentAnimationSpec
+                            ) +
+                                    fadeOut(animationSpec = FadeAnimationSpec)
+                        )
+                    }
+                ) { quoteId ->
+                    // ID를 기반으로 현재 명언 객체 메모이제이션
+                    val displayedQuote = remember(quoteId) {
+                        // quoteId와 일치하는 명언을 quotes 리스트에서 찾기
+                        quotes.find { it.id == quoteId } ?: currentQuote
+                    }
+
+                    SideEffect {
+                        Log.d(
+                            "OptimizationLog",
+                            "AnimatedContent recomposed (optimized): quoteId=$quoteId, time=${System.currentTimeMillis()}"
+                        )
+                    }
+
+                    displayedQuote?.let {
+                        QuoteAndPerson(
+                            quote = it.text,
+                            author = it.person
                         )
                     }
                 }
+                Spacer(modifier = Modifier.weight(1f))
             }
+
+//            // 명언 표시
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(horizontal = 16.dp),
+//                verticalArrangement = Arrangement.Center,
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                Spacer(modifier = Modifier.weight(1f))
+//
+//                // 문제 지점: 전체 currentQuote 객체를 targetState로 사용
+//                AnimatedContent(
+//                    targetState = currentQuote,
+//                    transitionSpec = {
+//                        (slideIntoContainer(slideDirection, animationSpec = ContentAnimationSpec) +
+//                                fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
+//                            slideOutOfContainer(
+//                                slideDirection,
+//                                animationSpec = ContentAnimationSpec
+//                            ) +
+//                                    fadeOut(animationSpec = FadeAnimationSpec)
+//                        )
+//                    }
+//
+//                ) { quote ->
+//                    quote?.let {
+//                        SideEffect {
+//                            Log.d(
+//                                "OptimizationLog",
+//                                "AnimatedContent recomposed: quoteId=${quote.id}, time=${System.currentTimeMillis()}"
+//                            )
+//                        }
+//
+//                        QuoteAndPerson(
+//                            quote = it.text,
+//                            author = it.person
+//                        )
+//                    }
+//                }
+//                Spacer(modifier = Modifier.weight(1f))
+//            }
+
+            // 버튼들
+            Row(
+                modifier = Modifier
+                    .offset(y = -172.dp)
+                    .align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                currentQuote?.let { quote ->
+                    Buttons(
+                        quoteViewModel = quoteViewModel,
+                        favoritesViewModel = favoritesViewModel,
+                        currentQuoteId = quote.id,
+                        category = selectedCategory,
+                        quoteDisplay = quote.toQuoteDisplay()
+                    )
+                }
+            }
+        }
 
         // Navigation Bar는 항상 표시
         Row(
@@ -230,13 +329,3 @@ fun QuoteScreen(
         }
     }
 }
-
-private val ContentAnimationSpec = tween<IntOffset>(
-    durationMillis = 400,
-    easing = FastOutSlowInEasing
-)
-
-private val FadeAnimationSpec = tween<Float>(
-    durationMillis = 400,
-    easing = LinearOutSlowInEasing
-)

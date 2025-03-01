@@ -1,5 +1,6 @@
 package com.example.passionDaily.quote.stateholder
 
+import android.util.Log
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.model.QuoteCategory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,7 @@ class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
     }
 
     override suspend fun updateIsQuoteLoading(isLoading: Boolean) {
+        Log.d("StateHolder", "updateIsQuoteLoading: $isLoading, time=${System.currentTimeMillis()}")
         _isQuoteLoading.emit(isLoading)
     }
 
@@ -39,11 +41,22 @@ class QuoteStateHolderImpl @Inject constructor() : QuoteStateHolder {
     }
 
     override suspend fun addQuotes(additionalQuotes: List<Quote>, isNewCategory: Boolean) {
-        _quotes.emit(if (isNewCategory) {
-            additionalQuotes  // 새 카테고리면 기존 목록을 새것으로 교체
+        Log.d("StateHolder", "addQuotes: count=${additionalQuotes.size}, isNew=$isNewCategory, time=${System.currentTimeMillis()}")
+
+        // 1. 비어있는 리스트가 들어오면 처리하지 않음
+        if (additionalQuotes.isEmpty()) return
+
+        val newQuotes = if (isNewCategory) {
+            // 2. 현재 값과 새 값이 동일하면 업데이트하지 않음
+            if (additionalQuotes == _quotes.value) return
+            additionalQuotes
         } else {
-            _quotes.value + additionalQuotes  // 기존 목록에 새 명언들 추가
-        })
+            // 3. 추가되는 경우에도 이미 포함되어 있으면 업데이트하지 않음
+            if (_quotes.value.containsAll(additionalQuotes)) return
+            _quotes.value + additionalQuotes
+        }
+
+        _quotes.emit(newQuotes)
     }
 
     override suspend fun clearQuotes() {

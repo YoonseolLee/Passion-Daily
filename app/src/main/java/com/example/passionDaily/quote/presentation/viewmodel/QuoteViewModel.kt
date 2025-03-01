@@ -1,6 +1,7 @@
 package com.example.passionDaily.quote.presentation.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +26,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
@@ -55,15 +58,23 @@ class QuoteViewModel @Inject constructor(
     override val currentQuote: StateFlow<Quote?> =
         combine(quotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
-        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+        }
+            .onEach {
+                Log.d("OptimizationLog", "StateFlow collected: ${System.currentTimeMillis()}")
+            }
+            .distinctUntilChanged { old, new ->
+            val same = old?.id == new?.id
+            same
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(2000), null)
+//        }.stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+
     private var retryCount = 0
     private val maxRetries = 3
 
     init {
         loadInitialQuotes()
     }
-
-    private var initialLoadDone = false
 
     fun loadInitialQuotes() {
         viewModelScope.launch {
@@ -209,6 +220,8 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun previousQuote() {
+        val startTime = System.currentTimeMillis()
+        Log.d("OptimizationLog", "Quote navigation started: time=$startTime")
         if (_currentQuoteIndex.value == 0 && hasReachedEnd.value) {
             savedStateHandle[KEY_QUOTE_INDEX] = quotes.value.size - 1
             return
@@ -220,9 +233,12 @@ class QuoteViewModel @Inject constructor(
         }
 
         savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value - 1
+        Log.d("OptimizationLog", "Quote navigation completed: duration=${System.currentTimeMillis() - startTime}ms")
     }
 
     override fun nextQuote() {
+        val startTime = System.currentTimeMillis()
+        Log.d("OptimizationLog", "Quote navigation started: time=$startTime")
         val nextIndex = _currentQuoteIndex.value + 1
         val currentQuotes = quotes.value
 
@@ -252,7 +268,7 @@ class QuoteViewModel @Inject constructor(
                         }
                         savedStateHandle[KEY_QUOTE_INDEX] = nextIndex
                     }
-
+                    Log.d("OptimizationLog", "Quote navigation completed: duration=${System.currentTimeMillis() - startTime}ms")
                 } catch (e: Exception) {
                     handleError(e)
                 } finally {

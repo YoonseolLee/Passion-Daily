@@ -3,9 +3,6 @@ package com.example.passionDaily.favorites.presentation.screen
 import android.app.Activity
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -42,7 +39,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -57,6 +53,7 @@ import com.example.passionDaily.quote.presentation.components.RightArrow
 import com.example.passionDaily.quote.presentation.components.toQuoteDisplay
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quotecategory.model.QuoteCategory
+import com.example.passionDaily.ui.component.AnimationSpecs
 import com.example.passionDaily.ui.component.CommonNavigationBar
 
 @Composable
@@ -167,13 +164,16 @@ fun FavoritesScreen(
                         targetState = currentFavoriteQuote,
                         transitionSpec = {
                             val direction = slideDirection
-                            (slideIntoContainer(direction, animationSpec = ContentAnimationSpec) +
-                                    fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
+                            (slideIntoContainer(
+                                direction,
+                                animationSpec = AnimationSpecs.ContentAnimationSpec
+                            ) +
+                                    fadeIn(animationSpec = AnimationSpecs.FadeAnimationSpec)).togetherWith(
                                 slideOutOfContainer(
                                     direction,
-                                    animationSpec = ContentAnimationSpec
+                                    animationSpec = AnimationSpecs.ContentAnimationSpec
                                 ) +
-                                        fadeOut(animationSpec = FadeAnimationSpec)
+                                        fadeOut(animationSpec = AnimationSpecs.FadeAnimationSpec)
                             )
                         }
                     ) { quote ->
@@ -221,13 +221,3 @@ fun FavoritesScreen(
         }
     }
 }
-
-private val ContentAnimationSpec = tween<IntOffset>(
-    durationMillis = 400,
-    easing = FastOutSlowInEasing
-)
-
-private val FadeAnimationSpec = tween<Float>(
-    durationMillis = 400,
-    easing = LinearOutSlowInEasing
-)
