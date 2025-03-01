@@ -109,9 +109,10 @@ fun QuoteScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp)  // Navigation Bar 공간 확보
+                .padding(bottom = 80.dp)
         ) {
-            if (isQuoteLoading) {
+            // 초기 로딩 중이고 명언이 없을 때만 전체 화면 로딩 인디케이터 표시
+            if (isQuoteLoading && quotes.isEmpty()) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .testTag("LoadingIndicator")
@@ -140,16 +141,21 @@ fun QuoteScreen(
                     }
                 }
             } else {
-                // 화살표 버튼
+                // 화살표 버튼 (로딩 중일 때 비활성화)
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = 16.dp)
                 ) {
-                    LeftArrow(onClick = {
-                        slideDirection = AnimatedContentTransitionScope.SlideDirection.End
-                        quoteViewModel.previousQuote()
-                    })
+                    LeftArrow(
+                        onClick = {
+                            if (!isQuoteLoading) {
+                                slideDirection = AnimatedContentTransitionScope.SlideDirection.End
+                                quoteViewModel.previousQuote()
+                            }
+                        },
+                        enabled = !isQuoteLoading
+                    )
                 }
 
                 Box(
@@ -157,10 +163,15 @@ fun QuoteScreen(
                         .align(Alignment.CenterEnd)
                         .padding(end = 16.dp)
                 ) {
-                    RightArrow(onClick = {
-                        slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
-                        quoteViewModel.nextQuote()
-                    })
+                    RightArrow(
+                        onClick = {
+                            if (!isQuoteLoading) {
+                                slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
+                                quoteViewModel.nextQuote()
+                            }
+                        },
+                        enabled = !isQuoteLoading
+                    )
                 }
             }
 

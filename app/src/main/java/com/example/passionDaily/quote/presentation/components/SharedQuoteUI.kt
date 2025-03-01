@@ -105,7 +105,7 @@ private fun ArrowButton(
 }
 
 @Composable
-fun LeftArrow(onClick: () -> Unit) {
+fun LeftArrow(onClick: () -> Unit, enabled: Boolean = true) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.left_arrow),
@@ -117,7 +117,7 @@ fun LeftArrow(onClick: () -> Unit) {
 }
 
 @Composable
-fun RightArrow(onClick: () -> Unit) {
+fun RightArrow(onClick: () -> Unit, enabled: Boolean = true) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.right_arrow),
