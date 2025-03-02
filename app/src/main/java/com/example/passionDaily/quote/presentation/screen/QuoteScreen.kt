@@ -24,7 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,11 +66,10 @@ fun QuoteScreen(
     onNavigateToSettings: () -> Unit,
     currentScreen: NavigationBarScreens,
 ) {
-
     val selectedCategory by quoteStateHolder.selectedQuoteCategory.collectAsState()
-    val currentQuote by quoteViewModel.currentQuote.collectAsState()
     val quotes by quoteStateHolder.quotes.collectAsState()
     val isQuoteLoading by quoteStateHolder.isQuoteLoading.collectAsState()
+    val currentQuote by quoteViewModel.currentQuote.collectAsState()
 
     var slideDirection by remember {
         mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start)
@@ -87,39 +88,55 @@ fun QuoteScreen(
         onDispose {}
     }
 
+    val backgroundImageUrl = remember {
+        derivedStateOf {
+            currentQuote?.imageUrl
+        }
+    }.value
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // 백그라운드 이미지는 현재 명언이 있을 때만 표시
-        currentQuote?.let {
-            BackgroundImage(imageUrl = it.imageUrl)
+        // 배경 이미지는 URL이 있을 때만 표시
+        backgroundImageUrl?.let {
+            BackgroundImage(imageUrl = it)
         }
 
-        // 로딩 중이거나 명언이 없을 때도 카테고리 선택 버튼 표시
         Row(
             modifier = Modifier
                 .offset(y = 110.dp)
                 .align(Alignment.TopCenter)
         ) {
+            // remember로 selectedCategory가 변경될 때만 재구성
+            val buttonCategory = remember(selectedCategory) {
+                selectedCategory
+            }
+
             CategorySelectionButton(
                 onCategoryClicked = onNavigateToCategory,
-                selectedCategory = selectedCategory,
+                selectedCategory = buttonCategory,
             )
         }
 
-        // 메인 콘텐츠 영역
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            // 초기 로딩 중이고 명언이 없을 때만 전체 화면 로딩 인디케이터 표시
-            if (isQuoteLoading && quotes.isEmpty()) {
+            val showLoadingIndicator = remember {
+                derivedStateOf { isQuoteLoading && quotes.isEmpty() }
+            }.value
+
+            val showEmptyState = remember {
+                derivedStateOf { !isQuoteLoading && quotes.isEmpty() }
+            }.value
+
+            if (showLoadingIndicator) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .testTag("LoadingIndicator")
                         .align(Alignment.Center),
                     color = PrimaryColor
                 )
-            } else if (quotes.isEmpty()) {
+            } else if (showEmptyState) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -141,7 +158,10 @@ fun QuoteScreen(
                     }
                 }
             } else {
-                // 화살표 버튼 (로딩 중일 때 비활성화)
+                val arrowsEnabled = remember {
+                    derivedStateOf { !isQuoteLoading }
+                }.value
+
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -149,12 +169,12 @@ fun QuoteScreen(
                 ) {
                     LeftArrow(
                         onClick = {
-                            if (!isQuoteLoading) {
+                            if (arrowsEnabled) {
                                 slideDirection = AnimatedContentTransitionScope.SlideDirection.End
                                 quoteViewModel.previousQuote()
                             }
                         },
-                        enabled = !isQuoteLoading
+                        enabled = arrowsEnabled
                     )
                 }
 
@@ -165,12 +185,12 @@ fun QuoteScreen(
                 ) {
                     RightArrow(
                         onClick = {
-                            if (!isQuoteLoading) {
+                            if (arrowsEnabled) {
                                 slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
                                 quoteViewModel.nextQuote()
                             }
                         },
-                        enabled = !isQuoteLoading
+                        enabled = arrowsEnabled
                     )
                 }
             }
@@ -185,8 +205,15 @@ fun QuoteScreen(
             ) {
                 Spacer(modifier = Modifier.weight(1f))
 
+                // 현재 인용구 ID를 매번 계산하는 대신 remember와 derivedStateOf 사용
+                val currentQuoteId = remember {
+                    derivedStateOf {
+                        currentQuote?.id ?: ""
+                    }
+                }.value
+
                 AnimatedContent(
-                    targetState = currentQuote?.id ?: "",
+                    targetState = currentQuoteId,
                     transitionSpec = {
                         (slideIntoContainer(
                             slideDirection,
@@ -202,22 +229,24 @@ fun QuoteScreen(
                     }
                 ) { quoteId ->
                     // ID를 기반으로 현재 명언 객체 메모이제이션
-                    val displayedQuote = remember(quoteId) {
-                        // quoteId와 일치하는 명언을 quotes 리스트에서 찾기
+                    // quotes와 quoteId가 변경될 때만 재계산
+                    val displayedQuote = remember(quoteId, quotes) {
                         quotes.find { it.id == quoteId } ?: currentQuote
                     }
 
-                    displayedQuote?.let {
-                        QuoteAndPerson(
-                            quote = it.text,
-                            author = it.person
-                        )
+                    // displayedQuote의 변경을 효율적으로 감지하기 위해 id로 key 지정
+                    key(displayedQuote?.id) {
+                        displayedQuote?.let {
+                            QuoteAndPerson(
+                                quote = it.text,
+                                author = it.person
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.weight(1f))
             }
 
-            // 버튼들
             Row(
                 modifier = Modifier
                     .offset(y = -172.dp)
@@ -225,26 +254,41 @@ fun QuoteScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                currentQuote?.let { quote ->
+                val buttonQuote = remember(currentQuote?.id) {
+                    currentQuote
+                }
+
+                val buttonCategory = remember(selectedCategory) {
+                    selectedCategory
+                }
+
+                buttonQuote?.let { quote ->
+                    val quoteDisplay = remember(quote.id) {
+                        quote.toQuoteDisplay()
+                    }
+
                     Buttons(
                         quoteViewModel = quoteViewModel,
                         favoritesViewModel = favoritesViewModel,
                         currentQuoteId = quote.id,
-                        category = selectedCategory,
-                        quoteDisplay = quote.toQuoteDisplay()
+                        category = buttonCategory,
+                        quoteDisplay = quoteDisplay
                     )
                 }
             }
         }
 
-        // Navigation Bar는 항상 표시
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
         ) {
+            val screen = remember(currentScreen) {
+                currentScreen
+            }
+
             CommonNavigationBar(
-                currentScreen = currentScreen,
+                currentScreen = screen,
                 onNavigateToFavorites = onNavigateToFavorites,
                 onNavigateToQuote = onNavigateToQuote,
                 onNavigateToSettings = onNavigateToSettings

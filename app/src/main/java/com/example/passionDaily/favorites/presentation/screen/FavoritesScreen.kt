@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,10 +68,15 @@ fun FavoritesScreen(
 ) {
     val favoriteQuotes by favoritesViewModel.favoriteQuotes.collectAsState()
     val currentFavoriteQuote by favoritesViewModel.currentFavoriteQuote.collectAsState()
-    val isFavoriteQuotesEmpty = favoriteQuotes.isEmpty()
     val isFavoriteLoading by favoritesViewModel.isFavoriteLoading.collectAsState()
 
-    var slideDirection by remember { mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start) }
+    val isFavoriteQuotesEmpty = remember {
+        derivedStateOf { favoriteQuotes.isEmpty() }
+    }.value
+
+    var slideDirection by remember {
+        mutableStateOf(AnimatedContentTransitionScope.SlideDirection.Start)
+    }
 
     val context = LocalContext.current
     DisposableEffect(Unit) {
@@ -135,10 +141,13 @@ fun FavoritesScreen(
                         .align(Alignment.CenterStart)
                         .padding(start = 16.dp)
                 ) {
-                    LeftArrow(onClick = {
-                        slideDirection = AnimatedContentTransitionScope.SlideDirection.End
-                        favoritesViewModel.previousQuote()
-                    })
+                    LeftArrow(
+                        onClick = {
+                            slideDirection = AnimatedContentTransitionScope.SlideDirection.End
+                            favoritesViewModel.previousQuote()
+                        },
+                        enabled = favoriteQuotes.size > 1
+                    )
                 }
 
                 Box(
@@ -146,10 +155,13 @@ fun FavoritesScreen(
                         .align(Alignment.CenterEnd)
                         .padding(end = 16.dp)
                 ) {
-                    RightArrow(onClick = {
-                        slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
-                        favoritesViewModel.nextQuote()
-                    })
+                    RightArrow(
+                        onClick = {
+                            slideDirection = AnimatedContentTransitionScope.SlideDirection.Start
+                            favoritesViewModel.nextQuote()
+                        },
+                        enabled = favoriteQuotes.size > 1
+                    )
                 }
 
                 Column(
@@ -160,8 +172,19 @@ fun FavoritesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
+
+                    // 현재 인용구의 위치를 찾아 인덱스로 사용
+                    val currentIndex = remember(currentFavoriteQuote) {
+                        derivedStateOf {
+                            favoriteQuotes.indexOfFirst { quote ->
+                                quote.categoryId == currentFavoriteQuote?.categoryId &&
+                                        quote.quoteId == currentFavoriteQuote?.quoteId
+                            }
+                        }
+                    }.value
+
                     AnimatedContent(
-                        targetState = currentFavoriteQuote?.quoteId ?: "",
+                        targetState = currentIndex,
                         transitionSpec = {
                             val direction = slideDirection
                             (slideIntoContainer(
@@ -176,12 +199,9 @@ fun FavoritesScreen(
                                         fadeOut(animationSpec = AnimationSpecs.FadeAnimationSpec)
                             )
                         }
-                    ) { quoteId ->
-                        val displayedQuote = remember(quoteId) {
-                            if (currentFavoriteQuote?.quoteId == quoteId) currentFavoriteQuote else null
-                        }
-
-                        displayedQuote?.let { quote ->
+                    ) { index ->
+                        if (index >= 0 && index < favoriteQuotes.size) {
+                            val quote = favoriteQuotes[index]
                             QuoteAndPerson(
                                 quote = quote.text,
                                 author = quote.person
@@ -199,12 +219,20 @@ fun FavoritesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     currentFavoriteQuote?.let { quote ->
+                        val quoteCategory = remember(quote.categoryId) {
+                            QuoteCategory.fromCategoryId(quote.categoryId)
+                        }
+
+                        val quoteDisplay = remember(quote.quoteId, quote.categoryId) {
+                            quote.toQuoteDisplay()
+                        }
+
                         Buttons(
                             quoteViewModel = quoteViewModel,
                             favoritesViewModel = favoritesViewModel,
                             currentQuoteId = quote.quoteId,
-                            category = QuoteCategory.fromCategoryId(quote.categoryId),
-                            quoteDisplay = quote.toQuoteDisplay()
+                            category = quoteCategory,
+                            quoteDisplay = quoteDisplay
                         )
                     }
                 }
@@ -216,8 +244,12 @@ fun FavoritesScreen(
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
         ) {
+            val screen = remember(currentScreen) {
+                currentScreen
+            }
+
             CommonNavigationBar(
-                currentScreen = currentScreen,
+                currentScreen = screen,
                 onNavigateToFavorites = onNavigateToFavorites,
                 onNavigateToQuote = onNavigateToQuote,
                 onNavigateToSettings = onNavigateToSettings
