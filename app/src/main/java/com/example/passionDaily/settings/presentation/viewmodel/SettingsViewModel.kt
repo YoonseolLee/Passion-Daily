@@ -1,5 +1,6 @@
 package com.example.passionDaily.settings.presentation.viewmodel
 
+import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteException
 import androidx.lifecycle.ViewModel
@@ -16,6 +17,20 @@ class SettingsViewModel @Inject constructor(
     private val toastManager: ToastManager,
     private val emailManager: EmailManager,
 ) : ViewModel(), SettingsViewModelActions {
+
+    fun sendSuggestion(context: Context) {
+        try {
+            val emailIntent = emailManager.createEmailIntent()
+            emailIntent?.let { intent ->
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            }
+        } catch (e: URISyntaxException) {
+            toastManager.showURISyntaxException()
+        } catch (e: Exception) {
+            handleError(e)
+        }
+    }
 
     override fun createEmailIntent(): Intent? {
         return try {

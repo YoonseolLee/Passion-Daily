@@ -54,6 +54,8 @@ fun SettingsScreen(
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsScreenContent(
             onNavigateToFavorites = onNavigateToFavorites,
@@ -61,8 +63,8 @@ fun SettingsScreen(
             onNavigateToSettings = onNavigateToSettings,
             currentScreen = currentScreen,
             onBack = onBack,
-            onCreateEmailIntent = {
-                settingsViewModel.createEmailIntent() ?: Intent()
+            onSendSuggestion = {
+                settingsViewModel.sendSuggestion(context)
             },
         )
     }
@@ -75,7 +77,7 @@ fun SettingsScreenContent(
     onNavigateToSettings: () -> Unit,
     currentScreen: NavigationBarScreens,
     onBack: () -> Unit,
-    onCreateEmailIntent: () -> Intent,
+    onSendSuggestion: () -> Unit,
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -115,7 +117,7 @@ fun SettingsScreenContent(
             // 고객 지원
             SettingsCategoryHeader(text = stringResource(id = R.string.customer_support))
             SuggestionSettingItem(
-                onCreateEmailIntent = onCreateEmailIntent
+                onSendSuggestion = onSendSuggestion
             )
             VersionInfoItem()
 
@@ -143,21 +145,12 @@ fun SettingsScreenContent(
 
 @Composable
 fun SuggestionSettingItem(
-    onCreateEmailIntent: () -> Intent
+    onSendSuggestion: () -> Unit
 ) {
-    val context = LocalContext.current
-
     CommonIconItem(
         title = stringResource(R.string.send_suggestion),
         icon = Icons.Filled.Email,
-        onClick = {
-            val intent = onCreateEmailIntent()
-            try {
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+        onClick = onSendSuggestion
     )
 }
 
@@ -387,4 +380,3 @@ fun SettingsHeaderText() {
         modifier = Modifier.testTag("SettingsTitle")
     )
 }
-

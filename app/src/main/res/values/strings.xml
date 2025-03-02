@@ -94,7 +94,7 @@
     <string name="no">아니오</string>
 
     <!-- 이메일 관련 -->
-    <string name="email_address">mailto:thisyoon97@gmail.com</string>
+    <string name="email_address">mailto:ryanlovescoffee97@gmail.com</string>
     <string name="choose_email_app">이메일 앱 선택</string>
     <string name="success_send_email">이메일 전송에 성공했습니다.</string>
 
