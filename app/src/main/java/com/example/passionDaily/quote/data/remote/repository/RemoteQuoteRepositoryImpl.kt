@@ -1,4 +1,4 @@
-package com.example.passionDaily.quote.data.remote
+package com.example.passionDaily.quote.data.remote.repository
 
 import com.example.passionDaily.R
 import com.example.passionDaily.quote.data.remote.model.Quote

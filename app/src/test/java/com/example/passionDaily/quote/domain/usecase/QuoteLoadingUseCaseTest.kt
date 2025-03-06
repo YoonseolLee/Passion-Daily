@@ -1,6 +1,6 @@
 package com.example.passionDaily.quote.domain.usecase
 
-import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
+import com.example.passionDaily.quote.data.remote.repository.RemoteQuoteRepository
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder

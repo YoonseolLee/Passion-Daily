@@ -228,13 +228,10 @@ fun QuoteScreen(
                         )
                     }
                 ) { quoteId ->
-                    // ID를 기반으로 현재 명언 객체 메모이제이션
-                    // quotes와 quoteId가 변경될 때만 재계산
                     val displayedQuote = remember(quoteId, quotes) {
                         quotes.find { it.id == quoteId } ?: currentQuote
                     }
 
-                    // displayedQuote의 변경을 효율적으로 감지하기 위해 id로 key 지정
                     key(displayedQuote?.id) {
                         displayedQuote?.let {
                             QuoteAndPerson(

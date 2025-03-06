@@ -3,7 +3,6 @@ package com.example.passionDaily.quote.domain.usecase
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepository
 import com.example.passionDaily.favorites.usecase.SaveFavoritesToLocalUseCase
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
-import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
 import com.example.passionDaily.quotecategory.model.QuoteCategory
@@ -13,8 +12,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test

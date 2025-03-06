@@ -4,8 +4,8 @@ import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRep
 import com.example.passionDaily.favorites.data.local.repository.LocalFavoriteRepositoryImpl
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepository
 import com.example.passionDaily.quote.data.local.repository.LocalQuoteRepositoryImpl
-import com.example.passionDaily.quote.data.remote.RemoteQuoteRepository
-import com.example.passionDaily.quote.data.remote.RemoteQuoteRepositoryImpl
+import com.example.passionDaily.quote.data.remote.repository.RemoteQuoteRepository
+import com.example.passionDaily.quote.data.remote.repository.RemoteQuoteRepositoryImpl
 import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepository
 import com.example.passionDaily.quotecategory.data.local.repository.LocalQuoteCategoryRepositoryImpl
 import dagger.Binds
