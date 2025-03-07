@@ -41,7 +41,6 @@ import androidx.core.view.WindowCompat
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
-import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
 import com.example.passionDaily.quote.presentation.components.CategorySelectionButton

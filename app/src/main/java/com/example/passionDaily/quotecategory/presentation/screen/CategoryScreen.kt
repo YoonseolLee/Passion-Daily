@@ -107,6 +107,8 @@ fun CategoryScreenContent(
 
 @Composable
 private fun TopBar(onBack: () -> Unit) {
+    val backContentDescription = stringResource(R.string.content_description_back)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,7 +124,7 @@ private fun TopBar(onBack: () -> Unit) {
             BackButton(
                 onBack = onBack,
                 modifier = Modifier.semantics {
-                    contentDescription = "뒤로 가기"
+                    contentDescription = backContentDescription
                 }
             )
         }
@@ -243,6 +245,12 @@ fun SingleCategoryBox(
     }
 
     val isSelected = selectedCategory == currentCategory
+    val selectedText = if (isSelected) stringResource(id = R.string.content_description_selected) else ""
+    val contentDescriptionText = stringResource(
+        id = R.string.content_description_category_format,
+        category,
+        selectedText
+    )
 
     Box(
         modifier = modifier
@@ -257,8 +265,7 @@ fun SingleCategoryBox(
                 onClick = { onCategoryClicked(currentCategory) }
             )
             .semantics {
-                contentDescription = "카테고리: $category" +
-                        if (isSelected) ", 선택됨" else ""
+                contentDescription = contentDescriptionText
             },
         contentAlignment = Alignment.Center
     ) {

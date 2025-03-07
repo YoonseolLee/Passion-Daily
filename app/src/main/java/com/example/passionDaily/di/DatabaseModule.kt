@@ -2,6 +2,8 @@ package com.example.passionDaily.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.passionDaily.constants.DatabaseConstants
+import com.example.passionDaily.constants.DatabaseConstants.DATABASE_NAME
 import com.example.passionDaily.favorites.data.local.dao.FavoriteDao
 import com.example.passionDaily.quotecategory.data.local.dao.QuoteCategoryDao
 import com.example.passionDaily.quote.data.local.dao.QuoteDao
@@ -25,7 +27,7 @@ object DatabaseModule {
             .databaseBuilder(
                 context,
                 PassionDailyDatabase::class.java,
-                "passion_daily.db",
+                DATABASE_NAME,
             ).build()
 
     @Provides

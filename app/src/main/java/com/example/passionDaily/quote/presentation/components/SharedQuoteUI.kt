@@ -38,7 +38,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -46,7 +45,6 @@ import com.example.passionDaily.R
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quotecategory.model.QuoteCategory
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -54,7 +52,7 @@ fun BackgroundImage(imageUrl: String?) {
     imageUrl?.let {
         AsyncImage(
             model = it,
-            contentDescription = "Background Image",
+            contentDescription = stringResource(id = R.string.content_description_background_image),
             modifier = Modifier
                 .fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -109,9 +107,9 @@ fun LeftArrow(onClick: () -> Unit, enabled: Boolean = true) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.left_arrow),
-            contentDescription = "quote_arrow_left",
+            contentDescription = stringResource(id = R.string.content_description_left_arrow),
             contentScale = ContentScale.None,
-            modifier = Modifier.testTag("LeftArrow")
+            modifier = Modifier.testTag(stringResource(id = R.string.test_tag_left_arrow))
         )
     }
 }
@@ -121,9 +119,9 @@ fun RightArrow(onClick: () -> Unit, enabled: Boolean = true) {
     ArrowButton(onClick = onClick) {
         Image(
             painter = painterResource(id = R.drawable.right_arrow),
-            contentDescription = "quote_arrow_right",
+            contentDescription = stringResource(id = R.string.content_description_right_arrow),
             contentScale = ContentScale.None,
-            modifier = Modifier.testTag("RightArrow")
+            modifier = Modifier.testTag(stringResource(id = R.string.test_tag_right_arrow))
         )
     }
 }
@@ -159,7 +157,7 @@ fun CategorySelectionButton(
         )
         Image(
             painter = painterResource(id = R.drawable.simple_arrow),
-            contentDescription = "navigation to category screen",
+            contentDescription = stringResource(id = R.string.content_description_navigate_to_category),
             contentScale = ContentScale.None
         )
     }
@@ -215,7 +213,7 @@ fun QuoteAndPerson(
                     .padding(horizontal = 16.dp)
             ) {
                 Text(
-                    text = "-$author-",
+                    text = stringResource(id = R.string.quote_author_format, author),
                     style = TextStyle(
                         fontSize = 22.sp,
                         lineHeight = 39.6.sp,
@@ -263,7 +261,7 @@ fun ShareButton(
 
     Image(
         painter = painterResource(id = R.drawable.share_icon),
-        contentDescription = "share icon",
+        contentDescription = stringResource(id = R.string.content_description_share_icon),
         contentScale = ContentScale.None,
         modifier = Modifier.clickable(
             indication = null,
@@ -323,9 +321,15 @@ fun AddToFavoritesButton(
         R.drawable.add_to_favorites_icon
     }
 
+    val contentDescription = if (isFavorite) {
+        stringResource(id = R.string.content_description_remove_from_favorites)
+    } else {
+        stringResource(id = R.string.content_description_add_to_favorites)
+    }
+
     Image(
         painter = painterResource(id = iconResource),
-        contentDescription = if (isFavorite) "remove from favorites icon" else "add to favorites icon",
+        contentDescription = contentDescription,
         contentScale = ContentScale.None,
         modifier = Modifier
             .graphicsLayer(
@@ -356,4 +360,3 @@ fun AddToFavoritesButton(
             }
     )
 }
-

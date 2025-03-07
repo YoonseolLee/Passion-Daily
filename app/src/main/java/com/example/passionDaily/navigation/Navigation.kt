@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.example.passionDaily.constants.AppDestinations
 import com.example.passionDaily.navigation.destinations.categoryComposable
 import com.example.passionDaily.navigation.destinations.favoritesComposable
 import com.example.passionDaily.navigation.destinations.quoteComposable
@@ -35,7 +36,7 @@ fun SetupNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = "quote"
+        startDestination = AppDestinations.QUOTE_ROUTE
     ) {
 
         quoteComposable(
@@ -48,14 +49,14 @@ fun SetupNavigation(
         )
 
         composable(
-            route = "quote/{category}/{quoteId}",
+            route = "${AppDestinations.QUOTE_ROUTE}/{category}/{quoteId}",
             arguments = listOf(
                 navArgument("category") { type = NavType.StringType },
                 navArgument("quoteId") { type = NavType.StringType }
             ),
             deepLinks = listOf(
                 navDeepLink {
-                    uriPattern = "passiondaily://quote/{category}/{quoteId}"
+                    uriPattern = AppDestinations.QUOTE_DEEP_LINK
                 }
             )
         ) { backStackEntry ->

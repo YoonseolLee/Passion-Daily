@@ -157,12 +157,14 @@ fun SuggestionSettingItem(
 @Composable
 fun VersionInfoItem() {
     val context = LocalContext.current
-    val versionName = remember {
+    val unknownVersion = stringResource(R.string.unknown_version)
+
+    val versionName = remember(context, unknownVersion) {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName ?: "Unknown"
+            packageInfo.versionName ?: unknownVersion
         } catch (e: Exception) {
-            "Unknown"
+            unknownVersion
         }
     }
 
@@ -270,7 +272,7 @@ private fun CommonNavigationItem(
         )
         Image(
             painter = painterResource(R.drawable.chevron_right),
-            contentDescription = "chevron_right",
+            contentDescription = stringResource(R.string.content_description_navigate_to_next),
         )
     }
 }
@@ -301,7 +303,7 @@ private fun CommonIconItem(
         )
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = stringResource(R.string.content_description_icon_for, title),
             tint = Color.White,
             modifier = Modifier.size(24.dp)
         )
@@ -352,7 +354,7 @@ fun SettingsCategoryHeader(text: String) {
             .height(45.dp)
             .background(color = Color(0xFF0E1C41))
             .padding(horizontal = 24.dp, vertical = 8.dp)
-            .testTag("CategoryHeader"),
+            .testTag(stringResource(R.string.test_tag_category_header)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -377,6 +379,6 @@ fun SettingsHeaderText() {
             fontWeight = FontWeight(400),
             color = Color(0xFFFFFFFF),
         ),
-        modifier = Modifier.testTag("SettingsTitle")
+        modifier = Modifier.testTag(stringResource(R.string.test_tag_settings_title))
     )
 }

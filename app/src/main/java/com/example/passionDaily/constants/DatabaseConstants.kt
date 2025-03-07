@@ -18,4 +18,7 @@ object DatabaseConstants {
 
     // Favorite 컬럼
     const val COLUMN_ADDED_AT = "added_at"
+
+    // Database 이름
+    const val DATABASE_NAME = "passion_daily.db"
 }

@@ -33,9 +33,10 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         limit: Int
     ): List<Quote> = withContext(Dispatchers.IO) {
         try {
-            val baseQuery = firestore.collection("categories")
-                .document(category.name.lowercase())
-                .collection("quotes")
+            val baseQuery =
+                firestore.collection(stringProvider.getString(R.string.collection_categories))
+                    .document(category.name.lowercase())
+                    .collection(stringProvider.getString(R.string.collection_quotes))
 
             val query = baseQuery
                 .orderBy(FieldPath.documentId())
@@ -57,14 +58,15 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         limit: Int
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
-            val query = firestore.collection("categories")
-                .document(category.name.lowercase())
-                .collection("quotes")
-                .orderBy(FieldPath.documentId())
-                .startAfter(afterQuoteId)
-                .limit(limit.toLong())
-                .get()
-                .await()
+            val query =
+                firestore.collection(stringProvider.getString(R.string.collection_categories))
+                    .document(category.name.lowercase())
+                    .collection(stringProvider.getString(R.string.collection_quotes))
+                    .orderBy(FieldPath.documentId())
+                    .startAfter(afterQuoteId)
+                    .limit(limit.toLong())
+                    .get()
+                    .await()
 
             QuoteResult(
                 quotes = query.documents.map { it.toQuote() },
@@ -81,7 +83,7 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         lastLoadedQuote: DocumentSnapshot?
     ): QuoteResult = withContext(Dispatchers.IO) {
         try {
-            withTimeout(10000L) {
+            withTimeout(stringProvider.getString(R.string.firestore_timeout_ms).toLong()) {
                 val query = buildCategoryQuery(category, pageSize, lastLoadedQuote)
 
                 // 먼저 캐시에서 시도
@@ -99,7 +101,8 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
                 e is UnknownHostException ||
                         e.cause is UnknownHostException ||
                         e is TimeoutCancellationException ->
-                    throw IOException("Network error while accessing Firestore", e)
+                    throw IOException(stringProvider.getString(R.string.error_network_firestore), e)
+
                 else -> throw e
             }
         }
@@ -113,9 +116,10 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         val categoryStr = category.getLowercaseCategoryId()
 
         return try {
-            val baseQuery = firestore.collection("categories")
-                .document(categoryStr)
-                .collection("quotes")
+            val baseQuery =
+                firestore.collection(stringProvider.getString(R.string.collection_categories))
+                    .document(categoryStr)
+                    .collection(stringProvider.getString(R.string.collection_quotes))
 
             val orderedQuery = baseQuery.orderBy(FieldPath.documentId())
             val paginatedQuery = lastLoadedQuote?.let {
@@ -133,11 +137,14 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         category: QuoteCategory
     ): Unit = withContext(Dispatchers.IO) {
         try {
-            firestore.collection("categories")
+            firestore.collection(stringProvider.getString(R.string.collection_categories))
                 .document(category.getLowercaseCategoryId())
-                .collection("quotes")
+                .collection(stringProvider.getString(R.string.collection_quotes))
                 .document(quoteId)
-                .update("shareCount", FieldValue.increment(1))
+                .update(
+                    stringProvider.getString(R.string.field_share_count),
+                    FieldValue.increment(1)
+                )
                 .await()
         } catch (e: FirebaseFirestoreException) {
             throw e
@@ -151,9 +158,9 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
         category: QuoteCategory
     ): Quote? = withContext(Dispatchers.IO) {
         try {
-            firestore.collection("categories")
+            firestore.collection(stringProvider.getString(R.string.collection_categories))
                 .document(category.name.lowercase())
-                .collection("quotes")
+                .collection(stringProvider.getString(R.string.collection_quotes))
                 .document(quoteId)
                 .get()
                 .await()
@@ -179,14 +186,17 @@ class RemoteQuoteRepositoryImpl @Inject constructor(
     private fun DocumentSnapshot.toQuote(): Quote {
         return Quote(
             id = id,
-            category = QuoteCategory.fromEnglishName(getString("category") ?: "")
-                ?: QuoteCategory.OTHER,
-            text = getString("text") ?: "",
-            person = getString("person") ?: "",
-            imageUrl = getString("imageUrl") ?: "",
-            createdAt = getString("createdAt") ?: stringProvider.getString(R.string.default_timestamp),
-            modifiedAt = getString("modifiedAt") ?: stringProvider.getString(R.string.default_timestamp),
-            shareCount = getLong("shareCount")?.toInt() ?: 0
+            category = QuoteCategory.fromEnglishName(
+                getString(stringProvider.getString(R.string.field_category)) ?: ""
+            ) ?: QuoteCategory.OTHER,
+            text = getString(stringProvider.getString(R.string.field_text)) ?: "",
+            person = getString(stringProvider.getString(R.string.field_person)) ?: "",
+            imageUrl = getString(stringProvider.getString(R.string.field_image_url)) ?: "",
+            createdAt = getString(stringProvider.getString(R.string.field_created_at))
+                ?: stringProvider.getString(R.string.default_timestamp),
+            modifiedAt = getString(stringProvider.getString(R.string.field_modified_at))
+                ?: stringProvider.getString(R.string.default_timestamp),
+            shareCount = getLong(stringProvider.getString(R.string.field_share_count))?.toInt() ?: 0
         )
     }
 }
