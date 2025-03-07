@@ -110,4 +110,9 @@
 
     <!-- 기타 -->
     <string name="unknown">Unknown</string>
+    <string name="test_tag_loading_indicator">LoadingIndicator</string>
+    <string name="content_description_no_favorites">sentiment_dissatisfied_icon</string>
+
+    <!-- Firebase 쿼리 전용-->
+
 </resources>

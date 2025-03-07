@@ -1,6 +1,5 @@
 package com.example.passionDaily.quotecategory.manager
 
-import com.example.passionDaily.constants.ManagerConstants.QuoteLoading.PAGE_SIZE
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.domain.model.QuoteResult
 import com.example.passionDaily.quote.domain.usecase.QuoteListManagementUseCase
