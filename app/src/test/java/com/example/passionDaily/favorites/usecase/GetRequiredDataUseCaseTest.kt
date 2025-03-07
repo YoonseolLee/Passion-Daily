@@ -2,6 +2,7 @@ package com.example.passionDaily.favorites.usecase
 
 import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quotecategory.model.QuoteCategory
+import com.example.passionDaily.resources.StringProvider
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.every
 import io.mockk.mockk
@@ -11,8 +12,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class GetRequiredDataUseCaseTest {
-
-    private val getRequiredDataUseCase = GetRequiredDataUseCase()
+    private val stringProvider = mockk<StringProvider>()
+    private val getRequiredDataUseCase = GetRequiredDataUseCase(stringProvider)
 
     @Test
     fun `모든 값이 정상일 경우 Pair를 반환한다`() {
@@ -22,7 +23,6 @@ class GetRequiredDataUseCaseTest {
             every { id } returns "quote1"
         })
         val quoteId = "quote1"
-
         // When & Then
         val result = getRequiredDataUseCase.getRequiredDataForAdd(
             selectedCategory,
@@ -39,8 +39,9 @@ class GetRequiredDataUseCaseTest {
         val selectedCategory: QuoteCategory? = null
         val quotes = listOf(mockk<Quote> { every { id } returns "quote1" })
         val quoteId = "quote1"
-
         // When & Then
+        every { stringProvider.getString(any()) } returns "No category selected"
+
         val exception = assertThrows(IllegalStateException::class.java) {
             getRequiredDataUseCase.getRequiredDataForAdd(
                 selectedCategory,
@@ -58,8 +59,9 @@ class GetRequiredDataUseCaseTest {
         val selectedCategory = mockk<QuoteCategory>()
         val quotes = listOf(mockk<Quote> { every { id } returns "quote2" })
         val quoteId = "quote1"
-
         // When & Then
+        every { stringProvider.getString(any(), any()) } returns "Quote not found: quote1"
+
         val exception = assertThrows(IllegalStateException::class.java) {
             getRequiredDataUseCase.getRequiredDataForAdd(
                 selectedCategory,
