@@ -4,7 +4,10 @@ import android.database.sqlite.SQLiteException
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.DEFAULT_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.EMPTY_SIZE
 import com.example.passionDaily.constants.ViewModelConstants.Favorites.KEY_FAVORITE_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Favorites.STATE_SUBSCRIPTION_TIMEOUT_MS
 import com.example.passionDaily.favorites.base.FavoritesViewModelActions
 import com.example.passionDaily.favorites.base.FavoritesViewModelState
 import com.example.passionDaily.favorites.manager.FavoritesLoadingManager
@@ -52,7 +55,7 @@ class FavoritesViewModel @Inject constructor(
 
     private val _currentQuoteIndex = savedStateHandle.getStateFlow(
         KEY_FAVORITE_INDEX,
-        0
+        DEFAULT_INDEX
     )
 
     override val currentFavoriteQuote: StateFlow<QuoteEntity?> = createCurrentFavoriteQuoteFlow()
@@ -62,7 +65,7 @@ class FavoritesViewModel @Inject constructor(
     private fun createCurrentFavoriteQuoteFlow(): StateFlow<QuoteEntity?> {
         return combine(favoriteQuotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STATE_SUBSCRIPTION_TIMEOUT_MS), null)
     }
 
     init {
@@ -75,9 +78,9 @@ class FavoritesViewModel @Inject constructor(
         try {
             val quotesSize = favoriteQuotes.value.size
 
-            if (quotesSize == 0) return  // 즐겨찾기가 없는 경우
+            if (quotesSize == EMPTY_SIZE) return  // 즐겨찾기가 없는 경우
 
-            if (_currentQuoteIndex.value == 0) {
+            if (_currentQuoteIndex.value == EMPTY_SIZE) {
                 savedStateHandle[KEY_FAVORITE_INDEX] = quotesSize - 1
             } else {
                 savedStateHandle[KEY_FAVORITE_INDEX] = _currentQuoteIndex.value - 1
@@ -92,7 +95,7 @@ class FavoritesViewModel @Inject constructor(
             val nextIndex = _currentQuoteIndex.value + 1
             val quotesSize = favoriteQuotes.value.size
 
-            if (quotesSize == 0) return  // 즐겨찾기가 없는 경우
+            if (quotesSize == EMPTY_SIZE) return  // 즐겨찾기가 없는 경우
 
             if (nextIndex >= quotesSize) {
                 savedStateHandle[KEY_FAVORITE_INDEX] = 0
@@ -112,7 +115,6 @@ class FavoritesViewModel @Inject constructor(
                 favoritesLoadingManager.getAllFavorites()
                     .catch { e ->
                         favoritesLoadingManager.updateIsFavoriteLoading(false)
-                        favoritesStateHolder.updateIsFavoriteLoading(false)
                         throw e
                     }
                     .collect { favorites ->

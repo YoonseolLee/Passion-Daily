@@ -7,6 +7,9 @@ object ViewModelConstants {
     }
 
     object Favorites {
+        const val STATE_SUBSCRIPTION_TIMEOUT_MS = 5000L
         const val KEY_FAVORITE_INDEX = "favorite_quote_index"
+        const val DEFAULT_INDEX = 0
+        const val EMPTY_SIZE = 0
     }
 }

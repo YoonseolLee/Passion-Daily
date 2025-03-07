@@ -21,7 +21,6 @@
 
     <!--  QuoteViewModel  -->
     <string name="error_permission_denied">권한이 없어 요청을 처리할 수 없습니다.</string>
-    <string name="error_quote_not_found">현재 명언을 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="error_sharing_quote">명언을 공유할 수 없습니다.</string>
     <string name="error_share_count_increment_fail">명언 공유 횟수를 증가할 수 없습니다.</string>
 
@@ -32,10 +31,4 @@
 
     <string name="error_email_send">메일 전송에 실패하였습니다.</string>
     <string name="error_uri_syntax">잘못된 URI 형식입니다.</string>
-
-<!--  ImageShare  -->
-    <string name="error_share_img">이미지 공유 중 오류가 발생했습니다</string>
-    <string name="share_quote">명언 공유하기</string>
-
-
 </resources>
