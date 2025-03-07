@@ -3,9 +3,10 @@ package com.example.passionDaily.quotecategory.data.local.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.passionDaily.constants.DatabaseConstants
 
-@Entity(tableName = "quote_categories")
+@Entity(tableName = DatabaseConstants.TABLE_QUOTE_CATEGORIES)
 data class QuoteCategoryEntity(
-    @PrimaryKey @ColumnInfo(name = "category_id") val categoryId: Int,
-    @ColumnInfo(name = "category_name") val categoryName: String,
+    @PrimaryKey @ColumnInfo(name = DatabaseConstants.COLUMN_CATEGORY_ID) val categoryId: Int,
+    @ColumnInfo(name = DatabaseConstants.COLUMN_CATEGORY_NAME) val categoryName: String,
 )

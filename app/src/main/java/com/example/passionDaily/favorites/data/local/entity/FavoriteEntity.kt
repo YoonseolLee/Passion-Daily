@@ -4,33 +4,34 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import com.example.passionDaily.constants.DatabaseConstants
 import com.example.passionDaily.quotecategory.data.local.entity.QuoteCategoryEntity
 import com.example.passionDaily.quote.data.local.entity.QuoteEntity
 
 @Entity(
-    tableName = "favorites",
-    primaryKeys = ["quote_id", "category_id"],
+    tableName = DatabaseConstants.TABLE_FAVORITES,
+    primaryKeys = [DatabaseConstants.COLUMN_QUOTE_ID, DatabaseConstants.COLUMN_CATEGORY_ID],
     foreignKeys = [
         ForeignKey(
             entity = QuoteEntity::class,
-            parentColumns = ["quote_id", "category_id"],
-            childColumns = ["quote_id", "category_id"],
+            parentColumns = [DatabaseConstants.COLUMN_QUOTE_ID, DatabaseConstants.COLUMN_CATEGORY_ID],
+            childColumns = [DatabaseConstants.COLUMN_QUOTE_ID, DatabaseConstants.COLUMN_CATEGORY_ID],
             onDelete = ForeignKey.NO_ACTION
         ),
         ForeignKey(
             entity = QuoteCategoryEntity::class,
-            parentColumns = ["category_id"],
-            childColumns = ["category_id"],
+            parentColumns = [DatabaseConstants.COLUMN_CATEGORY_ID],
+            childColumns = [DatabaseConstants.COLUMN_CATEGORY_ID],
             onDelete = ForeignKey.NO_ACTION
         )
     ],
     indices = [
-        Index(value = ["quote_id", "category_id"]),
-        Index(value = ["category_id"])
+        Index(value = [DatabaseConstants.COLUMN_QUOTE_ID, DatabaseConstants.COLUMN_CATEGORY_ID]),
+        Index(value = [DatabaseConstants.COLUMN_CATEGORY_ID])
     ]
 )
 data class FavoriteEntity(
-    @ColumnInfo(name = "quote_id") val quoteId: String,
-    @ColumnInfo(name = "category_id") val categoryId: Int,
-    @ColumnInfo(name = "added_at") val addedAt: Long = System.currentTimeMillis()
+    @ColumnInfo(name = DatabaseConstants.COLUMN_QUOTE_ID) val quoteId: String,
+    @ColumnInfo(name = DatabaseConstants.COLUMN_CATEGORY_ID) val categoryId: Int,
+    @ColumnInfo(name = DatabaseConstants.COLUMN_ADDED_AT) val addedAt: Long = System.currentTimeMillis()
 )
