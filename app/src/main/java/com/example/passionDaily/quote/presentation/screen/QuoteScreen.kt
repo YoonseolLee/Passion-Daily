@@ -41,6 +41,7 @@ import androidx.core.view.WindowCompat
 import com.example.passionDaily.R
 import com.example.passionDaily.constants.NavigationBarScreens
 import com.example.passionDaily.favorites.presentation.viewmodel.FavoritesViewModel
+import com.example.passionDaily.quote.data.remote.model.Quote
 import com.example.passionDaily.quote.presentation.components.BackgroundImage
 import com.example.passionDaily.quote.presentation.components.Buttons
 import com.example.passionDaily.quote.presentation.components.CategorySelectionButton
@@ -50,6 +51,7 @@ import com.example.passionDaily.quote.presentation.components.RightArrow
 import com.example.passionDaily.quote.presentation.components.toQuoteDisplay
 import com.example.passionDaily.quote.presentation.viewmodel.QuoteViewModel
 import com.example.passionDaily.quote.stateholder.QuoteStateHolder
+import com.example.passionDaily.quotecategory.model.QuoteCategory
 import com.example.passionDaily.ui.component.AnimationSpecs.ContentAnimationSpec
 import com.example.passionDaily.ui.component.AnimationSpecs.FadeAnimationSpec
 import com.example.passionDaily.ui.component.CommonNavigationBar
@@ -132,7 +134,7 @@ fun QuoteScreen(
             if (showLoadingIndicator) {
                 CircularProgressIndicator(
                     modifier = Modifier
-                        .testTag("LoadingIndicator")
+                        .testTag(stringResource(id = R.string.test_tag_loading_indicator))
                         .align(Alignment.Center),
                     color = PrimaryColor
                 )
@@ -193,88 +195,89 @@ fun QuoteScreen(
                         enabled = arrowsEnabled
                     )
                 }
-            }
 
-            // 명언 표시
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
+                // 명언 표시
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
 
-                // 현재 인용구 ID를 매번 계산하는 대신 remember와 derivedStateOf 사용
-                val currentQuoteId = remember {
-                    derivedStateOf {
-                        currentQuote?.id ?: ""
-                    }
-                }.value
+                    val currentQuoteId = remember {
+                        derivedStateOf {
+                            currentQuote?.id ?: ""
+                        }
+                    }.value
 
-                AnimatedContent(
-                    targetState = currentQuoteId,
-                    transitionSpec = {
-                        (slideIntoContainer(
-                            slideDirection,
-                            animationSpec = ContentAnimationSpec
-                        ) +
-                                fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
-                            slideOutOfContainer(
+                    AnimatedContent(
+                        targetState = currentQuoteId,
+                        transitionSpec = {
+                            (slideIntoContainer(
                                 slideDirection,
                                 animationSpec = ContentAnimationSpec
                             ) +
-                                    fadeOut(animationSpec = FadeAnimationSpec)
-                        )
-                    }
-                ) { quoteId ->
-                    val displayedQuote = remember(quoteId, quotes) {
-                        quotes.find { it.id == quoteId } ?: currentQuote
-                    }
-
-                    key(displayedQuote?.id) {
-                        displayedQuote?.let {
-                            QuoteAndPerson(
-                                quote = it.text,
-                                author = it.person
+                                    fadeIn(animationSpec = FadeAnimationSpec)).togetherWith(
+                                slideOutOfContainer(
+                                    slideDirection,
+                                    animationSpec = ContentAnimationSpec
+                                ) +
+                                        fadeOut(animationSpec = FadeAnimationSpec)
                             )
                         }
+                    ) { quoteId ->
+                        val displayedQuote = remember(quoteId, quotes) {
+                            quotes.find { it.id == quoteId } ?: currentQuote
+                        }
+
+                        key(displayedQuote?.id) {
+                            displayedQuote?.let {
+                                QuoteAndPerson(
+                                    quote = it.text,
+                                    author = it.person
+                                )
+                            }
+                        }
                     }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            Row(
-                modifier = Modifier
-                    .offset(y = -172.dp)
-                    .align(Alignment.BottomCenter),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val buttonQuote = remember(currentQuote?.id) {
-                    currentQuote
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
-                val buttonCategory = remember(selectedCategory) {
-                    selectedCategory
-                }
-
-                buttonQuote?.let { quote ->
-                    val quoteDisplay = remember(quote.id) {
-                        quote.toQuoteDisplay()
+                // 하단 버튼
+                Row(
+                    modifier = Modifier
+                        .offset(y = -172.dp)
+                        .align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val buttonQuote = remember(currentQuote?.id) {
+                        currentQuote
                     }
 
-                    Buttons(
-                        quoteViewModel = quoteViewModel,
-                        favoritesViewModel = favoritesViewModel,
-                        currentQuoteId = quote.id,
-                        category = buttonCategory,
-                        quoteDisplay = quoteDisplay
-                    )
+                    val buttonCategory = remember(selectedCategory) {
+                        selectedCategory
+                    }
+
+                    buttonQuote?.let { quote ->
+                        val quoteDisplay = remember(quote.id) {
+                            quote.toQuoteDisplay()
+                        }
+
+                        Buttons(
+                            quoteViewModel = quoteViewModel,
+                            favoritesViewModel = favoritesViewModel,
+                            currentQuoteId = quote.id,
+                            category = buttonCategory,
+                            quoteDisplay = quoteDisplay
+                        )
+                    }
                 }
             }
         }
 
+        // 하단 네비게이션 바
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
