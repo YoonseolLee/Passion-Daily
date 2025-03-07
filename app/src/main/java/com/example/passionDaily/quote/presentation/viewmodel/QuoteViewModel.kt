@@ -4,8 +4,13 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.passionDaily.constants.ViewModelConstants.Quote.DEFAULT_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Quote.DEFAULT_TIMEOUT_MS
+import com.example.passionDaily.constants.ViewModelConstants.Quote.INITIAL_RETRY_COUNT
 import com.example.passionDaily.constants.ViewModelConstants.Quote.KEY_QUOTE_INDEX
+import com.example.passionDaily.constants.ViewModelConstants.Quote.MAX_RETRIES
 import com.example.passionDaily.constants.ViewModelConstants.Quote.PAGE_SIZE
+import com.example.passionDaily.constants.ViewModelConstants.Quote.STATE_SUBSCRIPTION_TIMEOUT_MS
 import com.example.passionDaily.quote.base.QuoteViewModelActions
 import com.example.passionDaily.quote.base.QuoteViewModelState
 import com.example.passionDaily.quote.data.remote.model.Quote
@@ -51,21 +56,25 @@ class QuoteViewModel @Inject constructor(
     override val selectedCategory: StateFlow<QuoteCategory> =
         quoteStateHolder.selectedQuoteCategory
 
-    private val _currentQuoteIndex = savedStateHandle.getStateFlow(KEY_QUOTE_INDEX, 0)
+    private val _currentQuoteIndex = savedStateHandle.getStateFlow(
+        KEY_QUOTE_INDEX,
+        DEFAULT_INDEX
+    )
+
+    private var retryCount = INITIAL_RETRY_COUNT
+    private var categoryChangeJob: Job? = null
     override val currentQuoteIndex: StateFlow<Int> = _currentQuoteIndex
 
     override val currentQuote: StateFlow<Quote?> =
         combine(quotes, _currentQuoteIndex) { quotes, index ->
             quotes.getOrNull(index)
         }
-            .distinctUntilChanged { old, new ->
-            val same = old?.id == new?.id
-            same
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-
-    private var retryCount = 0
-    private val maxRetries = 3
+            .distinctUntilChanged { old, new -> old?.id == new?.id }
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(STATE_SUBSCRIPTION_TIMEOUT_MS),
+                null
+            )
 
     init {
         loadInitialQuotes()
@@ -73,7 +82,7 @@ class QuoteViewModel @Inject constructor(
 
     fun loadInitialQuotes() {
         viewModelScope.launch {
-            selectedCategory.value?.let { category ->
+            selectedCategory.value.let { category ->
                 try {
                     quoteStateHolder.updateIsQuoteLoading(true)
                     val result = retryWithTimeout {
@@ -92,7 +101,7 @@ class QuoteViewModel @Inject constructor(
                         )
                     }
                 } catch (e: Exception) {
-                    if (retryCount < maxRetries) {
+                    if (retryCount < MAX_RETRIES) {
                         retryCount++
                         loadInitialQuotes()
                     } else {
@@ -106,7 +115,7 @@ class QuoteViewModel @Inject constructor(
     }
 
     private suspend fun <T> retryWithTimeout(
-        timeoutMs: Long = 10000,
+        timeoutMs: Long = DEFAULT_TIMEOUT_MS,
         block: suspend () -> T
     ): T {
         return withTimeout(timeoutMs) {
@@ -215,12 +224,12 @@ class QuoteViewModel @Inject constructor(
     }
 
     override fun previousQuote() {
-        if (_currentQuoteIndex.value == 0 && hasReachedEnd.value) {
+        if (_currentQuoteIndex.value == DEFAULT_INDEX && hasReachedEnd.value) {
             savedStateHandle[KEY_QUOTE_INDEX] = quotes.value.size - 1
             return
         }
 
-        if (_currentQuoteIndex.value == 0) {
+        if (_currentQuoteIndex.value == DEFAULT_INDEX) {
             savedStateHandle[KEY_QUOTE_INDEX] = _currentQuoteIndex.value
             return
         }
@@ -237,8 +246,8 @@ class QuoteViewModel @Inject constructor(
                 try {
                     quoteLoadingManager.startQuoteLoading()
 
-                    val result = withTimeout(10_000L) {
-                        selectedCategory.value?.let { category ->
+                    val result = withTimeout(DEFAULT_TIMEOUT_MS) {
+                        selectedCategory.value.let { category ->
                             quoteLoadingManager.loadQuotesAfter(
                                 category = category,
                                 lastQuoteId = quotes.value.last().id,
@@ -250,7 +259,7 @@ class QuoteViewModel @Inject constructor(
                     if (result == null || result.quotes.isEmpty()) {
                         quoteLoadingManager.setHasQuoteReachedEndTrue()
                         // 더 이상 데이터가 없을 때는 첫 번째로 돌아가기
-                        savedStateHandle[KEY_QUOTE_INDEX] = 0
+                        savedStateHandle[KEY_QUOTE_INDEX] = DEFAULT_INDEX
                     } else {
                         // 새로운 데이터가 있을 때만 상태 업데이트
                         quoteLoadingManager.updateQuotesAfterLoading(result) { newLastDocument ->
@@ -266,7 +275,7 @@ class QuoteViewModel @Inject constructor(
             } else {
                 // 현재 페이지 내에서 다음 인덱스로 이동하거나 처음으로 돌아가기
                 savedStateHandle[KEY_QUOTE_INDEX] =
-                    if (isLastQuote(nextIndex, currentQuotes)) 0 else nextIndex
+                    if (isLastQuote(nextIndex, currentQuotes)) DEFAULT_INDEX else nextIndex
             }
         }
     }
@@ -322,8 +331,6 @@ class QuoteViewModel @Inject constructor(
         }
     }
 
-    private var categoryChangeJob: Job? = null
-
     override fun onCategorySelected(category: QuoteCategory) {
         categoryChangeJob?.cancel()
 
@@ -345,8 +352,7 @@ class QuoteViewModel @Inject constructor(
         quoteStateHolder.clearQuotes()
 
         lastLoadedQuote = null
-        savedStateHandle[KEY_QUOTE_INDEX] = 0
-
+        savedStateHandle[KEY_QUOTE_INDEX] = DEFAULT_INDEX
     }
 
     fun getStateHolder(): QuoteStateHolder {
